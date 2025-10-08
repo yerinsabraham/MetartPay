@@ -95,3 +95,40 @@ coverage/
 
 # Test files
 test_results/
+
+# Additional sensitive files
+# Firebase config and generated options
+**/google-services.json
+**/GoogleService-Info.plist
+**/firebase_options.dart
+
+# Native keystore and signing files
+**/key.properties
+**/*.jks
+**/*.keystore
+**/*.p12
+
+# Environment and secret files
+.env
+.env.*
+secrets.yml
+*.secret
+
+# Android local config
+mobile/android/local.properties
+mobile/android/key.properties
+
+# iOS local config
+mobile/ios/Runner/GoogleService-Info.plist
+mobile/ios/**/GoogleService-Info.plist
+
+# Flutter build artifacts
+build/
+**/build/
+
+# Avoid accidental commit of generated plugin registrant
+**/GeneratedPluginRegistrant.*
+
+# Editor swap/temp files
+*.swp
+*.swo
