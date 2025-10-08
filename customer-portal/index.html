@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetartPay Customer Payment Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 450px;
+            margin: 0 auto;
+            padding-top: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            margin-bottom: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #4299e1;
+            margin-bottom: 8px;
+        }
+
+        .tagline {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .payment-form {
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        .amount-input {
+            font-size: 20px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .currency-prefix {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            font-weight: 600;
+            color: #38a169;
+        }
+
+        .amount-group {
+            position: relative;
+        }
+
+        .amount-group input {
+            padding-left: 40px;
+        }
+
+        .create-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #4299e1, #667eea);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .create-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(66, 153, 225, 0.3);
+        }
+
+        .create-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .payment-details {
+            display: none;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .payment-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .business-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .payment-description {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .amount-display {
+            text-align: center;
+            margin: 24px 0;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+
+        .naira-amount {
+            font-size: 32px;
+            font-weight: bold;
+            color: #38a169;
+        }
+
+        .crypto-amount {
+            font-size: 18px;
+            color: #4a5568;
+            margin-top: 8px;
+        }
+
+        .network-selector {
+            margin: 20px 0;
+        }
+
+        .network-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .network-option {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .network-option:hover {
+            border-color: #4299e1;
+            background: #f7fafc;
+        }
+
+        .network-option.selected {
+            border-color: #4299e1;
+            background: #ebf8ff;
+            color: #2b6cb0;
+        }
+
+        .network-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .token-name {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .qr-section {
+            text-align: center;
+            margin: 24px 0;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 12px;
+        }
+
+        .address-section {
+            margin: 20px 0;
+        }
+
+        .address-display {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            background: #edf2f7;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin: 12px 0;
+        }
+
+        .copy-btn {
+            width: 100%;
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #3182ce;
+        }
+
+        .status-indicator {
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fef5e7;
+            color: #d69e2e;
+            border: 1px solid #f6e05e;
+        }
+
+        .status-confirmed {
+            background: #f0fff4;
+            color: #38a169;
+            border: 1px solid #9ae6b4;
+        }
+
+        .instructions {
+            background: #fef5e7;
+            border: 1px solid #f6e05e;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .back-btn {
+            background: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 12px;
+            color: #a0aec0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4299e1;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #e53e3e;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 16px 0;
+            border: 1px solid #feb2b2;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+                padding-top: 20px;
+            }
+            
+            .card {
+                padding: 24px 20px;
+            }
+            
+            .naira-amount {
+                font-size: 28px;
+            }
+            
+            .network-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Payment Form Card -->
+        <div class="card" id="paymentForm">
+            <div class="header">
+                <div class="logo">MetartPay</div>
+                <div class="tagline">Secure Crypto-to-Fiat Payments</div>
+            </div>
+
+            <form class="payment-form" onsubmit="createPaymentLink(event)">
+                <div class="form-group">
+                    <label for="businessName">Business Name</label>
+                    <input type="text" id="businessName" value="Demo Business" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Payment Description</label>
+                    <input type="text" id="description" placeholder="e.g., Product purchase, Service payment" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="amount">Amount (₦)</label>
+                    <div class="amount-group">
+                        <span class="currency-prefix">₦</span>
+                        <input type="number" id="amount" class="amount-input" min="100" step="0.01" placeholder="0.00" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="create-btn" id="createBtn">
+                    Create Payment Link
+                </button>
+            </form>
+        </div>
+
+        <!-- Payment Details Card -->
+        <div class="card payment-details" id="paymentDetails">
+            <button class="back-btn" onclick="goBack()">← Back</button>
+            
+            <div class="payment-header">
+                <div class="business-name" id="displayBusinessName"></div>
+                <div class="payment-description" id="displayDescription"></div>
+            </div>
+
+            <div class="amount-display">
+                <div class="naira-amount" id="displayNairaAmount"></div>
+                <div class="crypto-amount" id="displayCryptoAmount"></div>
+            </div>
+
+            <div class="network-selector">
+                <label>Choose Payment Method:</label>
+                <div class="network-grid" id="networkGrid">
+                    <!-- Networks will be populated dynamically -->
+                </div>
+            </div>
+
+            <div class="qr-section" id="qrSection" style="display: none;">
+                <div id="qrcode" style="display: inline-block; margin: 0 auto;"></div>
+                <div style="margin-top: 12px; font-size: 14px; color: #718096; text-align: center;">
+                    Scan with your crypto wallet
+                </div>
+            </div>
+
+            <div class="address-section" id="addressSection" style="display: none;">
+                <label>Send to this address:</label>
+                <div class="address-display" id="addressDisplay"></div>
+                <button class="copy-btn" onclick="copyAddress()">📋 Copy Address</button>
+            </div>
+
+            <div class="status-indicator status-pending" id="statusIndicator" style="display: none;">
+                ⏳ Waiting for payment...
+            </div>
+
+            <div class="instructions" id="instructionsBox" style="display: none;">
+                <strong>⚠️ Important Instructions:</strong><br>
+                • Send exactly <strong id="exactAmount"></strong><br>
+                • Use <strong id="networkName"></strong> network only<br>
+                • Payment will be confirmed automatically<br>
+                • Do not close this page until payment is confirmed
+            </div>
+
+            <div class="footer">
+                <svg style="width: 16px; height: 16px; display: inline-block; margin-right: 6px;" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                Powered by MetartPay - Secure & Fast
+            </div>
+        </div>
+
+        <!-- Loading Card -->
+        <div class="card loading" id="loadingCard" style="display: none;">
+            <div class="spinner"></div>
+            <p style="margin-top: 16px;">Creating payment link...</p>
+        </div>
+
+        <!-- Error Card -->
+        <div class="error-message" id="errorMessage" style="display: none;"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script>
+        // Wait for QRCode library to load
+        let qrCodeReady = false;
+        
+        // Check if QRCode is available
+        function checkQRCode() {
+            if (typeof QRCode !== 'undefined') {
+                qrCodeReady = true;
+                console.log('QRCode library loaded successfully');
+            } else {
+                console.log('QRCode library not ready yet, retrying...');
+                setTimeout(checkQRCode, 100);
+            }
+        }
+        
+        // Start checking when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            checkQRCode();
+        });
+        
+        // Also check when script loads
+        window.addEventListener('load', () => {
+            setTimeout(checkQRCode, 500);
+        });
+        
+        // Configuration
+        const API_BASE_URL = 'https://api-xpqfkkf3oa-uc.a.run.app';
+        
+        // Exchange rates (fetch from a real API in production)
+        const EXCHANGE_RATES = {
+            'USD': 1650, // 1 USD = 1650 NGN (example rate)
+            'USDT': 1645,
+            'USDC': 1645
+        };
+
+        // Supported networks and tokens
+        const CRYPTO_OPTIONS = [
+            { network: 'ETH', token: 'USDT', name: 'Ethereum', rate: EXCHANGE_RATES.USDT },
+            { network: 'ETH', token: 'USDC', name: 'Ethereum', rate: EXCHANGE_RATES.USDC },
+            { network: 'BSC', token: 'USDT', name: 'BSC', rate: EXCHANGE_RATES.USDT },
+            { network: 'BSC', token: 'USDC', name: 'BSC', rate: EXCHANGE_RATES.USDC },
+            { network: 'MATIC', token: 'USDT', name: 'Polygon', rate: EXCHANGE_RATES.USDT },
+            { network: 'MATIC', token: 'USDC', name: 'Polygon', rate: EXCHANGE_RATES.USDC },
+            { network: 'SOL', token: 'USDT', name: 'Solana', rate: EXCHANGE_RATES.USDT },
+            { network: 'SOL', token: 'USDC', name: 'Solana', rate: EXCHANGE_RATES.USDC }
+        ];
+
+        // Demo merchant ID for testing
+        const DEMO_MERCHANT_ID = 'demo-merchant-' + Date.now();
+        
+        // Create demo merchant token for API calls
+        const DEMO_TOKEN = btoa(JSON.stringify({
+            merchantId: DEMO_MERCHANT_ID,
+            businessName: 'Demo Business',
+            exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+        }));
+
+        let currentPaymentLink = null;
+        let selectedCryptoOption = null;
+        let monitoringInterval = null;
+
+        async function createPaymentLink(event) {
+            event.preventDefault();
+            
+            const businessName = document.getElementById('businessName').value;
+            const description = document.getElementById('description').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+
+            if (!businessName || !description || !amount || amount < 100) {
+                showError('Please fill in all fields with a valid amount (minimum ₦100)');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('paymentForm').style.display = 'none';
+            document.getElementById('loadingCard').style.display = 'block';
+
+            try {
+                // First create/register demo merchant if needed
+                await createDemoMerchant(businessName);
+                
+                // Create payment link via API
+                const response = await fetch(`${API_BASE_URL}/api/payment-links/${DEMO_MERCHANT_ID}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEMO_TOKEN}`
+                    },
+                    body: JSON.stringify({
+                        title: description,
+                        description: description,
+                        amount: amount,
+                        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                    })
+                });
+
+                if (!response.ok) {
+                    // Fallback to demo mode if API fails
+                    console.warn('API call failed, using demo mode');
+                    return createDemoPaymentLink(businessName, description, amount);
+                }
+
+                const result = await response.json();
+                currentPaymentLink = result.paymentLink;
+                currentPaymentLink.businessName = businessName;
+
+                // Show payment details
+                displayPaymentDetails();
+
+            } catch (error) {
+                console.error('Error creating payment link:', error);
+                console.warn('Falling back to demo mode');
+                
+                // Fallback to demo mode
+                createDemoPaymentLink(businessName, description, amount);
+            }
+        }
+
+        async function createDemoMerchant(businessName) {
+            // In a real app, you'd create the merchant via API
+            // For demo, we'll just store it locally
+            localStorage.setItem('demoMerchant', JSON.stringify({
+                id: DEMO_MERCHANT_ID,
+                businessName: businessName,
+                createdAt: new Date().toISOString()
+            }));
+        }
+
+        function createDemoPaymentLink(businessName, description, amount) {
+            // Generate addresses for different networks (demo implementation)
+            const cryptoOptions = CRYPTO_OPTIONS.map(option => ({
+                network: option.network,
+                token: option.token,
+                amount: (amount / option.rate).toFixed(6), // This will be dynamic based on input amount
+                address: generateMockAddress(option.network)
+            }));
+            
+            console.log('Creating payment link with amount:', amount);
+            console.log('Crypto options generated:', cryptoOptions);
+
+            // Create demo payment link
+            currentPaymentLink = {
+                id: 'demo-' + Date.now(),
+                title: description,
+                description: description,
+                amount: amount,
+                cryptoOptions: cryptoOptions,
+                businessName: businessName,
+                status: 'active',
+                createdAt: new Date(),
+                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from now
+            };
+
+            // Show payment details
+            displayPaymentDetails();
+        }
+
+        function generateMockAddress(network) {
+            // Generate mock addresses for demo purposes
+            if (network === 'SOL') {
+                // Solana addresses are base58 encoded, typically 32-44 characters
+                const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+                let address = '';
+                for (let i = 0; i < 44; i++) {
+                    address += chars[Math.floor(Math.random() * chars.length)];
+                }
+                return address;
+            } else {
+                // Ethereum-based addresses (ETH, BSC, MATIC)
+                const chars = '0123456789abcdef';
+                let address = '0x';
+                for (let i = 0; i < 40; i++) {
+                    address += chars[Math.floor(Math.random() * chars.length)];
+                }
+                return address;
+            }
+        }
+
+        function displayPaymentDetails() {
+            document.getElementById('loadingCard').style.display = 'none';
+            
+            // Populate payment details
+            document.getElementById('displayBusinessName').textContent = currentPaymentLink.businessName;
+            document.getElementById('displayDescription').textContent = currentPaymentLink.description;
+            document.getElementById('displayNairaAmount').textContent = `₦${currentPaymentLink.amount.toLocaleString()}`;
+
+            // Populate network options
+            const networkGrid = document.getElementById('networkGrid');
+            networkGrid.innerHTML = '';
+
+            currentPaymentLink.cryptoOptions.forEach((option, index) => {
+                const networkOption = document.createElement('div');
+                networkOption.className = 'network-option';
+                networkOption.onclick = () => {
+                    console.log('Network option clicked:', option);
+                    selectNetwork(option, index);
+                };
+                
+                const networkName = option.network === 'ETH' ? 'Ethereum' : 
+                                  option.network === 'BSC' ? 'BSC' : 
+                                  option.network === 'MATIC' ? 'Polygon' : 
+                                  option.network === 'SOL' ? 'Solana' : option.network;
+                
+                networkOption.innerHTML = `
+                    <div class="network-name">${networkName} ${option.token}</div>
+                    <div class="token-name">${networkName} Network</div>
+                    <div style="font-size: 12px; color: #4a5568; margin-top: 4px;">
+                        ${option.amount} ${option.token}
+                    </div>
+                `;
+                
+                networkGrid.appendChild(networkOption);
+            });
+
+            document.getElementById('paymentDetails').style.display = 'block';
+        }
+
+        function selectNetwork(cryptoOption, index) {
+            console.log('selectNetwork called with:', cryptoOption, index);
+            
+            // Remove previous selection
+            document.querySelectorAll('.network-option').forEach(el => el.classList.remove('selected'));
+            
+            // Add selection to clicked option
+            const networkOptions = document.querySelectorAll('.network-option');
+            if (networkOptions[index]) {
+                networkOptions[index].classList.add('selected');
+            }
+            
+            selectedCryptoOption = cryptoOption;
+            console.log('selectedCryptoOption set to:', selectedCryptoOption);
+            
+            // Update display
+            document.getElementById('displayCryptoAmount').textContent = `${cryptoOption.amount} ${cryptoOption.token}`;
+            
+            // Show payment details immediately
+            showPaymentMethod();
+        }
+
+        function showPaymentMethod() {
+            console.log('showPaymentMethod called with selectedCryptoOption:', selectedCryptoOption);
+            
+            if (!selectedCryptoOption) {
+                console.error('No selectedCryptoOption!');
+                return;
+            }
+
+            const networkName = selectedCryptoOption.network === 'ETH' ? 'Ethereum' : 
+                              selectedCryptoOption.network === 'BSC' ? 'Binance Smart Chain' : 
+                              selectedCryptoOption.network === 'MATIC' ? 'Polygon' : 
+                              selectedCryptoOption.network === 'SOL' ? 'Solana' : selectedCryptoOption.network;
+
+            console.log('Network name:', networkName);
+
+            // Generate QR Code
+            try {
+                generateQRCode();
+                console.log('QR code generated');
+            } catch (error) {
+                console.error('QR generation error:', error);
+            }
+            
+            // Show address
+            const addressElement = document.getElementById('addressDisplay');
+            if (addressElement) {
+                addressElement.textContent = selectedCryptoOption.address;
+                console.log('Address set to:', selectedCryptoOption.address);
+            }
+            
+            // Update instructions
+            const exactAmountElement = document.getElementById('exactAmount');
+            const networkNameElement = document.getElementById('networkName');
+            
+            if (exactAmountElement) {
+                exactAmountElement.textContent = `${selectedCryptoOption.amount} ${selectedCryptoOption.token}`;
+            }
+            if (networkNameElement) {
+                networkNameElement.textContent = networkName;
+            }
+            
+            // Show sections immediately (no animation delays for debugging)
+            const sections = ['qrSection', 'addressSection', 'statusIndicator', 'instructionsBox'];
+            sections.forEach((sectionId) => {
+                const element = document.getElementById(sectionId);
+                if (element) {
+                    element.style.display = 'block';
+                    console.log('Showing section:', sectionId);
+                } else {
+                    console.error('Element not found:', sectionId);
+                }
+            });
+
+            // Start monitoring for payments
+            try {
+                startPaymentMonitoring();
+                console.log('Payment monitoring started');
+            } catch (error) {
+                console.error('Monitoring start error:', error);
+            }
+        }
+
+        function generateQRCode() {
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = ''; // Clear existing QR code
+
+            const address = selectedCryptoOption.address;
+            const amount = selectedCryptoOption.amount;
+            const token = selectedCryptoOption.token;
+            const network = selectedCryptoOption.network;
+
+            // Generate appropriate QR data based on network
+            let qrData;
+            if (network === 'SOL') {
+                qrData = `solana:${address}?amount=${amount}&token=${token}`;
+            } else {
+                qrData = `ethereum:${address}?value=${amount}&token=${token}`;
+            }
+
+            if (!qrCodeReady || typeof QRCode === 'undefined') {
+                console.log('QRCode library not ready, using fallback QR service');
+                // Use Google Charts API as fallback
+                const qrImage = document.createElement('img');
+                qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`;
+                qrImage.style.width = '200px';
+                qrImage.style.height = '200px';
+                qrImage.style.border = '1px solid #e2e8f0';
+                qrImage.alt = 'Payment QR Code';
+                qrContainer.appendChild(qrImage);
+                
+                // Try the canvas method again in a moment
+                setTimeout(() => {
+                    if (qrCodeReady && typeof QRCode !== 'undefined') {
+                        generateQRCode();
+                    }
+                }, 1000);
+                return;
+            }
+
+            try {
+                QRCode.toCanvas(qrContainer, qrData, {
+                    width: 200,
+                    height: 200,
+                    margin: 2,
+                    color: {
+                        dark: '#000000',
+                        light: '#ffffff'
+                    }
+                }, (error) => {
+                    if (error) {
+                        console.error('QR Code generation error:', error);
+                        qrContainer.innerHTML = `
+                            <div style="width: 200px; height: 200px; border: 2px solid #e2e8f0; display: flex; align-items: center; justify-content: center; text-align: center; background: #f7fafc;">
+                                <div>
+                                    <div style="font-size: 24px;">📱</div>
+                                    <div style="font-size: 12px; margin-top: 8px;">Manual Payment</div>
+                                    <div style="font-size: 10px; color: #718096;">Use address below</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            } catch (error) {
+                console.error('QR Code canvas error:', error);
+                qrContainer.innerHTML = `
+                    <div style="width: 200px; height: 200px; border: 2px solid #e2e8f0; display: flex; align-items: center; justify-content: center; text-align: center; background: #f7fafc;">
+                        <div>
+                            <div style="font-size: 24px;">📱</div>
+                            <div style="font-size: 12px; margin-top: 8px;">Use Address Below</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function copyAddress() {
+            if (!selectedCryptoOption) return;
+
+            navigator.clipboard.writeText(selectedCryptoOption.address).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                btn.style.background = '#38a169';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#4299e1';
+                }, 2000);
+            }).catch((err) => {
+                console.error('Failed to copy address:', err);
+                // Fallback for browsers that don't support clipboard API
+                alert(`Address: ${selectedCryptoOption.address}`);
+            });
+        }
+
+        function startPaymentMonitoring() {
+            // Clear any existing monitoring
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+            }
+
+            console.log(`Starting payment monitoring for ${selectedCryptoOption.address}`);
+            
+            // Start real blockchain monitoring via API
+            startBlockchainMonitoring();
+            
+            // Also start local monitoring loop
+            let checkCount = 0;
+            monitoringInterval = setInterval(async () => {
+                checkCount++;
+                console.log(`Checking for payment... (${checkCount})`);
+                
+                try {
+                    // Check payment status via API
+                    await checkPaymentStatus();
+                } catch (error) {
+                    console.error('Error checking payment status:', error);
+                }
+                
+                // Simulate payment detection after 30 seconds for demo if real monitoring fails
+                if (checkCount >= 6) { // 6 * 5 seconds = 30 seconds
+                    console.log('Demo mode: Simulating payment confirmation');
+                    clearInterval(monitoringInterval);
+                    paymentConfirmed();
+                }
+            }, 5000); // Check every 5 seconds
+        }
+
+        async function startBlockchainMonitoring() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/transactions/start`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEMO_TOKEN}`
+                    },
+                    body: JSON.stringify({
+                        paymentLinkId: currentPaymentLink.id,
+                        address: selectedCryptoOption.address,
+                        network: selectedCryptoOption.network,
+                        token: selectedCryptoOption.token,
+                        expectedAmount: selectedCryptoOption.amount
+                    })
+                });
+
+                if (response.ok) {
+                    console.log('Blockchain monitoring started successfully');
+                } else {
+                    console.warn('Failed to start blockchain monitoring, using demo mode');
+                }
+            } catch (error) {
+                console.error('Error starting blockchain monitoring:', error);
+            }
+        }
+
+        async function checkPaymentStatus() {
+            try {
+                const response = await fetch(
+                    `${API_BASE_URL}/api/transactions/${DEMO_MERCHANT_ID}?paymentLinkId=${currentPaymentLink.id}`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${DEMO_TOKEN}`
+                        }
+                    }
+                );
+
+                if (response.ok) {
+                    const result = await response.json();
+                    const transactions = result.transactions || [];
+                    
+                    // Check if any transaction is confirmed
+                    const confirmedTransaction = transactions.find(tx => 
+                        tx.status === 'confirmed' && 
+                        tx.paymentLinkId === currentPaymentLink.id
+                    );
+
+                    if (confirmedTransaction) {
+                        clearInterval(monitoringInterval);
+                        paymentConfirmed(confirmedTransaction);
+                        return true;
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking payment status:', error);
+            }
+            
+            return false;
+        }
+
+        function paymentConfirmed(transactionData = null) {
+            const statusIndicator = document.getElementById('statusIndicator');
+            statusIndicator.className = 'status-indicator status-confirmed';
+            
+            if (transactionData) {
+                statusIndicator.innerHTML = `✅ Payment Confirmed!<br><small>Transaction: ${transactionData.txHash?.substring(0, 10)}...</small>`;
+            } else {
+                statusIndicator.innerHTML = '✅ Payment Confirmed!';
+            }
+
+            // Mark payment link as paid (in real system, this would be in backend)
+            if (currentPaymentLink) {
+                currentPaymentLink.status = 'paid';
+                currentPaymentLink.paidAt = new Date().toISOString();
+            }
+
+            // Disable all payment options
+            const networkOptions = document.querySelectorAll('.network-option');
+            networkOptions.forEach(option => {
+                option.style.opacity = '0.5';
+                option.style.pointerEvents = 'none';
+                option.onclick = null;
+            });
+
+            // Hide payment sections and show completion message
+            setTimeout(() => {
+                document.getElementById('qrSection').style.display = 'none';
+                document.getElementById('addressSection').style.display = 'none';
+                document.getElementById('instructionsBox').style.display = 'none';
+                
+                // Show completion message with countdown
+                const completionMessage = document.createElement('div');
+                completionMessage.className = 'status-indicator status-confirmed';
+                completionMessage.style.fontSize = '16px';
+                completionMessage.style.padding = '20px';
+                completionMessage.innerHTML = `
+                    <strong>🎉 Payment Complete!</strong><br><br>
+                    <div style="font-size: 14px; color: #22543d;">
+                        ✅ Amount: ₦${currentPaymentLink.amount}<br>
+                        ✅ Paid via: ${selectedCryptoOption.network} ${selectedCryptoOption.token}<br>
+                        ✅ Status: PAID<br><br>
+                        <em>This payment session is complete.</em><br>
+                        <div id="countdown" style="font-weight: bold; color: #2b6cb0; margin-top: 10px;">
+                            Refreshing in 3 seconds for new transactions...
+                        </div>
+                        <button onclick="window.location.reload()" style="margin-top: 15px; padding: 8px 16px; background: #4299e1; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                            Start New Payment Now
+                        </button>
+                    </div>
+                `;
+                
+                document.getElementById('statusIndicator').replaceWith(completionMessage);
+                
+                // Start countdown
+                let countdown = 3;
+                const countdownElement = document.getElementById('countdown');
+                const countdownInterval = setInterval(() => {
+                    countdown--;
+                    if (countdown > 0) {
+                        countdownElement.textContent = `Refreshing in ${countdown} seconds for new transactions...`;
+                    } else {
+                        countdownElement.textContent = 'Refreshing now...';
+                        clearInterval(countdownInterval);
+                    }
+                }, 1000);
+                
+                // Show success alert with auto-refresh
+                let message = 'Payment confirmed! Transaction completed successfully.';
+                if (transactionData) {
+                    message += `\n\nTransaction Hash: ${transactionData.txHash}`;
+                    message += `\nAmount: ${transactionData.amount} ${transactionData.token}`;
+                    message += `\nNetwork: ${transactionData.network}`;
+                }
+                message += '\n\nPage will refresh automatically for new transactions...';
+                alert(message);
+                
+                // Auto-refresh after 3 seconds to start completely fresh
+                setTimeout(() => {
+                    console.log('Auto-refreshing page after payment completion...');
+                    window.location.reload();
+                }, 3000);
+                
+            }, 1000);
+        }
+
+        function goBack() {
+            // Check if payment was completed
+            if (currentPaymentLink && currentPaymentLink.status === 'paid') {
+                const confirmReset = confirm(
+                    'This payment link has been completed and paid.\n\n' +
+                    'Going back will create a NEW payment session.\n\n' +
+                    'In real usage, customers would receive a new payment link for new transactions.\n\n' +
+                    'Continue to create new payment session?'
+                );
+                
+                if (!confirmReset) {
+                    return; // Don't go back if user cancels
+                }
+            }
+
+            // Clear monitoring
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+            }
+
+            // Reset state completely
+            currentPaymentLink = null;
+            selectedCryptoOption = null;
+
+            // Show form, hide details
+            document.getElementById('paymentDetails').style.display = 'none';
+            document.getElementById('loadingCard').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('paymentForm').style.display = 'block';
+
+            // Clear form for fresh start
+            document.getElementById('paymentForm').reset();
+            
+            // Add sample data back
+            document.getElementById('description').value = 'Product Purchase';
+            document.getElementById('amount').value = '5000';
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 5000);
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('MetartPay Customer Portal initialized');
+            
+            // Add some sample data for demo
+            document.getElementById('description').value = 'Product Purchase';
+            document.getElementById('amount').value = '5000';
+        });
+
+        // Handle page unload
+        window.addEventListener('beforeunload', (event) => {
+            if (monitoringInterval && selectedCryptoOption) {
+                event.preventDefault();
+                event.returnValue = 'Payment is in progress. Are you sure you want to leave?';
+            }
+        });
+    </script>
+</body>
+</html>

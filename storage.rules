@@ -1,0 +1,25 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // KYC documents - only merchant owners and admins can access
+    match /kyc/{merchantId}/{document} {
+      allow read, write: if request.auth != null && 
+        (isMerchantOwner(merchantId) || hasAdminRole());
+    }
+    
+    // Public assets (logos, etc.)
+    match /public/{allPaths=**} {
+      allow read: if true;
+      allow write: if hasAdminRole();
+    }
+    
+    function hasAdminRole() {
+      return request.auth.token.admin == true;
+    }
+    
+    function isMerchantOwner(merchantId) {
+      return firestore.exists(/databases/(default)/documents/merchants/$(merchantId)) &&
+        firestore.get(/databases/(default)/documents/merchants/$(merchantId)).data.userId == request.auth.uid;
+    }
+  }
+}

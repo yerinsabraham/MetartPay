@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetartPay API Test Dashboard</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #3182ce;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            color: #22543d;
+        }
+        .error {
+            background: #fed7d7;
+            border: 1px solid #feb2b2;
+            color: #742a2a;
+        }
+        .loading {
+            background: #fef5e7;
+            border: 1px solid #f6e05e;
+            color: #744210;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 MetartPay API Test Dashboard</h1>
+            <p>Test the complete MetartPay system functionality</p>
+        </div>
+
+        <div class="grid">
+            <div class="test-section">
+                <h3>🔧 API Health Check</h3>
+                <button class="test-button" onclick="testApiHealth()">Test API Health</button>
+                <div id="health-result" class="result" style="display: none;"></div>
+            </div>
+
+            <div class="test-section">
+                <h3>🔐 Wallet Generation</h3>
+                <button class="test-button" onclick="testWalletGeneration()">Generate Test Wallet</button>
+                <div id="wallet-result" class="result" style="display: none;"></div>
+            </div>
+
+            <div class="test-section">
+                <h3>🔗 Payment Link Creation</h3>
+                <input type="number" id="amount-input" placeholder="Amount in NGN (e.g., 5000)" value="5000" style="margin: 5px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                <br>
+                <button class="test-button" onclick="testPaymentLinkCreation()">Create Payment Link</button>
+                <div id="payment-link-result" class="result" style="display: none;"></div>
+            </div>
+
+            <div class="test-section">
+                <h3>⛓️ Blockchain Service</h3>
+                <button class="test-button" onclick="testBlockchainService()">Test Blockchain Connection</button>
+                <div id="blockchain-result" class="result" style="display: none;"></div>
+            </div>
+
+            <div class="test-section">
+                <h3>📊 Transaction Monitoring</h3>
+                <input type="text" id="address-input" placeholder="Test Address (0x...)" style="margin: 5px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 300px;">
+                <br>
+                <button class="test-button" onclick="testTransactionMonitoring()">Start Monitoring</button>
+                <div id="monitoring-result" class="result" style="display: none;"></div>
+            </div>
+
+            <div class="test-section">
+                <h3>🧪 Complete Payment Flow</h3>
+                <p>Test the entire payment process from creation to confirmation</p>
+                <button class="test-button" onclick="testCompleteFlow()">Run Full Test</button>
+                <div id="flow-result" class="result" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="test-section" style="margin-top: 40px;">
+            <h3>📋 System Status</h3>
+            <div id="system-status">
+                <p>Click the tests above to check system functionality.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://api-xpqfkkf3oa-uc.a.run.app';
+        const DEMO_MERCHANT_ID = 'test-merchant-' + Date.now();
+        const DEMO_TOKEN = btoa(JSON.stringify({
+            merchantId: DEMO_MERCHANT_ID,
+            businessName: 'Test Merchant',
+            exp: Date.now() + (24 * 60 * 60 * 1000)
+        }));
+
+        let currentPaymentLink = null;
+        let testResults = {
+            apiHealth: false,
+            walletGeneration: false,
+            paymentLink: false,
+            blockchain: false,
+            monitoring: false,
+            completeFlow: false
+        };
+
+        function showResult(elementId, content, type = 'loading') {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.textContent = content;
+            element.style.display = 'block';
+        }
+
+        function updateSystemStatus() {
+            const statusElement = document.getElementById('system-status');
+            const passed = Object.values(testResults).filter(r => r).length;
+            const total = Object.keys(testResults).length;
+            
+            statusElement.innerHTML = `
+                <p><strong>System Health:</strong> ${passed}/${total} tests passed</p>
+                <ul>
+                    <li>API Health: ${testResults.apiHealth ? '✅' : '❌'}</li>
+                    <li>Wallet Generation: ${testResults.walletGeneration ? '✅' : '❌'}</li>
+                    <li>Payment Link Creation: ${testResults.paymentLink ? '✅' : '❌'}</li>
+                    <li>Blockchain Service: ${testResults.blockchain ? '✅' : '❌'}</li>
+                    <li>Transaction Monitoring: ${testResults.monitoring ? '✅' : '❌'}</li>
+                    <li>Complete Flow: ${testResults.completeFlow ? '✅' : '❌'}</li>
+                </ul>
+            `;
+        }
+
+        async function testApiHealth() {
+            showResult('health-result', 'Testing API health...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    testResults.apiHealth = true;
+                    showResult('health-result', 
+                        `✅ API is healthy!\nStatus: ${data.status}\nVersion: ${data.version}\nTimestamp: ${data.timestamp}`, 
+                        'success'
+                    );
+                } else {
+                    throw new Error('API health check failed');
+                }
+            } catch (error) {
+                testResults.apiHealth = false;
+                showResult('health-result', `❌ API health check failed: ${error.message}`, 'error');
+            }
+            
+            updateSystemStatus();
+        }
+
+        async function testWalletGeneration() {
+            showResult('wallet-result', 'Testing wallet generation...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/wallets/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEMO_TOKEN}`
+                    },
+                    body: JSON.stringify({
+                        merchantId: DEMO_MERCHANT_ID
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    testResults.walletGeneration = true;
+                    showResult('wallet-result', 
+                        `✅ Wallet generated successfully!\n${JSON.stringify(data, null, 2)}`, 
+                        'success'
+                    );
+                } else {
+                    throw new Error(data.error || 'Wallet generation failed');
+                }
+            } catch (error) {
+                testResults.walletGeneration = false;
+                showResult('wallet-result', `❌ Wallet generation failed: ${error.message}`, 'error');
+            }
+            
+            updateSystemStatus();
+        }
+
+        async function testPaymentLinkCreation() {
+            const amount = document.getElementById('amount-input').value;
+            showResult('payment-link-result', 'Creating payment link...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/payment-links/${DEMO_MERCHANT_ID}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEMO_TOKEN}`
+                    },
+                    body: JSON.stringify({
+                        title: 'Test Payment',
+                        description: 'API Test Payment Link',
+                        amount: parseFloat(amount),
+                        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    testResults.paymentLink = true;
+                    currentPaymentLink = data.paymentLink;
+                    showResult('payment-link-result', 
+                        `✅ Payment link created!\nID: ${data.paymentLink.id}\nAmount: ₦${data.paymentLink.amount}\nCrypto Options: ${data.paymentLink.cryptoOptions.length}`, 
+                        'success'
+                    );
+                } else {
+                    throw new Error(data.error || 'Payment link creation failed');
+                }
+            } catch (error) {
+                testResults.paymentLink = false;
+                showResult('payment-link-result', `❌ Payment link creation failed: ${error.message}`, 'error');
+            }
+            
+            updateSystemStatus();
+        }
+
+        async function testBlockchainService() {
+            showResult('blockchain-result', 'Testing blockchain connectivity...', 'loading');
+            
+            try {
+                // Test getting latest block numbers for different networks
+                const networks = ['ETH', 'BSC', 'MATIC'];
+                const results = [];
+                
+                for (const network of networks) {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/api/transactions/check`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${DEMO_TOKEN}`
+                            },
+                            body: JSON.stringify({
+                                network: network,
+                                address: '0x1234567890123456789012345678901234567890' // dummy address
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            results.push(`${network}: Connected ✅`);
+                        } else {
+                            results.push(`${network}: Failed ❌`);
+                        }
+                    } catch (error) {
+                        results.push(`${network}: Error - ${error.message}`);
+                    }
+                }
+                
+                const allConnected = results.every(r => r.includes('✅'));
+                testResults.blockchain = allConnected;
+                
+                showResult('blockchain-result', 
+                    `Blockchain Connectivity Test:\n${results.join('\n')}`, 
+                    allConnected ? 'success' : 'error'
+                );
+                
+            } catch (error) {
+                testResults.blockchain = false;
+                showResult('blockchain-result', `❌ Blockchain test failed: ${error.message}`, 'error');
+            }
+            
+            updateSystemStatus();
+        }
+
+        async function testTransactionMonitoring() {
+            const address = document.getElementById('address-input').value || '0x1234567890123456789012345678901234567890';
+            showResult('monitoring-result', 'Starting transaction monitoring...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/transactions/start`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEMO_TOKEN}`
+                    },
+                    body: JSON.stringify({
+                        paymentLinkId: currentPaymentLink?.id || 'test-link',
+                        address: address,
+                        network: 'ETH',
+                        token: 'USDT',
+                        expectedAmount: '10.0'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    testResults.monitoring = true;
+                    showResult('monitoring-result', 
+                        `✅ Monitoring started!\nAddress: ${address}\nNetwork: ETH\nToken: USDT\nExpected: 10.0`, 
+                        'success'
+                    );
+                } else {
+                    throw new Error(data.error || 'Monitoring start failed');
+                }
+            } catch (error) {
+                testResults.monitoring = false;
+                showResult('monitoring-result', `❌ Monitoring failed: ${error.message}`, 'error');
+            }
+            
+            updateSystemStatus();
+        }
+
+        async function testCompleteFlow() {
+            showResult('flow-result', 'Running complete payment flow test...', 'loading');
+            
+            try {
+                let flowStatus = '';
+                
+                // Step 1: Create merchant wallet
+                flowStatus += '1. Generating wallet... ';
+                const walletResponse = await fetch(`${API_BASE_URL}/api/wallets/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEMO_TOKEN}`
+                    },
+                    body: JSON.stringify({
+                        merchantId: DEMO_MERCHANT_ID
+                    })
+                });
+                
+                if (!walletResponse.ok) throw new Error('Wallet generation failed');
+                flowStatus += '✅\n';
+                
+                // Step 2: Create payment link
+                flowStatus += '2. Creating payment link... ';
+                const linkResponse = await fetch(`${API_BASE_URL}/api/payment-links/${DEMO_MERCHANT_ID}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEMO_TOKEN}`
+                    },
+                    body: JSON.stringify({
+                        title: 'Complete Flow Test',
+                        description: 'End-to-end test payment',
+                        amount: 1000,
+                        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                    })
+                });
+                
+                if (!linkResponse.ok) throw new Error('Payment link creation failed');
+                const linkData = await linkResponse.json();
+                flowStatus += '✅\n';
+                
+                // Step 3: Start monitoring
+                flowStatus += '3. Starting transaction monitoring... ';
+                const cryptoOption = linkData.paymentLink.cryptoOptions[0];
+                const monitorResponse = await fetch(`${API_BASE_URL}/api/transactions/start`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEMO_TOKEN}`
+                    },
+                    body: JSON.stringify({
+                        paymentLinkId: linkData.paymentLink.id,
+                        address: cryptoOption.address,
+                        network: cryptoOption.network,
+                        token: cryptoOption.token,
+                        expectedAmount: cryptoOption.amount
+                    })
+                });
+                
+                if (!monitorResponse.ok) throw new Error('Monitoring start failed');
+                flowStatus += '✅\n';
+                
+                flowStatus += '\n🎉 Complete flow test PASSED!\n';
+                flowStatus += `Payment Link: ${linkData.paymentLink.id}\n`;
+                flowStatus += `Customer Portal: https://metartpay-bac2f.web.app\n`;
+                flowStatus += `Amount: ₦${linkData.paymentLink.amount}\n`;
+                flowStatus += `Crypto Options: ${linkData.paymentLink.cryptoOptions.length}`;
+                
+                testResults.completeFlow = true;
+                showResult('flow-result', flowStatus, 'success');
+                
+            } catch (error) {
+                testResults.completeFlow = false;
+                showResult('flow-result', `❌ Complete flow test failed: ${error.message}`, 'error');
+            }
+            
+            updateSystemStatus();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateSystemStatus();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+storePassword=ENTER_KEYSTORE_PASSWORD_HERE
+keyPassword=ENTER_KEYSTORE_PASSWORD_HERE
+keyAlias=upload
+storeFile=upload-keystore.jks

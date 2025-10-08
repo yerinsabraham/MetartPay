@@ -1,0 +1,5 @@
+package com.metart.pay
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()

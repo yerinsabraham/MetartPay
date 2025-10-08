@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - users can read/write their own data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Merchants collection - merchants can read/write their own data
+    match /merchants/{merchantId} {
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.userId || hasAdminRole());
+      allow create: if request.auth != null && 
+        (request.auth.uid == request.resource.data.userId || hasAdminRole());
+      allow update, delete: if request.auth != null && 
+        (request.auth.uid == resource.data.userId || hasAdminRole());
+    }
+    
+    // Invoices collection - merchants can read their invoices, public read for payment pages
+    match /invoices/{invoiceId} {
+      allow read: if true; // Public read for payment pages
+      allow write: if request.auth != null && 
+        (isInvoiceOwner(invoiceId) || hasAdminRole());
+    }
+    
+    // Transactions collection - read only for owners and admins
+    match /transactions/{transactionId} {
+      allow read: if request.auth != null && 
+        (isTransactionOwner(transactionId) || hasAdminRole());
+      allow write: if hasAdminRole();
+    }
+    
+    // Payouts collection - merchants can read their payouts
+    match /payouts/{payoutId} {
+      allow read: if request.auth != null && 
+        (isPayoutOwner(payoutId) || hasAdminRole());
+      allow write: if hasAdminRole();
+    }
+    
+    // Audit logs - admin only
+    match /audit_logs/{logId} {
+      allow read, write: if hasAdminRole();
+    }
+    
+    // Wallets collection - admin only
+    match /wallets/{walletId} {
+      allow read, write: if hasAdminRole();
+    }
+    
+    // Helper functions
+    function hasAdminRole() {
+      return request.auth != null && 
+        request.auth.token.admin == true;
+    }
+    
+    function isInvoiceOwner(invoiceId) {
+      return request.auth != null && 
+        get(/databases/$(database)/documents/invoices/$(invoiceId)).data.merchantId in 
+        getUserMerchants(request.auth.uid);
+    }
+    
+    function isTransactionOwner(transactionId) {
+      let transaction = get(/databases/$(database)/documents/transactions/$(transactionId));
+      let invoice = get(/databases/$(database)/documents/invoices/$(transaction.data.invoiceId));
+      return invoice.data.merchantId in getUserMerchants(request.auth.uid);
+    }
+    
+    function isPayoutOwner(payoutId) {
+      return request.auth != null && 
+        get(/databases/$(database)/documents/payouts/$(payoutId)).data.merchantId in 
+        getUserMerchants(request.auth.uid);
+    }
+    
+    function getUserMerchants(userId) {
+      return query(/databases/$(database)/documents/merchants, 
+        'userId', '==', userId).data.map(doc, doc.id);
+    }
+  }
+}
