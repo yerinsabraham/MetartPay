@@ -246,7 +246,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: MetartPayColors.primary.withOpacity(0.3),
+            color: MetartPayColors.primary.withAlpha((0.3 * 255).round()),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -274,7 +274,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                     Text(
                       merchant?.industry ?? 'Business',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withAlpha((0.8 * 255).round()),
                         fontSize: 16,
                       ),
                     ),
@@ -284,7 +284,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withAlpha((0.2 * 255).round()),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -327,9 +327,9 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withAlpha((0.1 * 255).round()),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        border: Border.all(color: Colors.white.withAlpha((0.2 * 255).round())),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,7 +342,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                 child: Text(
                   title,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withAlpha((0.8 * 255).round()),
                     fontSize: 12,
                   ),
                 ),
@@ -404,7 +404,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withAlpha((0.1 * 255).round()),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -415,7 +415,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withAlpha((0.1 * 255).round()),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: color, size: 24),
@@ -549,7 +549,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withAlpha((0.1 * 255).round()),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -560,7 +560,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withAlpha((0.1 * 255).round()),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: color, size: 28),
@@ -624,7 +624,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withAlpha((0.1 * 255).round()),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -635,7 +635,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: _getStatusColor(invoice.status).withOpacity(0.1),
+              color: _getStatusColor(invoice.status).withAlpha((0.1 * 255).round()),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -669,7 +669,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: _getStatusColor(invoice.status).withOpacity(0.1),
+              color: _getStatusColor(invoice.status).withAlpha((0.1 * 255).round()),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -694,7 +694,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withAlpha((0.1 * 255).round()),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -743,7 +743,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withAlpha((0.1 * 255).round()),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: color, size: 20),

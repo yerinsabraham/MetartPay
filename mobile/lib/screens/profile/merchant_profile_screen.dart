@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+// removed unused import
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/merchant_provider.dart';
-import '../../models/models.dart';
+// removed unused import
 import '../../widgets/metartpay_branding.dart';
 
 class MerchantProfileScreen extends StatefulWidget {
@@ -171,7 +171,7 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: _getKycStatusColor(merchant?.kycStatus ?? 'pending').withOpacity(0.1),
+                      color: _getKycStatusColor(merchant?.kycStatus ?? 'pending').withAlpha((0.1 * 255).round()),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
@@ -370,7 +370,7 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                   Text(
                     'Configure your wallet addresses for different blockchain networks',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -488,7 +488,7 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                   Text(
                     user?.email ?? 'No email',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()),
                     ),
                   ),
                 ],
@@ -668,7 +668,7 @@ class _InfoField extends StatelessWidget {
             prefixIcon: Icon(icon),
             border: const OutlineInputBorder(),
             filled: !isEditing,
-            fillColor: isEditing ? null : theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            fillColor: isEditing ? null : theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).round()),
           ),
         ),
       ],
@@ -708,7 +708,7 @@ class _WalletAddressCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withAlpha((0.1 * 255).round()),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -730,7 +730,7 @@ class _WalletAddressCard extends StatelessWidget {
                       Text(
                         subtitle,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()),
                         ),
                       ),
                     ],
@@ -782,7 +782,7 @@ class _StatItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withAlpha((0.1 * 255).round()),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -803,7 +803,7 @@ class _StatItem extends StatelessWidget {
           Text(
             title,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()),
             ),
             textAlign: TextAlign.center,
           ),

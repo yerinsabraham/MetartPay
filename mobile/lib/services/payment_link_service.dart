@@ -1,6 +1,8 @@
-import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../utils/app_logger.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 
 class PaymentLinkService {
@@ -38,8 +40,8 @@ class PaymentLinkService {
         }),
       );
 
-      print('Create payment link response: ${response.statusCode}');
-      print('Create payment link body: ${response.body}');
+      AppLogger.d('Create payment link response: ${response.statusCode}');
+      AppLogger.d('Create payment link body: ${response.body}');
 
       if (response.statusCode == 201) {
         return json.decode(response.body);
@@ -48,48 +50,92 @@ class PaymentLinkService {
         throw Exception(error['error'] ?? 'Failed to create payment link');
       }
     } catch (e) {
-      print('Error creating payment link: $e');
-      throw Exception('Failed to create payment link: $e');
+      AppLogger.e('Error creating payment link: $e', error: e);
+      throw Exception('Error creating payment link: $e');
     }
   }
 
   /// Get payment links for a merchant
-  Future<List<Map<String, dynamic>>> getPaymentLinks(
+  /// Returns a map with keys:
+  /// - 'links': List<Map<String, dynamic>>
+  /// - 'fromCache': bool (true when returned from local cache after failures)
+  Future<Map<String, dynamic>> getPaymentLinks(
     String merchantId, {
     String? status,
     int limit = 20,
   }) async {
-    try {
-      final user = _auth.currentUser;
-      if (user == null) throw Exception('User not authenticated');
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
 
-      final token = await user.getIdToken();
-      
-      final uri = Uri.parse('${ApiConfig.baseUrl}/api/payment-links/merchant/$merchantId')
-          .replace(queryParameters: {
-        if (status != null) 'status': status,
-        'limit': limit.toString(),
-      });
+    final token = await user.getIdToken();
 
-      final response = await http.get(
-        uri,
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      );
+    final uri = Uri.parse('${ApiConfig.baseUrl}/api/payment-links/merchant/$merchantId')
+        .replace(queryParameters: {
+      if (status != null) 'status': status,
+      'limit': limit.toString(),
+    });
 
-      print('Get payment links response: ${response.statusCode}');
+    const int maxAttempts = 3;
+    int attempt = 0;
+    while (true) {
+      attempt++;
+      try {
+        final response = await http.get(
+          uri,
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        );
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return List<Map<String, dynamic>>.from(data['paymentLinks'] ?? []);
-      } else {
-        final error = json.decode(response.body);
-        throw Exception(error['error'] ?? 'Failed to load payment links');
+        AppLogger.d('Get payment links response: ${response.statusCode} (attempt $attempt)');
+
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          final List<Map<String, dynamic>> links = List<Map<String, dynamic>>.from(data['paymentLinks'] ?? []);
+
+          // Cache the result for offline/fallback use
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('payment_links_$merchantId', json.encode(links));
+          } catch (cacheErr) {
+            AppLogger.w('Warning: failed to cache payment links: $cacheErr', error: cacheErr);
+          }
+
+          return {'links': links, 'fromCache': false};
+        } else {
+          // Log body for debugging (may not be JSON)
+          AppLogger.d('Get payment links non-200 body: ${response.body}');
+          String message;
+          try {
+            final error = json.decode(response.body);
+            message = error['error'] ?? 'Failed to load payment links';
+          } catch (_) {
+            message = 'Failed to load payment links (status ${response.statusCode}): ${response.body}';
+          }
+          throw Exception(message);
+        }
+      } catch (e) {
+        AppLogger.e('Attempt $attempt: error loading payment links: $e', error: e);
+        if (attempt >= maxAttempts) {
+          // Try returning cached links as a fallback
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            final cached = prefs.getString('payment_links_$merchantId');
+            if (cached != null) {
+              final List<dynamic> cachedList = json.decode(cached);
+              final List<Map<String, dynamic>> links = cachedList.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+              AppLogger.d('Returning ${links.length} cached payment links after failed attempts');
+              return {'links': links, 'fromCache': true};
+            }
+          } catch (cacheErr) {
+            AppLogger.e('Failed to load cached payment links: $cacheErr', error: cacheErr);
+          }
+
+          throw Exception('Failed to load payment links after $attempt attempts: $e');
+        }
+        // exponential backoff
+        await Future.delayed(Duration(milliseconds: 500 * (1 << (attempt - 1))));
       }
-    } catch (e) {
-      print('Error loading payment links: $e');
-      throw Exception('Failed to load payment links: $e');
     }
   }
 
@@ -100,7 +146,7 @@ class PaymentLinkService {
         Uri.parse('${ApiConfig.baseUrl}/api/payment-links/$linkId'),
       );
 
-      print('Get payment link response: ${response.statusCode}');
+      AppLogger.d('Get payment link response: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
@@ -109,7 +155,7 @@ class PaymentLinkService {
         throw Exception(error['error'] ?? 'Failed to load payment link');
       }
     } catch (e) {
-      print('Error loading payment link: $e');
+      AppLogger.e('Error loading payment link: $e', error: e);
       throw Exception('Failed to load payment link: $e');
     }
   }
@@ -129,7 +175,7 @@ class PaymentLinkService {
         }),
       );
 
-      print('Generate QR code response: ${response.statusCode}');
+      AppLogger.d('Generate QR code response: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
@@ -138,7 +184,7 @@ class PaymentLinkService {
         throw Exception(error['error'] ?? 'Failed to generate QR code');
       }
     } catch (e) {
-      print('Error generating QR code: $e');
+      AppLogger.e('Error generating QR code: $e', error: e);
       throw Exception('Failed to generate QR code: $e');
     }
   }
@@ -165,14 +211,14 @@ class PaymentLinkService {
         }),
       );
 
-      print('Update payment link response: ${response.statusCode}');
+      AppLogger.d('Update payment link response: ${response.statusCode}');
 
       if (response.statusCode != 200) {
         final error = json.decode(response.body);
         throw Exception(error['error'] ?? 'Failed to update payment link');
       }
     } catch (e) {
-      print('Error updating payment link: $e');
+      AppLogger.e('Error updating payment link: $e', error: e);
       throw Exception('Failed to update payment link: $e');
     }
   }
@@ -192,14 +238,14 @@ class PaymentLinkService {
         },
       );
 
-      print('Delete payment link response: ${response.statusCode}');
+      AppLogger.d('Delete payment link response: ${response.statusCode}');
 
       if (response.statusCode != 200) {
         final error = json.decode(response.body);
         throw Exception(error['error'] ?? 'Failed to delete payment link');
       }
     } catch (e) {
-      print('Error deleting payment link: $e');
+      AppLogger.e('Error deleting payment link: $e', error: e);
       throw Exception('Failed to delete payment link: $e');
     }
   }

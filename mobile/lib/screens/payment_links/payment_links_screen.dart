@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../providers/payment_link_provider.dart';
-import '../../providers/merchant_provider.dart';
+// removed unused merchant_provider import
 import 'create_payment_link_screen.dart';
 import 'payment_link_details_screen.dart';
 
@@ -37,6 +37,7 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
     if (!_isInitialized) {
       final paymentLinkProvider = Provider.of<PaymentLinkProvider>(context, listen: false);
       await paymentLinkProvider.loadPaymentLinks();
+      if (!mounted) return;
       setState(() {
         _isInitialized = true;
       });
@@ -45,17 +46,18 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+        backgroundColor: cs.surface,
       appBar: AppBar(
         title: const Text('Payment Links'),
         backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: cs.onPrimary,
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: Colors.white,
+          labelColor: cs.onPrimary,
+            unselectedLabelColor: cs.onPrimary.withValues(alpha: 0.7),
+          indicatorColor: cs.onPrimary,
           tabs: const [
             Tab(text: 'Active'),
             Tab(text: 'Inactive'),
@@ -66,6 +68,7 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () async {
+              final paymentLinkProvider = Provider.of<PaymentLinkProvider>(context, listen: false);
               final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -74,8 +77,7 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
               );
               
               if (result == true) {
-                // Refresh the list
-                final paymentLinkProvider = Provider.of<PaymentLinkProvider>(context, listen: false);
+                if (!mounted) return;
                 await paymentLinkProvider.loadPaymentLinks();
               }
             },
@@ -84,6 +86,8 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
       ),
       body: Consumer<PaymentLinkProvider>(
         builder: (context, paymentLinkProvider, child) {
+          // show a small banner when we're showing cached data after failures
+          final showCachedBanner = paymentLinkProvider.usedCache == true;
           if (paymentLinkProvider.isLoading && !_isInitialized) {
             return const Center(
               child: CircularProgressIndicator(),
@@ -98,7 +102,7 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
                   Icon(
                     Icons.error_outline,
                     size: 64,
-                    color: Colors.red[300],
+                    color: cs.error,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -108,12 +112,15 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
                   const SizedBox(height: 8),
                   Text(
                     paymentLinkProvider.error!,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: cs.onSurface,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () async {
+                      paymentLinkProvider.clearError();
                       await paymentLinkProvider.loadPaymentLinks();
                     },
                     child: const Text('Retry'),
@@ -123,32 +130,67 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
             );
           }
 
-          return TabBarView(
+          return Column(
+            children: [
+              if (showCachedBanner)
+                Material(
+                  color: cs.surfaceContainerHighest,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            'Showing cached payment links (server unavailable). Pull to retry.',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: cs.onSurface,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            paymentLinkProvider.clearError();
+                            await paymentLinkProvider.loadPaymentLinks();
+                          },
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: TabBarView(
             controller: _tabController,
             children: [
               _buildPaymentLinksList(paymentLinkProvider.activePaymentLinks, 'active'),
               _buildPaymentLinksList(paymentLinkProvider.inactivePaymentLinks, 'inactive'),
               _buildPaymentLinksList(paymentLinkProvider.paymentLinks, 'all'),
             ],
+                ),
+              ),
+            ],
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Theme.of(context).colorScheme.secondary,
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const CreatePaymentLinkScreen(),
-            ),
-          );
-          
-          if (result == true) {
-            final paymentLinkProvider = Provider.of<PaymentLinkProvider>(context, listen: false);
-            await paymentLinkProvider.loadPaymentLinks();
-          }
-        },
-        child: const Icon(Icons.add, color: Colors.white),
+        backgroundColor: cs.secondary,
+              onPressed: () async {
+                final paymentLinkProvider = Provider.of<PaymentLinkProvider>(context, listen: false);
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CreatePaymentLinkScreen(),
+                  ),
+                );
+                
+                if (result == true) {
+                  if (!mounted) return;
+                  await paymentLinkProvider.loadPaymentLinks();
+                }
+              },
+        child: Icon(Icons.add, color: cs.onSecondary),
       ),
     );
   }
@@ -166,9 +208,9 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
             ),
             const SizedBox(height: 16),
             Text(
-              filter == 'all' 
-                  ? 'No payment links yet'
-                  : 'No ${filter} payment links',
+        filter == 'all' 
+          ? 'No payment links yet'
+          : 'No $filter payment links',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 color: Colors.grey[600],
               ),
@@ -184,15 +226,16 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () async {
+                final paymentLinkProvider = Provider.of<PaymentLinkProvider>(context, listen: false);
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => const CreatePaymentLinkScreen(),
                   ),
                 );
-                
+          
                 if (result == true) {
-                  final paymentLinkProvider = Provider.of<PaymentLinkProvider>(context, listen: false);
+                  if (!mounted) return;
                   await paymentLinkProvider.loadPaymentLinks();
                 }
               },
@@ -225,10 +268,10 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
     final totalPayments = paymentLink['totalPayments'] ?? 0;
     final status = paymentLink['status'] ?? 'unknown';
     final cryptoOptions = List.from(paymentLink['cryptoOptions'] ?? []);
+    final cs = Theme.of(context).colorScheme;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -248,6 +291,7 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Column(
@@ -265,14 +309,42 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
                             child: Text(
                               paymentLink['description'],
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
+                                color: cs.onSurface,
                               ),
                             ),
                           ),
                       ],
                     ),
                   ),
-                  _buildStatusChip(status),
+                  // Show status chip and an additional small "Cached"/"Stale" pill
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      _buildStatusChip(status, context),
+                      const SizedBox(height: 6),
+                      Builder(builder: (ctx) {
+                        final provider = Provider.of<PaymentLinkProvider>(ctx, listen: false);
+                        if (provider.usedCache == true) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: cs.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'Cached',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: cs.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          );
+                        }
+
+                        return const SizedBox.shrink();
+                      }),
+                    ],
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -285,14 +357,14 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
                         Text(
                           '₦${amount.toStringAsFixed(2)}',
                           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
+                            color: cs.primary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
                           '$totalPayments payments received',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
+                            color: cs.onSurface,
                           ),
                         ),
                       ],
@@ -325,17 +397,18 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
                   spacing: 8,
                   runSpacing: 4,
                   children: cryptoOptions.take(3).map((option) {
+                    final cs = Theme.of(context).colorScheme;
                     return Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.blue[50],
+                        color: cs.primary.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.blue[200]!),
+                        border: Border.all(color: cs.primary.withValues(alpha: 0.12)),
                       ),
                       child: Text(
                         '${option['network']} ${option['token']}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.blue[800],
+                          color: cs.primary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -348,7 +421,7 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
                     child: Text(
                       '+${cryptoOptions.length - 3} more',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
+                        color: cs.onSurface,
                       ),
                     ),
                   ),
@@ -360,30 +433,31 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
     );
   }
 
-  Widget _buildStatusChip(String status) {
+  Widget _buildStatusChip(String status, BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     Color backgroundColor;
     Color textColor;
     String label;
 
     switch (status.toLowerCase()) {
       case 'active':
-        backgroundColor = Colors.green[100]!;
-        textColor = Colors.green[800]!;
+  backgroundColor = cs.primary.withValues(alpha: 0.12);
+        textColor = cs.primary;
         label = 'Active';
         break;
       case 'inactive':
-        backgroundColor = Colors.orange[100]!;
-        textColor = Colors.orange[800]!;
+  backgroundColor = cs.secondary.withValues(alpha: 0.12);
+        textColor = cs.secondary;
         label = 'Inactive';
         break;
       case 'expired':
-        backgroundColor = Colors.red[100]!;
-        textColor = Colors.red[800]!;
+  backgroundColor = cs.error.withValues(alpha: 0.12);
+        textColor = cs.error;
         label = 'Expired';
         break;
       default:
-        backgroundColor = Colors.grey[100]!;
-        textColor = Colors.grey[800]!;
+  backgroundColor = cs.surface.withValues(alpha: 0.06);
+        textColor = cs.onSurface;
         label = 'Unknown';
     }
 
@@ -408,11 +482,12 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
     required IconData icon,
     required VoidCallback onTap,
   }) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: 32,
       height: 32,
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+  color: cs.surfaceContainerHighest.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(8),
       ),
       child: InkWell(
@@ -421,7 +496,7 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
         child: Icon(
           icon,
           size: 18,
-          color: Colors.grey[700],
+          color: cs.onSurface.withValues(alpha: 0.7),
         ),
       ),
     );
@@ -430,10 +505,12 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
   void _sharePaymentLink(Map<String, dynamic> paymentLink) {
     final paymentLinkProvider = Provider.of<PaymentLinkProvider>(context, listen: false);
     final url = paymentLinkProvider.getPaymentUrl(paymentLink['id']);
-    
-    Share.share(
-      'Pay ${paymentLink['title']} - ₦${paymentLink['amount']}\n\n$url',
-      subject: 'Payment Request - ${paymentLink['title']}',
+
+    SharePlus.instance.share(
+      ShareParams(
+        text: 'Pay ${paymentLink['title']} - ₦${paymentLink['amount']}\n\n$url',
+        subject: 'Payment Request - ${paymentLink['title']}',
+      ),
     );
   }
 
@@ -449,6 +526,7 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
     showModalBottomSheet(
       context: context,
       builder: (context) {
+        final cs = Theme.of(context).colorScheme;
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -492,11 +570,11 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
               ),
               const Divider(),
               ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('Delete', style: TextStyle(color: Colors.red)),
+                leading: Icon(Icons.delete, color: cs.error),
+                title: Text('Delete', style: TextStyle(color: cs.error)),
                 onTap: () async {
                   Navigator.pop(context);
-                  
+                  final paymentLinkProvider = Provider.of<PaymentLinkProvider>(context, listen: false);
                   final confirmed = await showDialog<bool>(
                     context: context,
                     builder: (context) => AlertDialog(
@@ -517,7 +595,7 @@ class _PaymentLinksScreenState extends State<PaymentLinksScreen> with SingleTick
                   );
                   
                   if (confirmed == true) {
-                    final paymentLinkProvider = Provider.of<PaymentLinkProvider>(context, listen: false);
+                    if (!mounted) return;
                     await paymentLinkProvider.deletePaymentLink(paymentLink['id']);
                   }
                 },

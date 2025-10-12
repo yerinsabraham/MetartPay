@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 import '../../providers/customer_provider.dart';
 import '../../providers/merchant_provider.dart';
 import '../../models/models.dart';
-import 'customer_interactions_screen.dart';
-import 'customer_notes_screen.dart';
 import 'edit_customer_screen.dart';
 
 class CustomerDetailScreen extends StatefulWidget {
@@ -223,7 +221,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: _getTierColor(customer.tier).withOpacity(0.1),
+                                    color: _getTierColor(customer.tier).withAlpha((0.1 * 255).round()),
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
                                       color: _getTierColor(customer.tier),
@@ -256,7 +254,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: _getStatusColor(customer.status).withOpacity(0.1),
+                                    color: _getStatusColor(customer.status).withAlpha((0.1 * 255).round()),
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Row(
@@ -635,7 +633,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getInteractionTypeColor(interaction.type).withOpacity(0.1),
+                    color: _getInteractionTypeColor(interaction.type).withAlpha((0.1 * 255).round()),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -770,7 +768,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getNotePriorityColor(note.priority ?? 'low').withOpacity(0.1),
+                    color: _getNotePriorityColor(note.priority ?? 'low').withAlpha((0.1 * 255).round()),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -912,24 +910,17 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
         _showBlockCustomerDialog();
         break;
       case 'make_vip':
-        await customerProvider.updateCustomer(
-          merchantProvider.currentMerchant!.id,
-          _currentCustomer!.copyWith(
-            isVIP: true,
-            tier: 'gold',
-          ),
-        );
-        setState(() {
-          _currentCustomer = _currentCustomer!.copyWith(
-            isVIP: true,
-            tier: 'gold',
-          );
-        });
-        if (mounted) {
+          // capture id and newCustomer locally before awaiting
+          final merchantId = merchantProvider.currentMerchant!.id;
+          final updated = _currentCustomer!.copyWith(isVIP: true, tier: 'gold');
+          await customerProvider.updateCustomer(merchantId, updated);
+          if (!mounted) return;
+          setState(() {
+            _currentCustomer = updated;
+          });
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Customer promoted to VIP')),
           );
-        }
         break;
       case 'export':
         // TODO: Implement export functionality
@@ -943,7 +934,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
   void _showBlockCustomerDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Block Customer'),
         content: Text(
           'Are you sure you want to block ${_currentCustomer!.displayName}? '
@@ -956,25 +947,25 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.of(context).pop();
-              
-              final customerProvider = Provider.of<CustomerProvider>(context, listen: false);
-              final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
-              
-              await customerProvider.updateCustomer(
-                merchantProvider.currentMerchant!.id,
-                _currentCustomer!.copyWith(status: 'blocked'),
-              );
-              
+              // close the dialog first using the dialog's context
+              Navigator.of(dialogContext).pop();
+
+              // use the State's context / providers (capture before awaiting)
+              final customerProvider = Provider.of<CustomerProvider>(this.context, listen: false);
+              final merchantProvider = Provider.of<MerchantProvider>(this.context, listen: false);
+
+              final merchantId = merchantProvider.currentMerchant!.id;
+              final updated = _currentCustomer!.copyWith(status: 'blocked');
+
+              await customerProvider.updateCustomer(merchantId, updated);
+
+              if (!mounted) return;
               setState(() {
-                _currentCustomer = _currentCustomer!.copyWith(status: 'blocked');
+                _currentCustomer = updated;
               });
-              
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Customer blocked')),
-                );
-              }
+              ScaffoldMessenger.of(this.context).showSnackBar(
+                const SnackBar(content: Text('Customer blocked')),
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,

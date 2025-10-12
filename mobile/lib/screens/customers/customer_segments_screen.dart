@@ -23,7 +23,8 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
     final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
     
     if (merchantProvider.currentMerchant != null) {
-      customerProvider.loadCustomerSegments(merchantProvider.currentMerchant!.id);
+      final merchantId = merchantProvider.currentMerchant!.id;
+      customerProvider.loadCustomerSegments(merchantId);
     }
   }
 
@@ -137,10 +138,10 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+  color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withAlpha((0.1 * 255).round()),
             spreadRadius: 1,
             blurRadius: 3,
           ),
@@ -183,9 +184,9 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+  color: color.withAlpha((0.1 * 255).round()),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withAlpha((0.3 * 255).round())),
       ),
       child: Column(
         children: [
@@ -268,7 +269,7 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: _getSegmentTypeColor(segment.type).withOpacity(0.1),
+                          color: _getSegmentTypeColor(segment.type).withAlpha((0.1 * 255).round()),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: _getSegmentTypeColor(segment.type),
@@ -558,7 +559,7 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
   void _deleteSegment(CustomerSegment segment) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Segment'),
         content: Text(
           'Are you sure you want to delete the segment "${segment.name}"? '
@@ -566,39 +567,38 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.of(context).pop();
-              
-              final customerProvider = Provider.of<CustomerProvider>(context, listen: false);
-              final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
-              
+              // close dialog first
+              Navigator.of(dialogContext).pop();
+
+              final customerProvider = Provider.of<CustomerProvider>(this.context, listen: false);
+              final merchantProvider = Provider.of<MerchantProvider>(this.context, listen: false);
               try {
+                final merchantId = merchantProvider.currentMerchant?.id;
+                if (merchantId == null) return;
                 await customerProvider.deleteCustomerSegment(
-                  merchantProvider.currentMerchant!.id,
+                  merchantId,
                   segment.id,
                 );
-                
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Segment "${segment.name}" deleted'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
+                if (!mounted) return;
+                ScaffoldMessenger.of(this.context).showSnackBar(
+                  SnackBar(
+                    content: Text('Segment "${segment.name}" deleted'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
               } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error deleting segment: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
+                if (!mounted) return;
+                ScaffoldMessenger.of(this.context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error deleting segment: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
               }
             },
             style: ElevatedButton.styleFrom(
@@ -663,7 +663,7 @@ class _CreateSegmentDialogState extends State<CreateSegmentDialog> {
             const SizedBox(height: 16),
             
             DropdownButtonFormField<String>(
-              value: _selectedType,
+              initialValue: _selectedType,
               decoration: const InputDecoration(
                 labelText: 'Segment Type',
                 border: OutlineInputBorder(),
@@ -725,13 +725,14 @@ class _CreateSegmentDialogState extends State<CreateSegmentDialog> {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         merchantId: merchantProvider.currentMerchant!.id,
         name: _nameController.text.trim(),
-        description: _descriptionController.text.trim().isNotEmpty
-            ? _descriptionController.text.trim()
-            : null,
+        // models.CustomerSegment expects a non-null description string
+        description: _descriptionController.text.trim(),
         type: _selectedType,
         criteria: {},
         customerIds: [],
         isActive: true,
+        // createdBy is required in the model; use the merchant's userId as the creator
+        createdBy: merchantProvider.currentMerchant!.userId,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+// removed unused import
 import 'package:provider/provider.dart';
 import '../../providers/merchant_provider.dart';
 import '../../services/crypto_price_service.dart';
@@ -351,7 +351,7 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                       
                       // Chain Selection
                       DropdownButtonFormField<String>(
-                        value: _selectedChain,
+                          initialValue: _selectedChain,
                         decoration: const InputDecoration(
                           labelText: 'Select Blockchain',
                           border: OutlineInputBorder(),
@@ -383,7 +383,7 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
 
                       // Token Selection
                       DropdownButtonFormField<String>(
-                        value: _selectedToken,
+                          initialValue: _selectedToken,
                         decoration: const InputDecoration(
                           labelText: 'Select Token',
                           border: OutlineInputBorder(),

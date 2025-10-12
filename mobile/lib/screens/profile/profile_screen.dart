@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/merchant_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/metartpay_branding.dart';
 import '../kyc/kyc_verification_screen.dart';
 import '../security/security_settings_screen.dart';
+import 'admin_dashboard_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
 
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,7 +68,7 @@ class ProfileScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 
                 // Account & Security Section
-                _buildAccountSecuritySection(context, merchant),
+                _buildAccountSecuritySection(context, merchant, Provider.of<AuthProvider>(context).isAdmin),
                 const SizedBox(height: 16),
                 
                 // Support & Help Section
@@ -90,7 +97,7 @@ class ProfileScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withAlpha((0.1 * 255).round()),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -144,7 +151,7 @@ class ProfileScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: _getKYCStatusColor(merchant.kycStatus).withOpacity(0.1),
+              color: _getKYCStatusColor(merchant.kycStatus).withAlpha((0.1 * 255).round()),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: _getKYCStatusColor(merchant.kycStatus),
@@ -208,7 +215,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAccountSecuritySection(BuildContext context, merchant) {
+  Widget _buildAccountSecuritySection(BuildContext context, merchant, bool isAdmin) {
     return _buildSection(
       title: 'Account & Security',
       icon: Icons.security_outlined,
@@ -239,6 +246,20 @@ class ProfileScreen extends StatelessWidget {
             );
           },
         ),
+        if (isAdmin)
+          _buildActionRow(
+            'Admin Dashboard',
+            'Manage KYC & users',
+            Icons.admin_panel_settings,
+            () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AdminDashboardScreen(),
+                ),
+              );
+            },
+          ),
         _buildInfoRow('Account Created', _formatDate(merchant.createdAt)),
         _buildInfoRow('Last Updated', _formatDate(merchant.updatedAt)),
       ],
@@ -315,7 +336,7 @@ class ProfileScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withAlpha((0.1 * 255).round()),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -546,14 +567,55 @@ class ProfileScreen extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: Implement logout functionality
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/login',
-                (route) => false,
-              );
+            onPressed: () async {
+              // Capture locals that depend on context before async gaps
+              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+
+              // Close the confirmation dialog
+              try {
+                navigator.pop();
+              } catch (_) {}
+
+              // Show a non-dismissible progress dialog while signing out
+              if (mounted) {
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (ctx) => const Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              try {
+                await authProvider.signOut();
+
+                // Dismiss progress dialog and navigate to login if still mounted
+                if (mounted) {
+                  try {
+                    navigator.pop();
+                  } catch (_) {}
+
+                  navigator.pushNamedAndRemoveUntil(
+                    '/login',
+                    (route) => false,
+                  );
+                }
+              } catch (e) {
+                // Dismiss progress dialog if visible
+                if (mounted) {
+                  try {
+                    navigator.pop();
+                  } catch (_) {}
+
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to sign out: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,

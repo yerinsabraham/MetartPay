@@ -66,9 +66,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen>
         title: 'Transaction History',
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          indicatorColor: theme.colorScheme.onPrimary,
+          labelColor: theme.colorScheme.onPrimary,
+          unselectedLabelColor: theme.colorScheme.onPrimary.withAlpha((0.7 * 255).round()),
           tabs: const [
             Tab(text: 'All'),
             Tab(text: 'Pending'),
@@ -122,10 +122,10 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen>
                           FilterChip(
                             label: const Text('All'),
                             selected: _statusFilter == 'all',
-                            selectedColor: MetartPayColors.primary,
-                            checkmarkColor: Colors.white,
+                            selectedColor: theme.colorScheme.primary,
+                            checkmarkColor: theme.colorScheme.onPrimary,
                             labelStyle: TextStyle(
-                              color: _statusFilter == 'all' ? Colors.white : MetartPayColors.primary,
+                              color: _statusFilter == 'all' ? theme.colorScheme.onPrimary : theme.colorScheme.primary,
                             ),
                             onSelected: (selected) {
                               if (selected) {
@@ -138,10 +138,10 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen>
                           FilterChip(
                             label: const Text('Pending'),
                             selected: _statusFilter == 'pending',
-                            selectedColor: MetartPayColors.primary,
-                            checkmarkColor: Colors.white,
+                            selectedColor: theme.colorScheme.secondary,
+                            checkmarkColor: theme.colorScheme.onPrimary,
                             labelStyle: TextStyle(
-                              color: _statusFilter == 'pending' ? Colors.white : MetartPayColors.primary,
+                              color: _statusFilter == 'pending' ? theme.colorScheme.onPrimary : theme.colorScheme.secondary,
                             ),
                             onSelected: (selected) {
                               if (selected) {
@@ -154,10 +154,10 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen>
                           FilterChip(
                             label: const Text('Paid'),
                             selected: _statusFilter == 'paid',
-                            selectedColor: MetartPayColors.primary,
-                            checkmarkColor: Colors.white,
+                            selectedColor: theme.colorScheme.primary,
+                            checkmarkColor: theme.colorScheme.onPrimary,
                             labelStyle: TextStyle(
-                              color: _statusFilter == 'paid' ? Colors.white : MetartPayColors.primary,
+                              color: _statusFilter == 'paid' ? theme.colorScheme.onPrimary : theme.colorScheme.primary,
                             ),
                             onSelected: (selected) {
                               if (selected) {
@@ -170,10 +170,10 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen>
                           FilterChip(
                             label: const Text('Cancelled'),
                             selected: _statusFilter == 'cancelled',
-                            selectedColor: MetartPayColors.primary,
-                            checkmarkColor: Colors.white,
+                            selectedColor: theme.colorScheme.error,
+                            checkmarkColor: theme.colorScheme.onPrimary,
                             labelStyle: TextStyle(
-                              color: _statusFilter == 'cancelled' ? Colors.white : MetartPayColors.primary,
+                              color: _statusFilter == 'cancelled' ? theme.colorScheme.onPrimary : theme.colorScheme.error,
                             ),
                             onSelected: (selected) {
                               if (selected) {
@@ -210,7 +210,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen>
                         Icon(
                           Icons.error_outline,
                           size: 64,
-                          color: Colors.red,
+                          color: theme.colorScheme.error,
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -220,9 +220,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen>
                         const SizedBox(height: 8),
                         Text(
                           merchantProvider.error!,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity(0.7),
-                          ),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()),
+                            ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 16),
@@ -248,7 +248,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen>
                         Icon(
                           Icons.receipt_long_outlined,
                           size: 64,
-                          color: theme.colorScheme.onSurface.withOpacity(0.4),
+                          color: theme.colorScheme.onSurface.withAlpha((0.4 * 255).round()),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -261,7 +261,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen>
                               ? 'You haven\'t created any payment links yet.'
                               : 'Try adjusting your search or filter criteria.',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                            color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -347,13 +347,16 @@ class _TransactionCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
-        leading: CircleAvatar(
-          backgroundColor: _getStatusColor(invoice.status).withOpacity(0.1),
-          child: Icon(
-            _getStatusIcon(invoice.status),
-            color: _getStatusColor(invoice.status),
-          ),
-        ),
+        leading: Builder(builder: (ctx) {
+          final statusColor = _getStatusColor(ctx, invoice.status);
+          return CircleAvatar(
+            backgroundColor: statusColor.withAlpha((0.1 * 255).round()),
+            child: Icon(
+              _getStatusIcon(invoice.status),
+              color: statusColor,
+            ),
+          );
+        }),
         title: Text(
           description,
           style: theme.textTheme.titleMedium?.copyWith(
@@ -379,14 +382,14 @@ class _TransactionCard extends StatelessWidget {
                     horizontal: 8,
                     vertical: 4,
                   ),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(invoice.status).withOpacity(0.1),
+                    decoration: BoxDecoration(
+                    color: _getStatusColor(context, invoice.status).withAlpha((0.1 * 255).round()),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     invoice.status.toUpperCase(),
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: _getStatusColor(invoice.status),
+                      color: _getStatusColor(context, invoice.status),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -395,7 +398,7 @@ class _TransactionCard extends StatelessWidget {
                 Text(
                   DateFormat('MMM dd, yyyy').format(createdAt),
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).round()),
                   ),
                 ),
               ],
@@ -408,16 +411,17 @@ class _TransactionCard extends StatelessWidget {
     );
   }
 
-  Color _getStatusColor(String status) {
+  Color _getStatusColor(BuildContext context, String status) {
+    final cs = Theme.of(context).colorScheme;
     switch (status.toLowerCase()) {
       case 'paid':
-        return Colors.green;
+        return cs.primary;
       case 'pending':
-        return Colors.orange;
+        return cs.secondary;
       case 'cancelled':
-        return Colors.red;
+        return cs.error;
       default:
-        return Colors.grey;
+        return cs.onSurfaceVariant;
     }
   }
 
@@ -568,7 +572,7 @@ class _DetailRow extends StatelessWidget {
             child: Text(
               label,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()),
               ),
             ),
           ),

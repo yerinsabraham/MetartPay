@@ -1,7 +1,9 @@
 import 'dart:math';
+// removed unused dart:convert import
 import '../models/models.dart';
 import 'firebase_service.dart';
 import 'crypto_price_service.dart';
+import '../utils/app_logger.dart';
 
 class TransactionService {
   final FirebaseService _firebaseService = FirebaseService();
@@ -55,10 +57,10 @@ class TransactionService {
         await _updateCustomerFromTransaction(transaction, customerEmail);
       }
 
-      print('Payment transaction created successfully: ${transaction.id}');
+      AppLogger.d('Payment transaction created successfully: ${transaction.id}');
       return transaction;
     } catch (e) {
-      print('Error creating payment transaction: $e');
+      AppLogger.e('Error creating payment transaction: $e', error: e);
       rethrow;
     }
   }
@@ -103,10 +105,10 @@ class TransactionService {
       // Save transaction to Firebase
       await _firebaseService.saveTransaction(transaction);
 
-      print('Withdrawal transaction created successfully: ${transaction.id}');
+      AppLogger.d('Withdrawal transaction created successfully: ${transaction.id}');
       return transaction;
     } catch (e) {
-      print('Error creating withdrawal transaction: $e');
+      AppLogger.e('Error creating withdrawal transaction: $e', error: e);
       rethrow;
     }
   }
@@ -148,10 +150,10 @@ class TransactionService {
 
       await _firebaseService.saveTransaction(transaction);
       
-      print('Fee transaction created successfully: ${transaction.id}');
+      AppLogger.d('Fee transaction created successfully: ${transaction.id}');
       return transaction;
     } catch (e) {
-      print('Error creating fee transaction: $e');
+      AppLogger.e('Error creating fee transaction: $e', error: e);
       rethrow;
     }
   }
@@ -182,7 +184,7 @@ class TransactionService {
 
       return transactions;
     } catch (e) {
-      print('Error getting transaction history: $e');
+      AppLogger.e('Error getting transaction history: $e', error: e);
       return [];
     }
   }
@@ -200,7 +202,7 @@ class TransactionService {
         endDate: endDate,
       );
     } catch (e) {
-      print('Error getting transaction analytics: $e');
+      AppLogger.e('Error getting transaction analytics: $e', error: e);
       return {};
     }
   }
@@ -218,7 +220,7 @@ class TransactionService {
         txHash: txHash,
       );
     } catch (e) {
-      print('Error updating transaction status: $e');
+      AppLogger.e('Error updating transaction status: $e', error: e);
       rethrow;
     }
   }
@@ -261,9 +263,9 @@ class TransactionService {
         chain: invoice.chain,
       );
 
-      print('Payment webhook processed successfully for invoice: $invoiceId');
+      AppLogger.d('Payment webhook processed successfully for invoice: $invoiceId');
     } catch (e) {
-      print('Error processing payment webhook: $e');
+      AppLogger.e('Error processing payment webhook: $e', error: e);
       rethrow;
     }
   }
@@ -326,7 +328,7 @@ class TransactionService {
         await _firebaseService.saveCustomer(newCustomer);
       }
     } catch (e) {
-      print('Error updating customer from transaction: $e');
+      AppLogger.e('Error updating customer from transaction: $e', error: e);
       // Don't throw - customer update failure shouldn't fail the transaction
     }
   }
@@ -354,7 +356,7 @@ class TransactionService {
         customerEmail: customerEmail,
       );
     } catch (e) {
-      print('Error simulating payment: $e');
+      AppLogger.e('Error simulating payment: $e', error: e);
       rethrow;
     }
   }

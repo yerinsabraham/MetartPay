@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/security_provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../services/biometric_service.dart';
+// removed unused import
 import 'biometric_settings_screen.dart';
 import 'session_management_screen.dart';
 import 'security_logs_screen.dart';
@@ -328,7 +328,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
   ) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('End All Sessions'),
           content: const Text(
@@ -337,37 +337,35 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                
-                try {
-                  await securityProvider.endAllOtherSessions(
-                    authProvider.currentUser!.uid,
-                  );
-                  
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                onPressed: () async {
+                  // close dialog using dialog's context
+                  Navigator.of(context).pop();
+                  try {
+                    final uid = authProvider.currentUser?.uid;
+                    if (uid != null) {
+                      await securityProvider.endAllOtherSessions(uid);
+                    }
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(this.context).showSnackBar(
                       const SnackBar(
                         content: Text('All other sessions have been ended'),
                         backgroundColor: Colors.green,
                       ),
                     );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                  } catch (e) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(this.context).showSnackBar(
                       SnackBar(
                         content: Text('Error ending sessions: $e'),
                         backgroundColor: Colors.red,
                       ),
                     );
                   }
-                }
-              },
+                },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               child: const Text('End Sessions'),
             ),
@@ -380,35 +378,32 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
   void _refreshSession(BuildContext context, SecurityProvider securityProvider) async {
     try {
       final success = await securityProvider.refreshCurrentSession();
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              success 
-                ? 'Security session refreshed successfully'
-                : 'Failed to refresh session',
-            ),
-            backgroundColor: success ? Colors.green : Colors.red,
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            success 
+              ? 'Security session refreshed successfully'
+              : 'Failed to refresh session',
           ),
-        );
-      }
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error refreshing session: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error refreshing session: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   void _showResetSecurityDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Reset Security Settings'),
           content: const Text(
@@ -418,14 +413,14 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop();
                 // Implement reset functionality
-                ScaffoldMessenger.of(context).showSnackBar(
+                ScaffoldMessenger.of(this.context).showSnackBar(
                   const SnackBar(
                     content: Text('Security settings reset functionality will be implemented'),
                   ),

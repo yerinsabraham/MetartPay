@@ -1,10 +1,8 @@
-import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models.dart';
+import '../utils/app_logger.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -24,7 +22,7 @@ class NotificationService {
 
   /// Initialize Firebase Cloud Messaging
   Future<void> initialize({String? merchantId}) async {
-    print('NotificationService: Initializing FCM...');
+    AppLogger.d('NotificationService: Initializing FCM...');
     
     try {
       _currentMerchantId = merchantId;
@@ -40,7 +38,7 @@ class NotificationService {
         sound: true,
       );
 
-      print('NotificationService: Permission status: ${settings.authorizationStatus}');
+      AppLogger.d('NotificationService: Permission status: ${settings.authorizationStatus}');
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
         // Get FCM token
@@ -51,7 +49,7 @@ class NotificationService {
         
         // Listen for token refresh
         _firebaseMessaging.onTokenRefresh.listen((token) {
-          print('NotificationService: Token refreshed: $token');
+          AppLogger.d('NotificationService: Token refreshed: $token');
           _fcmToken = token;
           _saveFCMToken(token);
           if (_currentMerchantId != null) {
@@ -60,12 +58,12 @@ class NotificationService {
           onTokenRefresh?.call(token);
         });
         
-        print('NotificationService: FCM initialized successfully');
+        AppLogger.d('NotificationService: FCM initialized successfully');
       } else {
-        print('NotificationService: Notification permission denied');
+        AppLogger.w('NotificationService: Notification permission denied');
       }
     } catch (e) {
-      print('NotificationService: Error initializing FCM: $e');
+      AppLogger.e('NotificationService: Error initializing FCM: $e', error: e);
     }
   }
 
@@ -78,7 +76,7 @@ class NotificationService {
   Future<String?> _getFCMToken() async {
     try {
       _fcmToken = await _firebaseMessaging.getToken();
-      print('NotificationService: FCM Token: $_fcmToken');
+      AppLogger.d('NotificationService: FCM Token: $_fcmToken');
       
       if (_fcmToken != null) {
         await _saveFCMToken(_fcmToken!);
@@ -89,7 +87,7 @@ class NotificationService {
       
       return _fcmToken;
     } catch (e) {
-      print('NotificationService: Error getting FCM token: $e');
+      AppLogger.e('NotificationService: Error getting FCM token: $e', error: e);
       return null;
     }
   }
@@ -100,7 +98,7 @@ class NotificationService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('fcm_token', token);
     } catch (e) {
-      print('NotificationService: Error saving FCM token: $e');
+      AppLogger.e('NotificationService: Error saving FCM token: $e', error: e);
     }
   }
 
@@ -115,9 +113,9 @@ class NotificationService {
         'isActive': true,
       }, SetOptions(merge: true));
       
-      print('NotificationService: Token updated on server');
+      AppLogger.d('NotificationService: Token updated on server');
     } catch (e) {
-      print('NotificationService: Error updating token on server: $e');
+      AppLogger.e('NotificationService: Error updating token on server: $e', error: e);
     }
   }
 
@@ -125,20 +123,20 @@ class NotificationService {
   void _configureMessageHandlers() {
     // Handle messages when app is in foreground
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print('NotificationService: Received foreground message: ${message.messageId}');
+      AppLogger.d('NotificationService: Received foreground message: ${message.messageId}');
       _handleMessage(message, isForeground: true);
     });
 
     // Handle messages when app is in background and user taps notification
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print('NotificationService: App opened from notification: ${message.messageId}');
+      AppLogger.d('NotificationService: App opened from notification: ${message.messageId}');
       _handleMessage(message, isFromTap: true);
     });
 
     // Handle messages when app is terminated and opened from notification
     FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
       if (message != null) {
-        print('NotificationService: App launched from notification: ${message.messageId}');
+        AppLogger.d('NotificationService: App launched from notification: ${message.messageId}');
         _handleMessage(message, isFromTap: true);
       }
     });
@@ -164,7 +162,7 @@ class NotificationService {
       _saveNotification(notification);
       
     } catch (e) {
-      print('NotificationService: Error handling message: $e');
+      AppLogger.e('NotificationService: Error handling message: $e', error: e);
     }
   }
 
@@ -191,7 +189,7 @@ class NotificationService {
   void _showInAppNotification(AppNotification notification) {
     // This would typically show a custom in-app notification widget
     // For now, we'll just trigger the callback
-    print('NotificationService: Showing in-app notification: ${notification.title}');
+    AppLogger.d('NotificationService: Showing in-app notification: ${notification.title}');
   }
 
   /// Save notification to Firestore
@@ -206,9 +204,9 @@ class NotificationService {
           .doc(notification.id)
           .set(notification.toJson());
       
-      print('NotificationService: Notification saved to Firestore');
+      AppLogger.d('NotificationService: Notification saved to Firestore');
     } catch (e) {
-      print('NotificationService: Error saving notification: $e');
+      AppLogger.e('NotificationService: Error saving notification: $e', error: e);
     }
   }
 
@@ -216,9 +214,9 @@ class NotificationService {
   Future<void> subscribeToTopic(String topic) async {
     try {
       await _firebaseMessaging.subscribeToTopic(topic);
-      print('NotificationService: Subscribed to topic: $topic');
+      AppLogger.d('NotificationService: Subscribed to topic: $topic');
     } catch (e) {
-      print('NotificationService: Error subscribing to topic: $e');
+      AppLogger.e('NotificationService: Error subscribing to topic: $e', error: e);
     }
   }
 
@@ -226,9 +224,9 @@ class NotificationService {
   Future<void> unsubscribeFromTopic(String topic) async {
     try {
       await _firebaseMessaging.unsubscribeFromTopic(topic);
-      print('NotificationService: Unsubscribed from topic: $topic');
+      AppLogger.d('NotificationService: Unsubscribed from topic: $topic');
     } catch (e) {
-      print('NotificationService: Error unsubscribing from topic: $e');
+      AppLogger.e('NotificationService: Error unsubscribing from topic: $e', error: e);
     }
   }
 
@@ -263,7 +261,7 @@ class NotificationService {
               }))
           .toList();
     } catch (e) {
-      print('NotificationService: Error getting notifications: $e');
+      AppLogger.e('NotificationService: Error getting notifications: $e', error: e);
       return [];
     }
   }
@@ -283,9 +281,9 @@ class NotificationService {
         'readAt': FieldValue.serverTimestamp(),
       });
       
-      print('NotificationService: Notification marked as read');
+      AppLogger.d('NotificationService: Notification marked as read');
     } catch (e) {
-      print('NotificationService: Error marking notification as read: $e');
+      AppLogger.e('NotificationService: Error marking notification as read: $e', error: e);
     }
   }
 
@@ -311,9 +309,9 @@ class NotificationService {
       }
       
       await batch.commit();
-      print('NotificationService: All notifications marked as read');
+      AppLogger.d('NotificationService: All notifications marked as read');
     } catch (e) {
-      print('NotificationService: Error marking all notifications as read: $e');
+      AppLogger.e('NotificationService: Error marking all notifications as read: $e', error: e);
     }
   }
 
@@ -329,9 +327,9 @@ class NotificationService {
           .doc(notificationId)
           .delete();
       
-      print('NotificationService: Notification deleted');
+      AppLogger.d('NotificationService: Notification deleted');
     } catch (e) {
-      print('NotificationService: Error deleting notification: $e');
+      AppLogger.e('NotificationService: Error deleting notification: $e', error: e);
     }
   }
 
@@ -350,7 +348,7 @@ class NotificationService {
       
       return snapshot.docs.length;
     } catch (e) {
-      print('NotificationService: Error getting unread count: $e');
+      AppLogger.e('NotificationService: Error getting unread count: $e', error: e);
       return 0;
     }
   }
@@ -381,7 +379,7 @@ class NotificationService {
         );
       }
     } catch (e) {
-      print('NotificationService: Error getting notification settings: $e');
+      AppLogger.e('NotificationService: Error getting notification settings: $e', error: e);
       return null;
     }
   }
@@ -396,9 +394,9 @@ class NotificationService {
           .doc('notifications')
           .set(settings.toJson(), SetOptions(merge: true));
       
-      print('NotificationService: Notification settings updated');
+      AppLogger.d('NotificationService: Notification settings updated');
     } catch (e) {
-      print('NotificationService: Error updating notification settings: $e');
+      AppLogger.e('NotificationService: Error updating notification settings: $e', error: e);
     }
   }
 
@@ -449,7 +447,7 @@ class NotificationService {
     try {
       await _firebaseMessaging.requestPermission();
     } catch (e) {
-      print('NotificationService: Error opening notification settings: $e');
+      AppLogger.e('NotificationService: Error opening notification settings: $e', error: e);
     }
   }
 }
@@ -457,7 +455,7 @@ class NotificationService {
 /// Background message handler (must be top-level function)
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print('NotificationService: Background message received: ${message.messageId}');
+  AppLogger.d('NotificationService: Background message received: ${message.messageId}');
   
   // Handle background message here if needed
   // Note: This runs in a separate isolate, so shared state is not available

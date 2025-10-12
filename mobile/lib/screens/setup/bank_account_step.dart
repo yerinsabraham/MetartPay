@@ -235,7 +235,7 @@ class _BankAccountStepState extends State<BankAccountStep> {
                             ),
                           )
                         : DropdownButtonFormField<Map<String, dynamic>>(
-                            value: _selectedBank,
+                            initialValue: _selectedBank,
                             decoration: InputDecoration(
                               labelText: 'Bank *',
                               hintText: 'Select your bank',

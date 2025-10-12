@@ -234,7 +234,7 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: severityColor.withOpacity(0.1),
+                    color: severityColor.withAlpha((0.1 * 255).round()),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -264,9 +264,9 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen>
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: severityColor.withOpacity(0.1),
+                              color: severityColor.withAlpha((0.1 * 255).round()),
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: severityColor.withOpacity(0.3)),
+                              border: Border.all(color: severityColor.withAlpha((0.3 * 255).round())),
                             ),
                             child: Text(
                               log.severity.toUpperCase(),
@@ -516,7 +516,7 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen>
                   // Severity Filter
                   DropdownButtonFormField<String?>(
                     decoration: const InputDecoration(labelText: 'Severity'),
-                    value: _selectedSeverity,
+                      initialValue: _selectedSeverity,
                     items: [
                       const DropdownMenuItem(value: null, child: Text('All Severities')),
                       const DropdownMenuItem(value: 'critical', child: Text('Critical')),

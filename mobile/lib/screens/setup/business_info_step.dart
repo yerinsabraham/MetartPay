@@ -126,7 +126,7 @@ class _BusinessInfoStepState extends State<BusinessInfoStep> {
 
                     // Industry Dropdown
                     DropdownButtonFormField<String>(
-                      value: _selectedIndustry,
+                      initialValue: _selectedIndustry,
                       decoration: InputDecoration(
                         labelText: 'Industry *',
                         hintText: 'Select your industry',

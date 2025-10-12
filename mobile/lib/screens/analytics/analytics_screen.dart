@@ -154,7 +154,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                   Text(
                     _analyticsError ?? merchantProvider.error ?? 'Unknown error',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -364,13 +364,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                                     Icon(
                                       Icons.receipt_outlined,
                                       size: 48,
-                                      color: theme.colorScheme.onSurface.withOpacity(0.4),
+                                      color: theme.colorScheme.onSurface.withAlpha((0.4 * 255).round()),
                                     ),
                                     const SizedBox(height: 12),
                                     Text(
                                       'No recent activity',
                                       style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                        color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()),
                                       ),
                                     ),
                                   ],
@@ -665,7 +665,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
         recentInvoices.add(invoice);
       } catch (e) {
         // Skip invalid transaction data
-        print('Error creating invoice from transaction: $e');
+        debugPrint('Error creating invoice from transaction: $e');
       }
     }
 
@@ -784,7 +784,7 @@ class _ActivityTile extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: _getStatusColor(invoice.status).withOpacity(0.1),
+            backgroundColor: _getStatusColor(invoice.status).withAlpha((0.1 * 255).round()),
             child: Icon(
               _getStatusIcon(invoice.status),
               size: 16,
@@ -805,7 +805,7 @@ class _ActivityTile extends StatelessWidget {
                 Text(
                   '₦${NumberFormat('#,##0.00').format(invoice.amountNaira)} • ${invoice.cryptoSymbol}',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()),
                   ),
                 ),
               ],
@@ -814,7 +814,7 @@ class _ActivityTile extends StatelessWidget {
           Text(
             DateFormat('MMM dd').format(invoice.createdAt),
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()),
             ),
           ),
         ],
@@ -905,7 +905,7 @@ class _StatusItem extends StatelessWidget {
           child: Container(
             height: 8,
             decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.3),
+              color: Colors.grey.withAlpha((0.3 * 255).round()),
               borderRadius: BorderRadius.circular(4),
             ),
             child: FractionallySizedBox(

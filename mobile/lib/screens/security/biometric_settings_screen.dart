@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:local_auth/local_auth.dart';
 import '../../providers/security_provider.dart';
-import '../../providers/auth_provider.dart';
 import '../../services/biometric_service.dart';
 
 class BiometricSettingsScreen extends StatefulWidget {

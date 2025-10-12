@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../services/firebase_service.dart';
 import '../services/crypto_wallet_service.dart';
 import '../services/transaction_service.dart';
+import '../utils/app_logger.dart';
 
 class MerchantProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -93,7 +94,7 @@ class MerchantProvider extends ChangeNotifier {
       _currentMerchant = merchant;
       _checkSetupStatus();
 
-      print('Merchant created successfully: ${merchant.id}');
+      AppLogger.d('Merchant created successfully: ${merchant.id}');
       return true;
     } catch (e) {
       _setError(e.toString());
@@ -143,12 +144,12 @@ class MerchantProvider extends ChangeNotifier {
       _currentMerchant = merchant;
       _needsSetup = false;
 
-      print('DEBUG: Successfully saved merchant to Firebase: ${merchant.id}');
+      AppLogger.d('DEBUG: Successfully saved merchant to Firebase: ${merchant.id}');
       notifyListeners();
       return true;
     } catch (e) {
       _setError('Failed to save merchant data: $e');
-      print('DEBUG: Failed to save merchant: $e');
+      AppLogger.e('DEBUG: Failed to save merchant: $e', error: e);
       return false;
     } finally {
       _setLoading(false);
@@ -158,11 +159,10 @@ class MerchantProvider extends ChangeNotifier {
   Future<void> loadUserMerchants() async {
     // Prevent multiple simultaneous loading attempts
     if (_isLoading || _hasAttemptedLoad) return;
-    
+
     try {
       _setLoading(true);
       _setError(null);
-      _hasAttemptedLoad = true;
 
       // Try to load from Firebase first
       try {
@@ -170,6 +170,7 @@ class MerchantProvider extends ChangeNotifier {
         
         if (_merchants.isNotEmpty) {
           _currentMerchant = _merchants.first;
+          AppLogger.d('DEBUG: Loaded merchant from Firebase: id=${_currentMerchant!.id} kyc=${_currentMerchant!.kycStatus} isSetup=${_currentMerchant!.isSetupComplete}');
           // Load all related data
           await loadMerchantInvoices();
           await loadTransactions();
@@ -180,7 +181,7 @@ class MerchantProvider extends ChangeNotifier {
           subscribeToRealtimeUpdates();
         }
       } catch (firebaseError) {
-        print('DEBUG: Firebase load failed, trying API: $firebaseError');
+        AppLogger.w('DEBUG: Firebase load failed, trying API: $firebaseError', error: firebaseError);
         
         // Fallback to API if Firebase fails
         try {
@@ -199,7 +200,7 @@ class MerchantProvider extends ChangeNotifier {
             subscribeToRealtimeUpdates();
           }
         } catch (apiError) {
-          print('DEBUG: API load also failed: $apiError');
+          AppLogger.e('DEBUG: API load also failed: $apiError', error: apiError);
           _merchants = [];
           _currentMerchant = null;
         }
@@ -211,7 +212,7 @@ class MerchantProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _setError(e.toString());
-      print('DEBUG: Failed to load merchants: $e');
+      AppLogger.e('DEBUG: Failed to load merchants: $e', error: e);
       
       // No merchants found - user will be guided to setup wizard
       _merchants = [];
@@ -219,6 +220,8 @@ class MerchantProvider extends ChangeNotifier {
       _checkSetupStatus();
       notifyListeners();
     } finally {
+      // Mark that we've attempted a load (success or failure) so the UI can stop showing the initial spinner
+      _hasAttemptedLoad = true;
       _setLoading(false);
     }
   }
@@ -253,7 +256,7 @@ class MerchantProvider extends ChangeNotifier {
     _checkSetupStatus();
     notifyListeners();
     
-    print('DEBUG: Created sample merchant for demo');
+    AppLogger.d('DEBUG: Created sample merchant for demo');
   }
 
   Future<Invoice?> createInvoice({
@@ -309,7 +312,7 @@ class MerchantProvider extends ChangeNotifier {
       _invoices = await _firebaseService.getMerchantInvoices(_currentMerchant!.id);
       notifyListeners();
     } catch (e) {
-      print('Failed to load invoices: $e');
+      AppLogger.e('Failed to load invoices: $e', error: e);
       _invoices = [];
     }
   }
@@ -342,13 +345,13 @@ class MerchantProvider extends ChangeNotifier {
   // Save partial setup data for mid-setup persistence
   Future<bool> savePartialSetupData(Map<String, dynamic> setupData) async {
     try {
-      print('DEBUG: Starting savePartialSetupData with data: $setupData');
+      AppLogger.d('DEBUG: Starting savePartialSetupData with data: $setupData');
       _setLoading(true);
       _setError(null);
 
       // Check if user is authenticated
       final currentUserId = _firebaseService.currentUserId;
-      print('DEBUG: Current user ID: $currentUserId');
+      AppLogger.d('DEBUG: Current user ID: $currentUserId');
       if (currentUserId == null) {
         throw Exception('User not authenticated. Please log in first.');
       }
@@ -404,11 +407,11 @@ class MerchantProvider extends ChangeNotifier {
       
       _checkSetupStatus();
       notifyListeners();
-      print('DEBUG: Successfully saved partial setup data');
+      AppLogger.d('DEBUG: Successfully saved partial setup data');
       return true;
     } catch (e) {
       _setError('Failed to save setup progress: $e');
-      print('DEBUG: Failed to save partial setup: $e');
+      AppLogger.e('DEBUG: Failed to save partial setup: $e', error: e);
       return false;
     } finally {
       _setLoading(false);
@@ -465,6 +468,18 @@ class MerchantProvider extends ChangeNotifier {
 
       // Save to Firebase
       final savedMerchant = await _firebaseService.updateMerchant(updatedMerchant);
+  AppLogger.d('DEBUG: updateMerchant saved merchant ${savedMerchant.id} wallets=${savedMerchant.walletAddresses.keys.toList()}');
+
+      // If wallet addresses were provided, ensure corresponding wallet docs exist
+      try {
+        if ((savedMerchant.walletAddresses).isNotEmpty) {
+          AppLogger.d('DEBUG: Calling upsertMerchantWallets for ${savedMerchant.id}');
+          await _firebaseService.upsertMerchantWallets(savedMerchant.id, savedMerchant.walletAddresses);
+          AppLogger.d('DEBUG: upsertMerchantWallets completed for ${savedMerchant.id}');
+        }
+      } catch (e) {
+        AppLogger.w('Failed to upsert wallet docs after merchant update: $e', error: e);
+      }
       
       // Update local state
       _currentMerchant = savedMerchant;
@@ -476,12 +491,12 @@ class MerchantProvider extends ChangeNotifier {
       }
 
       _checkSetupStatus();
-      print('DEBUG: Successfully updated merchant in Firebase: ${savedMerchant.id}');
+      AppLogger.d('DEBUG: Successfully updated merchant in Firebase: ${savedMerchant.id}');
       notifyListeners();
       return true;
     } catch (e) {
       _setError('Failed to update merchant data: $e');
-      print('DEBUG: Failed to update merchant: $e');
+      AppLogger.e('DEBUG: Failed to update merchant: $e', error: e);
       return false;
     } finally {
       _setLoading(false);
@@ -545,12 +560,12 @@ class MerchantProvider extends ChangeNotifier {
       }
 
       _checkSetupStatus();
-      print('DEBUG: Successfully updated KYC data in Firebase: ${savedMerchant.id}');
+      AppLogger.d('DEBUG: Successfully updated KYC data in Firebase: ${savedMerchant.id}');
       notifyListeners();
       return true;
     } catch (e) {
       _setError('Failed to update KYC data: $e');
-      print('DEBUG: Failed to update KYC: $e');
+      AppLogger.e('DEBUG: Failed to update KYC: $e', error: e);
       return false;
     } finally {
       _setLoading(false);
@@ -585,7 +600,7 @@ class MerchantProvider extends ChangeNotifier {
       _transactions = await _transactionService.getTransactionHistory(_currentMerchant!.id);
       notifyListeners();
     } catch (e) {
-      print('Failed to load transactions: $e');
+      AppLogger.e('Failed to load transactions: $e', error: e);
       _transactions = [];
     }
   }
@@ -597,7 +612,7 @@ class MerchantProvider extends ChangeNotifier {
       _paymentLinks = await _firebaseService.getPaymentLinks(_currentMerchant!.id);
       notifyListeners();
     } catch (e) {
-      print('Failed to load payment links: $e');
+      AppLogger.e('Failed to load payment links: $e', error: e);
       _paymentLinks = [];
     }
   }
@@ -609,7 +624,7 @@ class MerchantProvider extends ChangeNotifier {
       _customers = await _firebaseService.getCustomers(_currentMerchant!.id);
       notifyListeners();
     } catch (e) {
-      print('Failed to load customers: $e');
+      AppLogger.e('Failed to load customers: $e', error: e);
       _customers = [];
     }
   }
@@ -707,7 +722,7 @@ class MerchantProvider extends ChangeNotifier {
         endDate: endDate,
       );
     } catch (e) {
-      print('Failed to get analytics: $e');
+      AppLogger.e('Failed to get analytics: $e', error: e);
       return null;
     }
   }
@@ -743,12 +758,18 @@ class MerchantProvider extends ChangeNotifier {
     _firebaseService.watchMerchantTransactions(_currentMerchant!.id).listen((transactions) {
       _transactions = List<Transaction>.from(transactions);
       notifyListeners();
+    }, onError: (e) {
+      AppLogger.w('Realtime transaction subscription error: $e', error: e);
+      // Don't rethrow - keep the app running even if subscription fails (e.g., missing index or permissions)
     });
 
     // Subscribe to payment link updates
     _firebaseService.watchMerchantPaymentLinks(_currentMerchant!.id).listen((paymentLinks) {
       _paymentLinks = List<PaymentLink>.from(paymentLinks);
       notifyListeners();
+    }, onError: (e) {
+      AppLogger.w('Realtime payment links subscription error: $e', error: e);
+      // Keep the app functional; the provider can fall back to non-realtime loading.
     });
   }
 }

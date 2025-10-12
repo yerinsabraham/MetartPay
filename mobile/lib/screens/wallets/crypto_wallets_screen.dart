@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/rendering.dart';
+// removed unused import
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'dart:ui' as ui;
-import 'dart:typed_data';
+// Removed unused imports: dart:ui and dart:typed_data
 import '../../providers/merchant_provider.dart';
 import '../../providers/wallet_provider.dart';
 import '../../widgets/metartpay_branding.dart';
@@ -104,7 +103,7 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: networkColor.withOpacity(0.1),
+                color: networkColor.withAlpha((0.1 * 255).round()),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -263,7 +262,7 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
                               ? LinearGradient(
                                   colors: [
                                     Color(network['color']),
-                                    Color(network['color']).withOpacity(0.8),
+                                    Color(network['color']).withAlpha((0.8 * 255).round()),
                                   ],
                                 )
                               : null,
@@ -324,7 +323,7 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: MetartPayColors.primary.withOpacity(0.1),
+                color: MetartPayColors.primary.withAlpha((0.1 * 255).round()),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -379,7 +378,7 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha((0.05 * 255).round()),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -395,7 +394,7 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
               gradient: LinearGradient(
                 colors: [
                   networkColor,
-                  networkColor.withOpacity(0.8),
+                  networkColor.withAlpha((0.8 * 255).round()),
                 ],
               ),
               borderRadius: const BorderRadius.only(
@@ -464,7 +463,7 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: networkColor.withOpacity(0.1),
+                              color: networkColor.withAlpha((0.1 * 255).round()),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Text(

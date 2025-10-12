@@ -7,7 +7,7 @@ import '../../screens/profile/profile_screen.dart';
 import '../../screens/notifications/notifications_screen.dart';
 import '../../screens/transactions/transaction_history_screen.dart';
 import '../../screens/wallets/crypto_wallets_screen.dart';
-import '../../screens/analytics/analytics_screen.dart';
+// ...analytics screen import removed (unused)
 import '../../screens/payment_links/create_payment_link_screen.dart';
 import '../../screens/payment_links/payment_links_screen.dart';
 import '../../screens/receive_payments_screen.dart';
@@ -24,24 +24,27 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
   Widget build(BuildContext context) {
     return Consumer<MerchantProvider>(
       builder: (context, merchantProvider, child) {
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
 
         
         return Scaffold(
-          backgroundColor: Colors.grey[50],
+          backgroundColor: colorScheme.background,
           appBar: AppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: colorScheme.surface,
             elevation: 0,
-            title: const Text(
+            title: Text(
               'MetartPay',
               style: TextStyle(
-                color: Color(0xFF2E7D32),
+                // use theme primary color for branding
+                color: colorScheme.primary,
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
               ),
             ),
             actions: [
               IconButton(
-                icon: const Icon(Icons.notifications_outlined, color: Color(0xFF2E7D32)),
+                icon: Icon(Icons.notifications_outlined, color: colorScheme.primary),
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -52,7 +55,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                 },
               ),
               IconButton(
-                icon: const Icon(Icons.account_circle_outlined, color: Color(0xFF2E7D32)),
+                icon: Icon(Icons.account_circle_outlined, color: colorScheme.primary),
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -72,9 +75,9 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
               padding: const EdgeInsets.all(16),
               children: [
                 _buildKYCBanner(context, merchantProvider),
-                _buildWelcomeCard(merchantProvider),
+                _buildWelcomeCard(context, merchantProvider),
                 const SizedBox(height: 16),
-                _buildQuickStats(merchantProvider),
+                _buildQuickStats(context, merchantProvider),
                 const SizedBox(height: 16),
                 _buildQuickActions(context),
                 const SizedBox(height: 16),
@@ -89,6 +92,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
 
   Widget _buildKYCBanner(BuildContext context, MerchantProvider merchantProvider) {
     final merchant = merchantProvider.currentMerchant;
+    final colorScheme = Theme.of(context).colorScheme;
     
     // Don't show banner if KYC is verified
     if (merchant?.kycStatus == 'verified') return const SizedBox.shrink();
@@ -114,12 +118,12 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.orange.shade100,
+                color: colorScheme.secondary.withAlpha((0.12 * 255).round()),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 Icons.pending,
-                color: Colors.orange.shade600,
+                color: colorScheme.secondary,
                 size: 24,
               ),
             ),
@@ -133,7 +137,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: Colors.orange.shade700,
+                      color: colorScheme.secondary,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -141,7 +145,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                     'Your KYC verification is under review. We\'ll notify you within 24-48 hours.',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.orange.shade700,
+                      color: colorScheme.secondary,
                     ),
                   ),
                 ],
@@ -162,12 +166,12 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
           ),
         );
       },
-      child: Container(
+        child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.red.shade50,
-          border: Border.all(color: Colors.red.shade200),
+          color: colorScheme.errorContainer,
+          border: Border.all(color: colorScheme.error),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -175,12 +179,12 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.red.shade100,
+                color: colorScheme.error.withAlpha((0.12 * 255).round()),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 Icons.warning,
-                color: Colors.red.shade600,
+                color: colorScheme.error,
                 size: 24,
               ),
             ),
@@ -194,7 +198,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: Colors.red.shade600,
+                      color: colorScheme.error,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -202,7 +206,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                     'Verify your identity to access all features and start receiving payments.',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.red.shade700,
+                      color: colorScheme.error,
                     ),
                   ),
                 ],
@@ -210,7 +214,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
             ),
             Icon(
               Icons.arrow_forward_ios,
-              color: Colors.red.shade400,
+              color: colorScheme.error,
               size: 16,
             ),
           ],
@@ -219,26 +223,20 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
     );
   }
 
-  Widget _buildWelcomeCard(MerchantProvider merchantProvider) {
+  Widget _buildWelcomeCard(BuildContext context, MerchantProvider merchantProvider) {
     final merchant = merchantProvider.currentMerchant;
     final businessName = merchant?.businessName ?? 'Your Business';
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF2E7D32),
-            const Color(0xFF388E3C).withValues(alpha: 0.8),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: colorScheme.onPrimary.withAlpha((0.08 * 255).round()),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -250,15 +248,15 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
           Text(
             'Welcome back!',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.9),
+              color: colorScheme.onPrimary.withAlpha((0.9 * 255).round()),
               fontSize: 16,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             businessName,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: colorScheme.onPrimary,
               fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
@@ -281,10 +279,11 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
   }
 
   Widget _buildStatItem(String label, String value, IconData icon) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
+  color: colorScheme.onPrimary.withAlpha((0.2 * 255).round()),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -292,22 +291,22 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
         children: [
           Row(
             children: [
-              Icon(icon, color: Colors.white, size: 18),
+              Icon(icon, color: colorScheme.onPrimary, size: 18),
               const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  fontSize: 12,
-                ),
-              ),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: colorScheme.onPrimary.withAlpha((0.9 * 255).round()),
+                      fontSize: 12,
+                    ),
+                  ),
             ],
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: colorScheme.onPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -317,27 +316,29 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
     );
   }
 
-  Widget _buildQuickStats(MerchantProvider merchantProvider) {
+  Widget _buildQuickStats(BuildContext context, MerchantProvider merchantProvider) {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Expanded(child: _buildQuickStatCard('Transactions', '0', Icons.receipt_long, Colors.blue)),
+        Expanded(child: _buildQuickStatCard('Transactions', '0', Icons.receipt_long, cs.primary)),
         const SizedBox(width: 12),
-        Expanded(child: _buildQuickStatCard('Customers', '0', Icons.people, Colors.green)),
+        Expanded(child: _buildQuickStatCard('Customers', '0', Icons.people, cs.secondary)),
         const SizedBox(width: 12),
-        Expanded(child: _buildQuickStatCard('Revenue', '₦0.00', Icons.monetization_on, Colors.orange)),
+        Expanded(child: _buildQuickStatCard('Revenue', '₦0.00', Icons.monetization_on, cs.tertiary)),
       ],
     );
   }
 
   Widget _buildQuickStatCard(String title, String value, IconData icon, Color color) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
+            color: cs.onSurface.withAlpha((0.06 * 255).round()),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -359,7 +360,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
             title,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey[600],
+              color: cs.onSurface.withAlpha((0.7 * 255).round()),
             ),
           ),
         ],
@@ -379,64 +380,76 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          childAspectRatio: 3.2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          children: [
-            _buildActionCard(
-              'Receive Payments',
-              Icons.qr_code,
-              Colors.purple,
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ReceivePaymentsScreen(
-                    merchantId: Provider.of<MerchantProvider>(context, listen: false).currentMerchant?.id ?? 'demo_merchant',
+        LayoutBuilder(
+          builder: (context, constraints) {
+            int crossAxis = 2;
+            final width = constraints.maxWidth;
+            if (width > 900) {
+              crossAxis = 4;
+            } else if (width > 600) {
+              crossAxis = 3;
+            }
+
+            return GridView.count(
+              crossAxisCount: crossAxis,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              childAspectRatio: 3.0,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              children: [
+                _buildActionCard(
+                  'Receive Payments',
+                  Icons.qr_code,
+                  Colors.purple,
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ReceivePaymentsScreen(
+                        merchantId: Provider.of<MerchantProvider>(context, listen: false).currentMerchant?.id ?? 'demo_merchant',
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            _buildActionCard(
-              'Create Payment Link',
-              Icons.add_link,
-              Colors.green,
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CreatePaymentLinkScreen()),
-              ),
-            ),
-            _buildActionCard(
-              'Payment Links',
-              Icons.link,
-              Colors.blue,
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const PaymentLinksScreen()),
-              ),
-            ),
-            _buildActionCard(
-              'View Wallets',
-              Icons.account_balance_wallet,
-              Colors.teal,
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CryptoWalletsScreen()),
-              ),
-            ),
-            _buildActionCard(
-              'Transactions',
-              Icons.receipt_long,
-              Colors.orange,
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const TransactionHistoryScreen()),
-              ),
-            ),
-          ],
+                _buildActionCard(
+                  'Create Payment Link',
+                  Icons.add_link,
+                  Colors.green,
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const CreatePaymentLinkScreen()),
+                  ),
+                ),
+                _buildActionCard(
+                  'Payment Links',
+                  Icons.link,
+                  Colors.blue,
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const PaymentLinksScreen()),
+                  ),
+                ),
+                _buildActionCard(
+                  'View Wallets',
+                  Icons.account_balance_wallet,
+                  Colors.teal,
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const CryptoWalletsScreen()),
+                  ),
+                ),
+                _buildActionCard(
+                  'Transactions',
+                  Icons.receipt_long,
+                  Colors.orange,
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const TransactionHistoryScreen()),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -445,42 +458,46 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
   Widget _buildActionCard(String title, IconData icon, Color color, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        elevation: 0,
+        child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withValues(alpha: 0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: color, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: color.withAlpha((0.12 * 255).round()),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: color, size: 22),
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -515,11 +532,11 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withValues(alpha: 0.1),
+                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.06 * 255).round()),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -530,7 +547,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
               Icon(
                 Icons.receipt_long_outlined,
                 size: 48,
-                color: Colors.grey[400],
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               const SizedBox(height: 12),
               Text(
@@ -538,7 +555,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: Colors.grey[600],
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 8),
@@ -546,7 +563,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                 'Your recent transactions will appear here',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey[500],
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha((0.9 * 255).round()),
                 ),
                 textAlign: TextAlign.center,
               ),

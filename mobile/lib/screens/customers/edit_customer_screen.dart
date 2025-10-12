@@ -122,7 +122,7 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                     children: [
                       Expanded(
                         child: TextFormField(
-                          controller: _firstNameController,
+                            controller: _firstNameController,
                           decoration: const InputDecoration(
                             labelText: 'First Name',
                             border: OutlineInputBorder(),
@@ -255,7 +255,7 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: _selectedTier,
+                            value: _selectedTier,
                           decoration: const InputDecoration(
                             labelText: 'Customer Tier',
                             border: OutlineInputBorder(),
@@ -279,7 +279,7 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: _selectedStatus,
+                            value: _selectedStatus,
                           decoration: const InputDecoration(
                             labelText: 'Status',
                             border: OutlineInputBorder(),
@@ -325,7 +325,7 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                         }
                       });
                     },
-                    activeColor: Colors.purple,
+                    activeThumbColor: Colors.purple,
                   ),
                 ],
               ),
@@ -517,9 +517,9 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withAlpha((0.1 * 255).round()),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withAlpha((0.3 * 255).round())),
       ),
       child: Column(
         children: [

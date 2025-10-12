@@ -4,7 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'screens/auth/auth_wrapper.dart';
-import 'screens/home/enhanced_home_screen.dart';
+import 'screens/home/home_screen.dart';
 import 'screens/setup/merchant_setup_wizard.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
@@ -16,28 +16,29 @@ import 'providers/notification_provider.dart';
 import 'providers/security_provider.dart';
 import 'providers/customer_provider.dart';
 import 'services/notification_service.dart';
+import 'utils/app_logger.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   try {
-    print('DEBUG: Initializing Firebase...');
+    AppLogger.d('DEBUG: Initializing Firebase...');
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    print('DEBUG: Firebase initialized successfully');
-    print('DEBUG: Project ID: ${Firebase.app().options.projectId}');
-    
+    AppLogger.d('DEBUG: Firebase initialized successfully');
+    AppLogger.d('DEBUG: Project ID: ${Firebase.app().options.projectId}');
+
     // Initialize Firebase Messaging background handler
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-    print('DEBUG: Firebase Messaging background handler registered');
-    
-  } catch (e) {
-    print('DEBUG: Firebase initialization failed: $e');
+    AppLogger.d('DEBUG: Firebase Messaging background handler registered');
+
+  } catch (e, s) {
+    AppLogger.e('DEBUG: Firebase initialization failed: $e', error: e, stackTrace: s);
     // Continue app launch even if Firebase fails
   }
-  
-  print('DEBUG: Launching MetartPay...');
+
+  AppLogger.d('DEBUG: Launching MetartPay...');
   runApp(const MyApp());
 }
 
@@ -46,25 +47,25 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('DEBUG: Building MetartPay App');
+  AppLogger.d('DEBUG: Building MetartPay App');
     
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) {
-          print('DEBUG: Creating AuthProvider');
+          AppLogger.d('DEBUG: Creating AuthProvider');
           return AuthProvider();
         }),
         ChangeNotifierProvider(create: (_) {
-          print('DEBUG: Creating MerchantProvider');
+          AppLogger.d('DEBUG: Creating MerchantProvider');
           return MerchantProvider();
         }),
         ChangeNotifierProvider(create: (_) {
-          print('DEBUG: Creating WalletProvider');
+          AppLogger.d('DEBUG: Creating WalletProvider');
           return WalletProvider();
         }),
         ChangeNotifierProxyProvider<MerchantProvider, PaymentLinkProvider>(
           create: (context) {
-            print('DEBUG: Creating PaymentLinkProvider');
+            AppLogger.d('DEBUG: Creating PaymentLinkProvider');
             return PaymentLinkProvider(context.read<MerchantProvider>());
           },
           update: (context, merchantProvider, previous) {
@@ -72,15 +73,15 @@ class MyApp extends StatelessWidget {
           },
         ),
         ChangeNotifierProvider(create: (_) {
-          print('DEBUG: Creating NotificationProvider');
+          AppLogger.d('DEBUG: Creating NotificationProvider');
           return NotificationProvider();
         }),
         ChangeNotifierProvider(create: (_) {
-          print('DEBUG: Creating SecurityProvider');
+          AppLogger.d('DEBUG: Creating SecurityProvider');
           return SecurityProvider();
         }),
         ChangeNotifierProvider(create: (_) {
-          print('DEBUG: Creating CustomerProvider');
+          AppLogger.d('DEBUG: Creating CustomerProvider');
           return CustomerProvider();
         }),
       ],
@@ -117,7 +118,7 @@ class MyApp extends StatelessWidget {
         ),
         home: const AuthWrapper(),
         routes: {
-          '/home': (context) => const EnhancedHomeScreen(),
+          '/home': (context) => const HomeScreen(),
           '/setup': (context) => const MerchantSetupWizard(),
           '/profile': (context) => const ProfileScreen(),
           '/notifications': (context) => const NotificationsScreen(),

@@ -165,7 +165,7 @@ class GradientCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius ?? 12),
         boxShadow: [
           BoxShadow(
-            color: MetartPayColors.primary.withOpacity(0.2),
+            color: MetartPayColors.primary.withAlpha((0.2 * 255).round()),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),

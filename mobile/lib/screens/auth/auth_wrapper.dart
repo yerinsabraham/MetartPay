@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/merchant_provider.dart';
 import 'login_screen.dart';
-import '../home/enhanced_home_screen.dart';
+import '../home/home_screen.dart';
 import '../setup/merchant_setup_wizard.dart';
 
 class AuthWrapper extends StatelessWidget {
@@ -31,21 +31,32 @@ class AuthWrapper extends StatelessWidget {
           );
         }
 
-        // Check if user has completed merchant setup and KYC status
+        // Debug: log merchantProvider state to help trace onboarding decision
+        // Use debugPrint only in debug builds
+        if (merchantProvider.currentMerchant != null) {
+          final m = merchantProvider.currentMerchant!;
+          debugPrint('DEBUG: AuthWrapper - hasAttemptedLoad=${merchantProvider.hasAttemptedLoad} isLoading=${merchantProvider.isLoading} merchantsCount=${merchantProvider.merchants.length} currentMerchant=${m.id}');
+          debugPrint('DEBUG: AuthWrapper - currentMerchant: id=${m.id} fullName=${m.fullName} idNumber=${m.idNumber} kyc=${m.kycStatus} isSetup=${m.isSetupComplete}');
+        } else {
+          debugPrint('DEBUG: AuthWrapper - hasAttemptedLoad=${merchantProvider.hasAttemptedLoad} isLoading=${merchantProvider.isLoading} merchantsCount=${merchantProvider.merchants.length} currentMerchant=null');
+        }
+
+        // Check merchant and KYC state
         final merchant = merchantProvider.currentMerchant;
         final bool hasAnyMerchant = merchantProvider.merchants.isNotEmpty;
         final bool hasCompletedSetup = merchant?.isSetupComplete ?? false;
         final String? kycStatus = merchant?.kycStatus;
 
-        // If user is authenticated but hasn't completed setup, show wizard
-        // BUT skip setup if KYC is pending or approved
-        final bool kycIsDone = kycStatus == 'pending' || kycStatus == 'approved';
-        if ((!hasCompletedSetup || !hasAnyMerchant) && !kycIsDone) {
+        // Consider KYC as "submitted" if there's any non-null status (pending/under-review/approved)
+        final bool kycSubmitted = kycStatus != null && kycStatus.isNotEmpty;
+
+        // Show setup wizard only when the user has no merchants OR setup isn't complete AND KYC hasn't been submitted
+        if ((!hasCompletedSetup || !hasAnyMerchant) && !kycSubmitted) {
           return const MerchantSetupWizard();
         }
 
-        // If setup is complete or KYC is pending/approved, show the main app
-        return const EnhancedHomeScreen();
+        // Otherwise show the main app
+        return const HomeScreen();
       },
     );
   }

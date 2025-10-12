@@ -55,9 +55,11 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
     // Simulate wallet generation
     await Future.delayed(const Duration(seconds: 3));
 
+    // capture merchant provider and generate wallets
     final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
     final generatedAddresses = merchantProvider.generateWalletAddresses();
 
+    if (!mounted) return;
     setState(() {
       _walletAddresses = generatedAddresses;
       _isGenerating = false;
@@ -65,7 +67,8 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
 
     widget.onDataUpdate('walletAddresses', _walletAddresses);
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    if (!mounted) return;
+    ScaffoldMessenger.of(this.context).showSnackBar(
       const SnackBar(
         content: Text('Crypto wallets generated successfully!'),
         backgroundColor: Colors.green,
@@ -75,7 +78,7 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
 
   void _copyAddress(String address) {
     Clipboard.setData(ClipboardData(text: address));
-    ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.of(this.context).showSnackBar(
       const SnackBar(
         content: Text('Address copied to clipboard'),
         duration: Duration(seconds: 2),
@@ -165,7 +168,7 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withAlpha((0.1 * 255).round()),
                 blurRadius: 10,
                 spreadRadius: 5,
               ),
@@ -315,7 +318,7 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: Color(network['color']).withOpacity(0.1),
+                                  color: Color(network['color']).withAlpha((0.1 * 255).round()),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(

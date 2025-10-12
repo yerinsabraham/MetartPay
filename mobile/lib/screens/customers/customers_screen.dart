@@ -134,7 +134,7 @@ class _CustomersScreenState extends State<CustomersScreen>
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withAlpha((0.1 * 255).round()),
             spreadRadius: 1,
             blurRadius: 3,
           ),
@@ -222,9 +222,9 @@ class _CustomersScreenState extends State<CustomersScreen>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+  color: color.withAlpha((0.1 * 255).round()),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+  border: Border.all(color: color.withAlpha((0.3 * 255).round())),
       ),
       child: Column(
         children: [
@@ -306,189 +306,183 @@ class _CustomersScreenState extends State<CustomersScreen>
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: InkWell(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => CustomerDetailScreen(customer: customer),
-            ),
-          );
-        },
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => CustomerDetailScreen(customer: customer),
+        )),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-            Row(
-              children: [
-                // Customer Avatar
-                CircleAvatar(
-                  radius: 25,
-                  backgroundColor: _getStatusColor(customer.status),
-                  child: Text(
-                    customer.displayName.isNotEmpty 
-                      ? customer.displayName[0].toUpperCase()
-                      : 'C',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+              Row(
+                children: [
+                  // Customer Avatar
+                  CircleAvatar(
+                    radius: 25,
+                    backgroundColor: _getStatusColor(customer.status),
+                    child: Text(
+                      customer.displayName.isNotEmpty ? customer.displayName[0].toUpperCase() : 'C',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                
-                const SizedBox(width: 16),
-                
-                // Customer Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              customer.displayName,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          // Customer Tags
-                          if (customer.isVIP)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.purple,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Text(
-                                'VIP',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
+
+                  const SizedBox(width: 16),
+
+                  // Customer Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                customer.displayName,
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
+                            if (customer.isVIP)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.purple,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Text(
+                                  'VIP',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        Text(
+                          customer.email,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                        ),
+
+                        if (customer.phone != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            customer.phone!,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[500],
+                            ),
+                          ),
                         ],
+
+                        const SizedBox(height: 8),
+
+                        Row(
+                          children: [
+                            Icon(Icons.payment, size: 14, color: Colors.grey[600]),
+                            const SizedBox(width: 4),
+                            Text(
+                              '₦${customer.totalSpentNaira.toStringAsFixed(0)}',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Icon(Icons.receipt, size: 14, color: Colors.grey[600]),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${customer.totalTransactions} transactions',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(width: 16),
+
+                  // Status and Tier Indicators
+                  Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _getTierColor(customer.tier).withAlpha((0.1 * 255).round()),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: _getTierColor(customer.tier)),
+                        ),
+                        child: Text(
+                          customer.tier.toUpperCase(),
+                          style: TextStyle(
+                            color: _getTierColor(customer.tier),
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                      
+
+                      const SizedBox(height: 8),
+
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(customer.status),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+
                       const SizedBox(height: 4),
-                      
+
                       Text(
-                        customer.email,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        customer.status,
+                        style: TextStyle(
+                          fontSize: 10,
                           color: Colors.grey[600],
                         ),
                       ),
-                      
-                      if (customer.phone != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          customer.phone!,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[500],
+                    ],
+                  ),
+                ],
+              ),
+
+              if (customer.requiresAttention) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange[300]!),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning, size: 16, color: Colors.orange[700]),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Needs attention - ${customer.daysSinceLastTransaction} days since last transaction',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.orange[700],
                           ),
                         ),
-                      ],
-                      
-                      const SizedBox(height: 8),
-                      
-                      Row(
-                        children: [
-                          Icon(Icons.payment, size: 14, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
-                          Text(
-                            '₦${customer.totalSpentNaira.toStringAsFixed(0)}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Icon(Icons.receipt, size: 14, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${customer.totalTransactions} transactions',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
                       ),
                     ],
                   ),
                 ),
-                
-                const SizedBox(width: 16),
-                
-                // Status and Tier Indicators
-                Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: _getTierColor(customer.tier).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _getTierColor(customer.tier)),
-                      ),
-                      child: Text(
-                        customer.tier.toUpperCase(),
-                        style: TextStyle(
-                          color: _getTierColor(customer.tier),
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 8),
-                    
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(customer.status),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 4),
-                    
-                    Text(
-                      customer.status,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
               ],
-            ),
-            
-            if (customer.requiresAttention) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.orange[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange[300]!),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.warning, size: 16, color: Colors.orange[700]),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Needs attention - ${customer.daysSinceLastTransaction} days since last transaction',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.orange[700],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -637,7 +631,7 @@ class _CustomersScreenState extends State<CustomersScreen>
                         ),
                         const SizedBox(height: 8),
                         DropdownButtonFormField<String>(
-                          value: customerProvider.sortBy,
+                            initialValue: customerProvider.sortBy,
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),
                           ),
