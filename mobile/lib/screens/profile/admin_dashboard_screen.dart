@@ -238,7 +238,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Reject KYC'),
-        content: Column(
+            content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text('Provide a reason for rejection (optional):'),
@@ -246,9 +246,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             TextField(
               controller: controller,
               maxLines: 3,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Reason...',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.primary,
+                    width: 1,
+                  ),
+                ),
               ),
             ),
           ],

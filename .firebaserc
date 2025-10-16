@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "metartpay-bac2f"
-  }
+    "default": "metartpay-bac2f",
+    "staging": "metartpay-bac2f"
+  },
+  "targets": {},
+  "etags": {}
 }

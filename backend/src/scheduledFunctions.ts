@@ -1,12 +1,5 @@
 import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { setGlobalOptions } from 'firebase-functions/v2';
 import { TransactionMonitorController } from './controllers/transactionMonitorController';
-
-// Set global options for scheduled functions
-setGlobalOptions({
-  maxInstances: 1,
-  region: 'us-central1',
-});
 
 const transactionMonitorController = new TransactionMonitorController();
 

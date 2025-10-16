@@ -21,6 +21,19 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.admin == true;
     }
 
+    // Staging override: allow authenticated users full read/write when their
+    // ID token contains env == 'staging'. This makes staging/e2e easier but
+    // should NOT be used in production.
+    function isStagingUser() {
+      return request.auth != null && request.auth.token.env == 'staging';
+    }
+
+    // Global staging shortcut: if the token explicitly marks the environment
+    // as 'staging' permit reads/writes across documents (for staging only).
+    match /{document=**} {
+      allow read, write: if isStagingUser();
+    }
+
     // Users: allow users to manage their own profile
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;

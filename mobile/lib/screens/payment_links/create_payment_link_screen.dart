@@ -88,6 +88,7 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                         prefixIcon: const Icon(Icons.title),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1),
                         ),
                       ),
                       validator: (value) {
@@ -106,6 +107,7 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                         prefixIcon: const Icon(Icons.description),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1),
                         ),
                       ),
                       maxLines: 3,
@@ -120,6 +122,7 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                         prefixText: '₦ ',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1),
                         ),
                       ),
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),

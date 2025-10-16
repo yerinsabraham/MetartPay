@@ -110,9 +110,10 @@ class _BusinessInfoStepState extends State<BusinessInfoStep> {
                       decoration: InputDecoration(
                         labelText: 'Business Name *',
                         hintText: 'Enter your business name',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1),
+                            ),
                         prefixIcon: const Icon(Icons.business),
                       ),
                       validator: (value) {
@@ -131,7 +132,11 @@ class _BusinessInfoStepState extends State<BusinessInfoStep> {
                         labelText: 'Industry *',
                         hintText: 'Select your industry',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1,
+                          ),
                         ),
                         prefixIcon: const Icon(Icons.category),
                       ),
@@ -162,9 +167,10 @@ class _BusinessInfoStepState extends State<BusinessInfoStep> {
                       decoration: InputDecoration(
                         labelText: 'Business Email *',
                         hintText: 'contact@yourbusiness.com',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1),
+                            ),
                         prefixIcon: const Icon(Icons.email),
                       ),
                       validator: (value) {
@@ -187,7 +193,11 @@ class _BusinessInfoStepState extends State<BusinessInfoStep> {
                         labelText: 'Business Address (Optional)',
                         hintText: 'Enter your business address',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1,
+                          ),
                         ),
                         prefixIcon: const Icon(Icons.location_on),
                         alignLabelWithHint: true,

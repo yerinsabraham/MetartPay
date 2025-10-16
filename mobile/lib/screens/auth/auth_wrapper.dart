@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import '../home/home_page_new.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/merchant_provider.dart';
@@ -55,7 +57,31 @@ class AuthWrapper extends StatelessWidget {
           return const MerchantSetupWizard();
         }
 
-        // Otherwise show the main app
+        // Otherwise show the main app. In debug builds provide a small dev button
+        // to open the simplified Home V2 for QA without changing default routes.
+        if (kDebugMode) {
+          return Stack(
+            children: [
+              const HomeScreen(),
+              Positioned(
+                top: 16,
+                right: 12,
+                child: SafeArea(
+                  child: FloatingActionButton.small(
+                    heroTag: 'home_v2_debug',
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/home-v2');
+                    },
+                    backgroundColor: Colors.white,
+                    foregroundColor: Theme.of(context).colorScheme.primary,
+                    child: const Text('V2', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+
         return const HomeScreen();
       },
     );

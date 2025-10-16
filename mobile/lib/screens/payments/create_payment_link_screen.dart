@@ -253,10 +253,16 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                       TextFormField(
                         controller: _amountController,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Amount (NGN)',
-                          prefixIcon: Icon(Icons.currency_exchange),
-                          border: OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.currency_exchange),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 1,
+                            ),
+                          ),
                           hintText: '0.00',
                         ),
                         validator: (value) {
@@ -352,10 +358,16 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                       // Chain Selection
                       DropdownButtonFormField<String>(
                           initialValue: _selectedChain,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Select Blockchain',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.account_tree),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 1,
+                            ),
+                          ),
+                          prefixIcon: const Icon(Icons.account_tree),
                         ),
                         items: _supportedChains.map((chain) {
                           return DropdownMenuItem<String>(
@@ -384,10 +396,16 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                       // Token Selection
                       DropdownButtonFormField<String>(
                           initialValue: _selectedToken,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Select Token',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.token),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 1,
+                            ),
+                          ),
+                          prefixIcon: const Icon(Icons.token),
                         ),
                         items: (currentChain['tokens'] as List<String>).map((token) {
                           return DropdownMenuItem<String>(
@@ -429,9 +447,15 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                       TextFormField(
                         controller: _descriptionController,
                         maxLines: 3,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Description (Optional)',
-                          border: OutlineInputBorder(),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 1,
+                            ),
+                          ),
                           hintText: 'Enter payment description...',
                         ),
                       ),

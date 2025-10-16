@@ -4,7 +4,14 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'screens/auth/auth_wrapper.dart';
-import 'screens/home/home_screen.dart';
+import 'screens/home/home_page_new.dart';
+import 'screens/receive_payments_screen.dart';
+import 'screens/payment_links/create_payment_link_screen.dart';
+import 'screens/payment_links/payment_links_screen.dart';
+import 'screens/wallets/crypto_wallets_screen.dart';
+import 'screens/payments/create_payment_v2.dart';
+import 'screens/payments/qr_view_v2.dart';
+import 'screens/transactions/transaction_history_screen.dart';
 import 'screens/setup/merchant_setup_wizard.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
@@ -90,11 +97,34 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF681f28), // Official MetartPay brand color
+            seedColor: const Color(0xFFC62B14), // Updated app theme color
             brightness: Brightness.light,
-            primary: const Color(0xFF681f28),
+            primary: const Color(0xFFC62B14),
             secondary: const Color(0xFFf79816),
             tertiary: const Color(0xFFe05414),
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFFC62B14), width: 2),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFFC62B14), width: 2),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFFC62B14), width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.red.shade700, width: 2),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.red.shade700, width: 2),
+            ),
+            floatingLabelStyle: TextStyle(color: Color(0xFFC62B14)),
           ),
           useMaterial3: true,
           appBarTheme: const AppBarTheme(
@@ -116,9 +146,22 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-        home: const AuthWrapper(),
+  // Set Home V2 (new simplified home) as the initial page per request.
+  home: const HomePageNew(),
         routes: {
-          '/home': (context) => const HomeScreen(),
+          '/home': (context) => const HomePageNew(),
+          '/home-v2': (context) => const HomePageNew(),
+          // Lightweight alias routes for HomeController navigation
+          '/receive': (context) {
+            final merchantId = Provider.of<MerchantProvider>(context, listen: false).currentMerchant?.id ?? '';
+            return ReceivePaymentsScreen(merchantId: merchantId);
+          },
+          '/create-payment-link': (context) => const CreatePaymentLinkScreen(),
+          '/create-payment-v2': (context) => const CreatePaymentV2(),
+          '/qr-view-v2': (context) => QRViewV2(),
+          '/payment-links': (context) => const PaymentLinksScreen(),
+          '/wallets': (context) => const CryptoWalletsScreen(),
+          '/transactions': (context) => const TransactionHistoryScreen(),
           '/setup': (context) => const MerchantSetupWizard(),
           '/profile': (context) => const ProfileScreen(),
           '/notifications': (context) => const NotificationsScreen(),

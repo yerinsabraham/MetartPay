@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import '../models/models.dart' as models;
 import '../utils/app_logger.dart';
+import 'crypto_wallet_service.dart';
 
 class FirebaseService {
   static final FirebaseService _instance = FirebaseService._internal();
@@ -22,6 +23,19 @@ class FirebaseService {
 
   // Helper to get current user ID
   String? get currentUserId => _auth.currentUser?.uid;
+
+  /// Get the current Firebase ID token for the logged-in user, or null if not available.
+  Future<String?> getIdToken({bool forceRefresh = false}) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return null;
+      final token = await user.getIdToken(forceRefresh);
+      return token;
+    } catch (e) {
+      AppLogger.e('Error getting ID token: $e', error: e);
+      return null;
+    }
+  }
 
   // Merchant Operations
   Future<models.Merchant> saveMerchant(models.Merchant merchant) async {
@@ -463,6 +477,38 @@ class FirebaseService {
     }
   }
 
+  /// Generate deterministic wallet addresses for a merchant and persist them.
+  /// Returns the generated map of network->address.
+  Future<Map<String, String>> generateAndSaveMerchantWallets(String merchantId) async {
+    try {
+      final userId = currentUserId;
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Generate addresses deterministically
+      final wallets = CryptoWalletService.generateWalletAddresses(merchantId: merchantId, userId: userId);
+
+      // Save wallet addresses on merchant document and mark walletsGenerated
+      final merchantRef = _firestore.collection(_merchantsCollection).doc(merchantId);
+      await merchantRef.set({
+        'walletAddresses': wallets,
+        'walletsGenerated': true,
+        'walletsGeneratedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      // Upsert per-network wallet docs
+      await upsertMerchantWallets(merchantId, wallets);
+
+      AppLogger.d('DEBUG: Generated and saved ${wallets.length} wallets for merchant $merchantId');
+      return wallets;
+    } catch (e) {
+      AppLogger.e('Failed to generate and save merchant wallets: $e', error: e);
+      rethrow;
+    }
+  }
+
   Stream<List<models.Invoice>> watchMerchantInvoices(String merchantId) {
     return _firestore
         .collection(_invoicesCollection)
@@ -844,6 +890,20 @@ class FirebaseService {
         'dailyRevenue': <String, double>{},
         'recentTransactions': <Map<String, dynamic>>[],
       };
+    }
+  }
+
+  /// Save a receipt record for merchant/transaction. `id` should be unique (e.g. 'receipt_<txId>').
+  Future<void> saveReceipt(String id, Map<String, dynamic> data) async {
+    try {
+      await _firestore.collection('receipts').doc(id).set({
+        ...data,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      AppLogger.d('Receipt saved: $id');
+    } catch (e) {
+      AppLogger.e('Error saving receipt $id: $e', error: e);
+      rethrow;
     }
   }
 }

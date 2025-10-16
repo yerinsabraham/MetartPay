@@ -95,7 +95,11 @@ class _KYCDetailsStepState extends State<KYCDetailsStep> {
                         labelText: 'Full Name *',
                         hintText: 'Enter your full name',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1,
+                          ),
                         ),
                         prefixIcon: const Icon(Icons.person),
                       ),
@@ -115,7 +119,11 @@ class _KYCDetailsStepState extends State<KYCDetailsStep> {
                         labelText: 'National ID Number (Optional)',
                         hintText: 'Enter your national ID number',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1,
+                          ),
                         ),
                         prefixIcon: const Icon(Icons.badge),
                       ),
@@ -134,7 +142,11 @@ class _KYCDetailsStepState extends State<KYCDetailsStep> {
                         labelText: 'BVN (Optional)',
                         hintText: 'Enter your Bank Verification Number',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1,
+                          ),
                         ),
                         prefixIcon: const Icon(Icons.account_balance),
                         helperText: 'This helps with bank account verification',
@@ -156,7 +168,11 @@ class _KYCDetailsStepState extends State<KYCDetailsStep> {
                         labelText: 'Residential Address (Optional)',
                         hintText: 'Enter your residential address',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1,
+                          ),
                         ),
                         prefixIcon: const Icon(Icons.home),
                         alignLabelWithHint: true,

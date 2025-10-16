@@ -240,7 +240,11 @@ class _BankAccountStepState extends State<BankAccountStep> {
                               labelText: 'Bank *',
                               hintText: 'Select your bank',
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  width: 1,
+                                ),
                               ),
                               prefixIcon: const Icon(Icons.account_balance),
                             ),
@@ -278,11 +282,15 @@ class _BankAccountStepState extends State<BankAccountStep> {
                         FilteringTextInputFormatter.digitsOnly,
                         LengthLimitingTextInputFormatter(10),
                       ],
-                      decoration: InputDecoration(
+                        decoration: InputDecoration(
                         labelText: 'Account Number *',
                         hintText: 'Enter 10-digit account number',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1,
+                          ),
                         ),
                         prefixIcon: const Icon(Icons.numbers),
                         suffixIcon: _isVerifying
@@ -323,11 +331,15 @@ class _BankAccountStepState extends State<BankAccountStep> {
                     TextFormField(
                       controller: _accountNameController,
                       readOnly: true,
-                      decoration: InputDecoration(
+                        decoration: InputDecoration(
                         labelText: 'Account Name',
                         hintText: 'Will be filled after verification',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1,
+                          ),
                         ),
                         prefixIcon: const Icon(Icons.person_outline),
                         filled: true,

@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Allow merchants to read their own merchant doc and wallets
+    match /merchants/{merchantId} {
+      allow read: if request.auth != null && request.auth.uid == merchantId;
+      // merchants cannot modify core profile fields via client
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Wallets collection: each merchant may create/update their own deterministic wallet docs
+    match /wallets/{walletId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.merchantId;
+
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.merchantId
+        && request.resource.data.keys().hasAll(['merchantId','network','address'])
+        && request.resource.data.merchantId is string
+        && request.resource.data.network is string
+        && request.resource.data.address is string
+        && request.resource.data.address.size() > 0;
+
+      allow update: if request.auth != null
+        && request.auth.uid == resource.data.merchantId
+        && request.resource.data.keys().hasOnly(['merchantId','network','address','updatedAt'])
+        && request.resource.data.merchantId == resource.data.merchantId;
+
+      allow delete: if false; // Deletions should be done server-side
+    }
+
+    // Payments: allow merchants to create payments for themselves with strict validation
+    match /payments/{paymentId} {
+      allow read: if request.auth != null && (
+        resource.data.merchantId == request.auth.uid || request.auth.uid == resource.data.createdBy
+      );
+
+      allow create: if request.auth != null
+        // merchant creates payments only for their merchantId
+        && request.resource.data.merchantId == request.auth.uid
+        // required fields and basic types
+        && request.resource.data.keys().hasAll(['merchantId','amountNaira','crypto','network','token','createdAt','status','payload'])
+        && request.resource.data.amountNaira is number
+        && request.resource.data.amountNaira >= 0
+        && request.resource.data.crypto is string
+        && request.resource.data.network is string
+        && request.resource.data.token is string
+        && request.resource.data.status in ['pending','paid','cancelled']
+        && request.resource.data.createdAt is timestamp
+        // do not allow client to set backend-only fields
+        && !(request.resource.data.keys().hasAny(['paidAt','backendProcessed']));
+
+      // updates (marking as paid) must be done server-side only
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Transactions: only server writes transaction events. Clients may read for their merchant.
+    match /transactions/{txId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.merchantId;
+      allow create, update, delete: if false;
+    }
+
+    // Receipts: merchants may create a receipt when a payment is confirmed
+    match /receipts/{receiptId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.merchantId;
+
+      allow create: if request.auth != null
+        && request.resource.data.merchantId == request.auth.uid
+        && request.resource.data.keys().hasAll(['merchantId','paymentId','amountNaira','createdAt','transactionId'])
+        && request.resource.data.paymentId is string
+        && request.resource.data.amountNaira is number
+        && request.resource.data.createdAt is timestamp;
+
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Invoices/payment_links: disallow client writes (server only)
+    match /invoices/{doc} { allow read: if request.auth != null; allow write: if false; }
+    match /payment_links/{doc} { allow read: if request.auth != null; allow write: if false; }
+
+    // Default rule: deny
+    match /{document=**} { allow read, write: if false; }
+  }
+}

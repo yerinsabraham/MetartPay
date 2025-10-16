@@ -666,7 +666,13 @@ class _InfoField extends StatelessWidget {
           keyboardType: keyboardType,
           decoration: InputDecoration(
             prefixIcon: Icon(icon),
-            border: const OutlineInputBorder(),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 1,
+              ),
+            ),
             filled: !isEditing,
             fillColor: isEditing ? null : theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).round()),
           ),
@@ -742,18 +748,24 @@ class _WalletAddressCard extends StatelessWidget {
             TextFormField(
               controller: controller,
               decoration: InputDecoration(
-                hintText: placeholder,
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.qr_code_scanner),
-                  onPressed: () {
-                    // TODO: Implement QR code scanner
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('QR Scanner - Coming Soon')),
-                    );
-                  },
+                  hintText: placeholder,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 1,
+                    ),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.qr_code_scanner),
+                    onPressed: () {
+                      // TODO: Implement QR code scanner
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('QR Scanner - Coming Soon')),
+                      );
+                    },
+                  ),
                 ),
-              ),
             ),
           ],
         ),
