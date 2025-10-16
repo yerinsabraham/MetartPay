@@ -54,6 +54,61 @@ class Merchant {
   });
 
   factory Merchant.fromJson(Map<String, dynamic> json) {
+    // Helper to parse timestamps coming from Firestore (Timestamp), int(ms), ISO string, or DateTime
+    DateTime _parseTimestamp(dynamic value) {
+      if (value == null) return DateTime.now();
+      // Firestore Timestamp
+      try {
+        // Avoid importing cloud_firestore here; accept common shapes
+        if (value is DateTime) return value;
+        if (value is int) return DateTime.fromMillisecondsSinceEpoch(value);
+        if (value is String) {
+          final dt = DateTime.tryParse(value);
+          if (dt != null) return dt;
+        }
+        // Firestore Timestamp has toDate() method
+        if (value is Map && value.containsKey('_seconds')) {
+          final seconds = value['_seconds'];
+          if (seconds is int) return DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
+        }
+        // Fallback to toDate() if available
+        final toDate = value?.toDate;
+        if (toDate is Function) {
+          final d = toDate();
+          if (d is DateTime) return d;
+        }
+      } catch (_) {}
+      return DateTime.now();
+    }
+
+    // Normalize wallet addresses map
+    Map<String, String> _parseWallets(dynamic w) {
+      if (w == null) return {};
+      try {
+        if (w is Map<String, String>) return w;
+        if (w is Map) return Map<String, String>.fromEntries(
+          w.entries.map((e) => MapEntry(e.key.toString(), e.value?.toString() ?? '')),
+        );
+      } catch (_) {}
+      return {};
+    }
+
+    bool _parseBool(dynamic v) {
+      if (v == null) return false;
+      if (v is bool) return v;
+      if (v is String) return v.toLowerCase() == 'true';
+      if (v is int) return v != 0;
+      return false;
+    }
+
+    double _parseDouble(dynamic v) {
+      if (v == null) return 0.0;
+      if (v is double) return v;
+      if (v is int) return v.toDouble();
+      if (v is String) return double.tryParse(v) ?? 0.0;
+      return 0.0;
+    }
+
     return Merchant(
       id: json['id'] ?? '',
       userId: json['userId'] ?? '',
@@ -66,15 +121,15 @@ class Merchant {
       bvn: json['bvn'],
       address: json['address'],
       kycStatus: json['kycStatus'] ?? 'pending',
-      isSetupComplete: json['isSetupComplete'] ?? false,
+      isSetupComplete: _parseBool(json['isSetupComplete']),
       bankAccountNumber: json['bankAccountNumber'] ?? '',
       bankName: json['bankName'] ?? '',
       bankAccountName: json['bankAccountName'] ?? '',
-      walletAddresses: Map<String, String>.from(json['walletAddresses'] ?? {}),
-      totalBalance: (json['totalBalance'] ?? 0.0).toDouble(),
-      availableBalance: (json['availableBalance'] ?? 0.0).toDouble(),
-      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
-      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
+      walletAddresses: _parseWallets(json['walletAddresses']),
+      totalBalance: _parseDouble(json['totalBalance']),
+      availableBalance: _parseDouble(json['availableBalance']),
+      createdAt: _parseTimestamp(json['createdAt']),
+      updatedAt: _parseTimestamp(json['updatedAt']),
     );
   }
 

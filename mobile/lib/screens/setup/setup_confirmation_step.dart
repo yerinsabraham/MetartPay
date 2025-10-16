@@ -110,14 +110,14 @@ class SetupConfirmationStep extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          MetartPayColors.primary.withOpacity(0.1),
-                          Colors.orange.withOpacity(0.1),
+                          MetartPayColors.primary.withAlpha((0.1 * 255).round()),
+                          Colors.orange.withAlpha((0.1 * 255).round()),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: MetartPayColors.primary.withOpacity(0.2)),
+                      border: Border.all(color: MetartPayColors.primary.withAlpha((0.2 * 255).round())),
                     ),
                     child: Column(
                       children: [

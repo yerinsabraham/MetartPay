@@ -441,9 +441,9 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withAlpha((0.1 * 255).round()),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withAlpha((0.3 * 255).round())),
       ),
       child: Column(
         children: [
@@ -578,13 +578,14 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
         token: _selectedToken!,
       );
 
-      if (result != null && mounted) {
+      if (!mounted) return;
+      if (result != null) {
         setState(() {
           _qrCodeData = result;
         });
       }
     } catch (e) {
-      print('Error generating QR code: $e');
+      debugPrint('Error generating QR code: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -602,9 +603,11 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
       token: _selectedToken,
     );
     
-    Share.share(
-      'Pay ${widget.paymentLink['title']} - ₦${widget.paymentLink['amount']}\n\n$url',
-      subject: 'Payment Request - ${widget.paymentLink['title']}',
+    SharePlus.instance.share(
+      ShareParams(
+        text: 'Pay ${widget.paymentLink['title']} - \u20a6${widget.paymentLink['amount']}\n\n$url',
+        subject: 'Payment Request - ${widget.paymentLink['title']}',
+      ),
     );
   }
 
@@ -612,8 +615,10 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
     final paymentLinkProvider = Provider.of<PaymentLinkProvider>(context, listen: false);
     final url = paymentLinkProvider.getPaymentUrl(widget.paymentLink['id']);
     
+    // capture and perform clipboard operation, then use State.context for UI
     Clipboard.setData(ClipboardData(text: url));
-    ScaffoldMessenger.of(context).showSnackBar(
+    if (!mounted) return;
+    ScaffoldMessenger.of(this.context).showSnackBar(
       const SnackBar(
         content: Text('Payment link copied to clipboard'),
         duration: Duration(seconds: 2),
@@ -629,6 +634,7 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
     );
     
     // Update local state
+    if (!mounted) return;
     setState(() {
       widget.paymentLink['status'] = 
           widget.paymentLink['status'] == 'active' ? 'inactive' : 'active';
@@ -638,16 +644,16 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
   Future<void> _deletePaymentLink() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Payment Link'),
         content: const Text('Are you sure you want to delete this payment link? This action cannot be undone.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Delete'),
           ),
@@ -656,12 +662,10 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
     );
     
     if (confirmed == true) {
-      final paymentLinkProvider = Provider.of<PaymentLinkProvider>(context, listen: false);
+      final paymentLinkProvider = Provider.of<PaymentLinkProvider>(this.context, listen: false);
       await paymentLinkProvider.deletePaymentLink(widget.paymentLink['id']);
-      
-      if (mounted) {
-        Navigator.pop(context, true);
-      }
+      if (!mounted) return;
+      Navigator.pop(this.context, true);
     }
   }
 }

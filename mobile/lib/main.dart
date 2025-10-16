@@ -4,7 +4,14 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'screens/auth/auth_wrapper.dart';
-import 'screens/home/enhanced_home_screen.dart';
+import 'screens/home/home_page_new.dart';
+import 'screens/receive_payments_screen.dart';
+import 'screens/payment_links/create_payment_link_screen.dart';
+import 'screens/payment_links/payment_links_screen.dart';
+import 'screens/wallets/crypto_wallets_screen.dart';
+import 'screens/payments/create_payment_v2.dart';
+import 'screens/payments/qr_view_v2.dart';
+import 'screens/transactions/transaction_history_screen.dart';
 import 'screens/setup/merchant_setup_wizard.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
@@ -16,28 +23,29 @@ import 'providers/notification_provider.dart';
 import 'providers/security_provider.dart';
 import 'providers/customer_provider.dart';
 import 'services/notification_service.dart';
+import 'utils/app_logger.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   try {
-    print('DEBUG: Initializing Firebase...');
+    AppLogger.d('DEBUG: Initializing Firebase...');
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    print('DEBUG: Firebase initialized successfully');
-    print('DEBUG: Project ID: ${Firebase.app().options.projectId}');
-    
+    AppLogger.d('DEBUG: Firebase initialized successfully');
+    AppLogger.d('DEBUG: Project ID: ${Firebase.app().options.projectId}');
+
     // Initialize Firebase Messaging background handler
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-    print('DEBUG: Firebase Messaging background handler registered');
-    
-  } catch (e) {
-    print('DEBUG: Firebase initialization failed: $e');
+    AppLogger.d('DEBUG: Firebase Messaging background handler registered');
+
+  } catch (e, s) {
+    AppLogger.e('DEBUG: Firebase initialization failed: $e', error: e, stackTrace: s);
     // Continue app launch even if Firebase fails
   }
-  
-  print('DEBUG: Launching MetartPay...');
+
+  AppLogger.d('DEBUG: Launching MetartPay...');
   runApp(const MyApp());
 }
 
@@ -46,25 +54,25 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('DEBUG: Building MetartPay App');
+  AppLogger.d('DEBUG: Building MetartPay App');
     
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) {
-          print('DEBUG: Creating AuthProvider');
+          AppLogger.d('DEBUG: Creating AuthProvider');
           return AuthProvider();
         }),
         ChangeNotifierProvider(create: (_) {
-          print('DEBUG: Creating MerchantProvider');
+          AppLogger.d('DEBUG: Creating MerchantProvider');
           return MerchantProvider();
         }),
         ChangeNotifierProvider(create: (_) {
-          print('DEBUG: Creating WalletProvider');
+          AppLogger.d('DEBUG: Creating WalletProvider');
           return WalletProvider();
         }),
         ChangeNotifierProxyProvider<MerchantProvider, PaymentLinkProvider>(
           create: (context) {
-            print('DEBUG: Creating PaymentLinkProvider');
+            AppLogger.d('DEBUG: Creating PaymentLinkProvider');
             return PaymentLinkProvider(context.read<MerchantProvider>());
           },
           update: (context, merchantProvider, previous) {
@@ -72,15 +80,15 @@ class MyApp extends StatelessWidget {
           },
         ),
         ChangeNotifierProvider(create: (_) {
-          print('DEBUG: Creating NotificationProvider');
+          AppLogger.d('DEBUG: Creating NotificationProvider');
           return NotificationProvider();
         }),
         ChangeNotifierProvider(create: (_) {
-          print('DEBUG: Creating SecurityProvider');
+          AppLogger.d('DEBUG: Creating SecurityProvider');
           return SecurityProvider();
         }),
         ChangeNotifierProvider(create: (_) {
-          print('DEBUG: Creating CustomerProvider');
+          AppLogger.d('DEBUG: Creating CustomerProvider');
           return CustomerProvider();
         }),
       ],
@@ -89,11 +97,34 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF681f28), // Official MetartPay brand color
+            seedColor: const Color(0xFFC62B14), // Updated app theme color
             brightness: Brightness.light,
-            primary: const Color(0xFF681f28),
+            primary: const Color(0xFFC62B14),
             secondary: const Color(0xFFf79816),
             tertiary: const Color(0xFFe05414),
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFFC62B14), width: 2),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFFC62B14), width: 2),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFFC62B14), width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.red.shade700, width: 2),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.red.shade700, width: 2),
+            ),
+            floatingLabelStyle: TextStyle(color: Color(0xFFC62B14)),
           ),
           useMaterial3: true,
           appBarTheme: const AppBarTheme(
@@ -115,9 +146,22 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-        home: const AuthWrapper(),
+  // Set Home V2 (new simplified home) as the initial page per request.
+  home: const HomePageNew(),
         routes: {
-          '/home': (context) => const EnhancedHomeScreen(),
+          '/home': (context) => const HomePageNew(),
+          '/home-v2': (context) => const HomePageNew(),
+          // Lightweight alias routes for HomeController navigation
+          '/receive': (context) {
+            final merchantId = Provider.of<MerchantProvider>(context, listen: false).currentMerchant?.id ?? '';
+            return ReceivePaymentsScreen(merchantId: merchantId);
+          },
+          '/create-payment-link': (context) => const CreatePaymentLinkScreen(),
+          '/create-payment-v2': (context) => const CreatePaymentV2(),
+          '/qr-view-v2': (context) => QRViewV2(),
+          '/payment-links': (context) => const PaymentLinksScreen(),
+          '/wallets': (context) => const CryptoWalletsScreen(),
+          '/transactions': (context) => const TransactionHistoryScreen(),
           '/setup': (context) => const MerchantSetupWizard(),
           '/profile': (context) => const ProfileScreen(),
           '/notifications': (context) => const NotificationsScreen(),

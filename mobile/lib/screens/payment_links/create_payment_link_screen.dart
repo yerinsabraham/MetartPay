@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/crypto_wallet_service.dart';
 import '../../providers/payment_link_provider.dart';
 import '../../providers/merchant_provider.dart';
+import '../../utils/app_logger.dart';
 
 class CreatePaymentLinkScreen extends StatefulWidget {
   const CreatePaymentLinkScreen({super.key});
@@ -16,11 +24,27 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
 
-  final List<String> _availableNetworks = ['ETH', 'BSC', 'MATIC'];
-  final List<String> _availableTokens = ['USDT', 'USDC'];
-  
-  Set<String> _selectedNetworks = {'ETH', 'BSC'};
-  Set<String> _selectedTokens = {'USDT', 'USDC'};
+  // System-wide supported networks/tokens (merchant cannot change)
+  final List<String> _availableNetworks = ['BTC', 'ETH', 'BSC', 'SOL'];
+  // Map tokens per network to avoid showing invalid combos (e.g., BTC USDT)
+  final Map<String, List<String>> _networkTokens = {
+    'BTC': ['BTC'],
+    'ETH': ['ETH', 'USDT', 'USDC'],
+    'BSC': ['BNB', 'USDT', 'BUSD'],
+    'SOL': ['SOL', 'USDT', 'USDC'],
+  };
+
+  // Aggregated list of unique tokens across networks (preserves first-seen order)
+  List<String> get _availableTokens {
+    final seen = <String>{};
+    final out = <String>[];
+    for (final tokens in _networkTokens.values) {
+      for (final t in tokens) {
+        if (seen.add(t)) out.add(t);
+      }
+    }
+    return out;
+  }
   
   DateTime? _expiryDate;
   bool _hasExpiry = false;
@@ -36,11 +60,13 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: cs.surface,
       appBar: AppBar(
         title: const Text('Create Payment Link'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: cs.primary,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -62,6 +88,7 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                         prefixIcon: const Icon(Icons.title),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1),
                         ),
                       ),
                       validator: (value) {
@@ -80,6 +107,7 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                         prefixIcon: const Icon(Icons.description),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1),
                         ),
                       ),
                       maxLines: 3,
@@ -94,6 +122,7 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                         prefixText: '₦ ',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1),
                         ),
                       ),
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -115,7 +144,7 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                   title: 'Accepted Networks',
                   children: [
                     const Text(
-                      'Select which blockchain networks customers can use to pay:',
+                      'Supported networks (system-wide). Buyers will choose their preferred network at checkout:',
                       style: TextStyle(color: Colors.grey),
                     ),
                     const SizedBox(height: 12),
@@ -123,27 +152,9 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                       spacing: 8,
                       runSpacing: 8,
                       children: _availableNetworks.map((network) {
-                        final isSelected = _selectedNetworks.contains(network);
-                        return FilterChip(
+                        return Chip(
                           label: Text(_getNetworkDisplayName(network)),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            setState(() {
-                              if (selected) {
-                                _selectedNetworks.add(network);
-                              } else {
-                                // Ensure at least one network is selected
-                                if (_selectedNetworks.length > 1) {
-                                  _selectedNetworks.remove(network);
-                                }
-                              }
-                            });
-                          },
-                          avatar: isSelected 
-                              ? const Icon(Icons.check_circle, size: 18)
-                              : const Icon(Icons.circle_outlined, size: 18),
-                          selectedColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                          checkmarkColor: Theme.of(context).colorScheme.primary,
+                          backgroundColor: Theme.of(context).colorScheme.surface,
                         );
                       }).toList(),
                     ),
@@ -154,7 +165,7 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                   title: 'Accepted Tokens',
                   children: [
                     const Text(
-                      'Select which stablecoins customers can use:',
+                      'Supported stablecoins (system-wide):',
                       style: TextStyle(color: Colors.grey),
                     ),
                     const SizedBox(height: 12),
@@ -162,27 +173,9 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                       spacing: 8,
                       runSpacing: 8,
                       children: _availableTokens.map((token) {
-                        final isSelected = _selectedTokens.contains(token);
-                        return FilterChip(
+                        return Chip(
                           label: Text(token),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            setState(() {
-                              if (selected) {
-                                _selectedTokens.add(token);
-                              } else {
-                                // Ensure at least one token is selected
-                                if (_selectedTokens.length > 1) {
-                                  _selectedTokens.remove(token);
-                                }
-                              }
-                            });
-                          },
-                          avatar: isSelected 
-                              ? const Icon(Icons.check_circle, size: 18)
-                              : const Icon(Icons.circle_outlined, size: 18),
-                          selectedColor: Theme.of(context).colorScheme.secondary.withOpacity(0.2),
-                          checkmarkColor: Theme.of(context).colorScheme.secondary,
+                          backgroundColor: Theme.of(context).colorScheme.surface,
                         );
                       }).toList(),
                     ),
@@ -238,8 +231,16 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                     ],
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
                 _buildPreview(),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    'Preview updates as you type. Creating the link may take a few seconds.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurface.withAlpha((0.7 * 255).round())),
+                  ),
+                ),
                 const SizedBox(height: 32),
               ],
             ),
@@ -252,7 +253,7 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withAlpha((0.1 * 255).round()),
               blurRadius: 4,
               offset: const Offset(0, -2),
             ),
@@ -348,13 +349,13 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                    Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                    Theme.of(context).colorScheme.primary.withAlpha((0.1 * 255).round()),
+                    Theme.of(context).colorScheme.secondary.withAlpha((0.1 * 255).round()),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                      color: Theme.of(context).colorScheme.primary.withAlpha((0.2 * 255).round()),
                 ),
               ),
               child: Column(
@@ -390,19 +391,20 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                   Wrap(
                     spacing: 4,
                     runSpacing: 4,
-                    children: _selectedNetworks.expand((network) {
-                      return _selectedTokens.map((token) {
+                    children: _availableNetworks.expand((network) {
+                      final tokens = _networkTokens[network] ?? [network];
+                      return tokens.map((token) {
                         return Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.blue[50],
+                            color: Theme.of(context).colorScheme.secondary.withAlpha((0.12 * 255).round()),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.blue[200]!),
+                            border: Border.all(color: Theme.of(context).colorScheme.secondary.withAlpha((0.28 * 255).round())),
                           ),
                           child: Text(
                             '$network $token',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.blue[800],
+                              color: Theme.of(context).colorScheme.secondary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -441,17 +443,20 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
 
   String _getNetworkDisplayName(String network) {
     switch (network) {
+      case 'BTC':
+        return 'Bitcoin';
       case 'ETH':
         return 'Ethereum';
       case 'BSC':
         return 'Binance Smart Chain';
       case 'MATIC':
         return 'Polygon';
+      case 'SOL':
+        return 'Solana';
       default:
         return network;
     }
   }
-
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
   }
@@ -473,29 +478,7 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
   }
 
   Future<void> _createPaymentLink() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    if (_selectedNetworks.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select at least one network'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    if (_selectedTokens.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select at least one token'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     if (_hasExpiry && _expiryDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -507,57 +490,246 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
+
+    // Show modal progress indicator so user knows work is in progress
+    if (mounted) {
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (c) => const Center(child: CircularProgressIndicator()),
+      );
+    }
 
     try {
       final paymentLinkProvider = Provider.of<PaymentLinkProvider>(context, listen: false);
-      
-      final result = await paymentLinkProvider.createPaymentLink(
-        title: _titleController.text.trim(),
-        description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
-        amount: double.parse(_amountController.text),
-        networks: _selectedNetworks.toList(),
-        tokens: _selectedTokens.toList(),
-        expiresAt: _expiryDate,
-      );
+      final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+
+      final currentMerchant = merchantProvider.currentMerchant;
+      if (currentMerchant == null) throw Exception('No merchant selected');
+
+      // Additional validation: require description (per business requirement)
+      if (_descriptionController.text.trim().isEmpty) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please provide a description for the payment link.'), backgroundColor: Colors.orange));
+        return;
+      }
+
+      // KYC check: allow creation if KYC is verified or pending (business rule)
+      final kyc = (currentMerchant.kycStatus ?? '').toLowerCase();
+      if (!(kyc == 'verified' || kyc == 'pending')) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('KYC is required before creating payment links. Please complete merchant verification.'), backgroundColor: Colors.red));
+        return;
+      }
+
+      // Auto-generate and persist wallet addresses if missing
+      if (currentMerchant.walletAddresses.isEmpty) {
+        AppLogger.d('DEBUG: No wallet addresses found for merchant ${currentMerchant.id}, generating now');
+        // Generate wallets off the UI thread to avoid jank
+        final generated = await compute(computeGenerateWalletAddresses, {
+          'merchantId': currentMerchant.id,
+          'userId': currentMerchant.userId,
+        });
+
+        AppLogger.d('DEBUG: Generated wallet addresses: ${generated.keys.toList()}');
+
+        final ok = await merchantProvider.updateMerchantSetup(walletAddresses: generated);
+        AppLogger.d('DEBUG: updateMerchantSetup returned: $ok');
+        if (!ok) {
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to generate wallets for merchant. Complete onboarding or try again.'), backgroundColor: Colors.red));
+          return;
+        }
+
+        // updateMerchantSetup sets _currentMerchant to the saved merchant,
+        // so read currentMerchant directly instead of reloading all merchants
+        final reloaded = merchantProvider.currentMerchant;
+        if (reloaded == null || reloaded.walletAddresses.isEmpty) {
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Merchants wallet not generated yet. Please complete onboarding or try again.'), backgroundColor: Colors.red));
+          return;
+        }
+      }
+
+      // Try to create the payment link with retries and sensible fallbacks
+      Map<String, dynamic>? result;
+      String? lastError;
+      const int maxAttempts = 3;
+      for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+        result = await paymentLinkProvider.createPaymentLink(
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+          amount: double.parse(_amountController.text),
+          networks: _availableNetworks,
+          tokens: _availableTokens,
+          expiresAt: _expiryDate,
+        );
+
+        if (result != null) break;
+
+        lastError = paymentLinkProvider.error?.toLowerCase();
+
+        // If backend claims wallets are missing, try to (re)generate and persist once
+        if (lastError != null && lastError.contains('wallet') && lastError.contains('not generated')) {
+          // regenerate wallets off UI thread
+          final generated = await compute(computeGenerateWalletAddresses, {
+            'merchantId': currentMerchant.id,
+            'userId': currentMerchant.userId,
+          });
+          final ok = await merchantProvider.updateMerchantSetup(walletAddresses: generated);
+          if (!ok) {
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to persist generated wallets. Please complete onboarding.'), backgroundColor: Colors.red));
+            break; // don't keep retrying
+          }
+
+          // short delay and retry
+          await Future.delayed(const Duration(milliseconds: 500));
+          continue;
+        }
+
+        // If backend indicates permission/index problems, save pending link locally and bail
+        if (lastError != null && (lastError.contains('permission') || lastError.contains('permission-denied') || lastError.contains('requires an index') || lastError.contains('index'))) {
+          await _savePendingLinkLocally(
+            title: _titleController.text.trim(),
+            description: _descriptionController.text.trim(),
+            amount: double.parse(_amountController.text),
+            networks: _availableNetworks,
+            tokens: _availableTokens,
+            expiresAt: _expiryDate,
+          );
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment link saved locally. Please fix backend permissions/indexes and retry.'), backgroundColor: Colors.orange));
+          result = null;
+          break;
+        }
+
+        // transient error: backoff and retry
+        await Future.delayed(Duration(milliseconds: 300 * attempt));
+      }
 
       if (result != null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Payment link created successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          Navigator.pop(context, true);
+        if (!mounted) return;
+
+        // Resolve a shareable URL
+        String shareUrl = '';
+        final linkId = result['id'] ?? result['linkId'] ?? (result['data'] is Map ? result['data']['id'] : null);
+        if (linkId != null) {
+          shareUrl = paymentLinkProvider.getPaymentUrl(linkId);
+        } else if (result['url'] != null) {
+          shareUrl = result['url'];
+        } else if (result['link'] != null) {
+          shareUrl = result['link'];
         }
+
+        // Show link + QR bottom sheet
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          builder: (context) {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Payment Link Created', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+                  if (shareUrl.isNotEmpty) ...[
+                    SelectableText(shareUrl),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: shareUrl));
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copied to clipboard')));
+                          },
+                          icon: const Icon(Icons.copy),
+                          label: const Text('Copy Link'),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            // Use SharePlus.instance.share with ShareParams
+                            SharePlus.instance.share(ShareParams(text: shareUrl));
+                          },
+                          icon: const Icon(Icons.share),
+                          label: const Text('Share'),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.pop(context, true);
+                          },
+                          icon: const Icon(Icons.check),
+                          label: const Text('Done'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: QrImageView(
+                        data: shareUrl,
+                        version: QrVersions.auto,
+                        size: 200.0,
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                      ),
+                    ),
+                  ] else ...[
+                    const Text('Created, but could not determine share URL.'),
+                  ],
+                  const SizedBox(height: 12),
+                ],
+              ),
+            );
+          },
+        );
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to create payment link'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        // If we fell out without a result, show a generic error (detailed errors preserved in logs)
+        final errMsg = paymentLinkProvider.error ?? 'Unable to create payment link. Please try again later.';
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errMsg), backgroundColor: Colors.red));
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
     } finally {
+      // Dismiss progress dialog if still shown
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        Navigator.of(context, rootNavigator: true).pop();
+        setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _savePendingLinkLocally({
+    required String title,
+    String? description,
+    required double amount,
+    required List<String> networks,
+    required List<String> tokens,
+    DateTime? expiresAt,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'pending_payment_links';
+      final existing = prefs.getStringList(key) ?? <String>[];
+      final payload = json.encode({
+        'title': title,
+        'description': description,
+        'amount': amount,
+        'networks': networks,
+        'tokens': tokens,
+        'expiresAt': expiresAt?.toIso8601String(),
+        'createdAt': DateTime.now().toIso8601String(),
+      });
+      existing.add(payload);
+      await prefs.setStringList(key, existing);
+      AppLogger.d('Saved pending payment link locally (count=${existing.length})');
+    } catch (e) {
+      AppLogger.e('Failed to save pending link locally: $e', error: e);
     }
   }
 }

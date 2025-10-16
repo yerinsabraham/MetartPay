@@ -86,9 +86,9 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
     final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    print('DEBUG: Auth status - isAuthenticated: ${authProvider.isAuthenticated}');
-    print('DEBUG: Auth status - currentUser: ${authProvider.currentUser?.uid}');
-    print('DEBUG: Setup data to save: $_setupData');
+  debugPrint('DEBUG: Auth status - isAuthenticated: ${authProvider.isAuthenticated}');
+  debugPrint('DEBUG: Auth status - currentUser: ${authProvider.currentUser?.uid}');
+  debugPrint('DEBUG: Setup data to save: $_setupData');
 
     // Show loading indicator while saving
     if (mounted) {
@@ -103,8 +103,8 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
     final success = await merchantProvider.savePartialSetupData(_setupData);
 
     if (!success && mounted) {
-      final errorMessage = merchantProvider.error ?? 'Failed to save progress. Please try again.';
-      print('DEBUG: Setup save failed with error: $errorMessage');
+  final errorMessage = merchantProvider.error ?? 'Failed to save progress. Please try again.';
+  debugPrint('DEBUG: Setup save failed with error: $errorMessage');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMessage),
@@ -302,7 +302,7 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
         ),
         if (_isStepLoading)
           Container(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withAlpha((0.2 * 255).round()),
             child: const Center(
               child: CircularProgressIndicator(),
             ),

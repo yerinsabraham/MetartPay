@@ -1,6 +1,11 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 import '../models/models.dart' as models;
+import '../utils/app_logger.dart';
+import 'crypto_wallet_service.dart';
 
 class FirebaseService {
   static final FirebaseService _instance = FirebaseService._internal();
@@ -9,6 +14,7 @@ class FirebaseService {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  String? _functionsBaseUrl;
 
   // Collections
   static const String _merchantsCollection = 'merchants';
@@ -17,6 +23,19 @@ class FirebaseService {
 
   // Helper to get current user ID
   String? get currentUserId => _auth.currentUser?.uid;
+
+  /// Get the current Firebase ID token for the logged-in user, or null if not available.
+  Future<String?> getIdToken({bool forceRefresh = false}) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return null;
+      final token = await user.getIdToken(forceRefresh);
+      return token;
+    } catch (e) {
+      AppLogger.e('Error getting ID token: $e', error: e);
+      return null;
+    }
+  }
 
   // Merchant Operations
   Future<models.Merchant> saveMerchant(models.Merchant merchant) async {
@@ -27,11 +46,19 @@ class FirebaseService {
     try {
       final docRef = _firestore.collection(_merchantsCollection).doc(merchant.id);
       
-      await docRef.set({
+      final data = {
         ...merchant.toJson(),
         'userId': currentUserId,
         'updatedAt': FieldValue.serverTimestamp(),
-      });
+      };
+
+      // If wallet addresses are present, mark walletsGenerated for backend compatibility
+      if ((merchant.walletAddresses?.isNotEmpty ?? false)) {
+        data['walletsGenerated'] = true;
+        data['walletsGeneratedAt'] = FieldValue.serverTimestamp();
+      }
+
+      await docRef.set(data);
 
       // Return merchant with updated timestamp
       return merchant.copyWith(updatedAt: DateTime.now());
@@ -133,11 +160,18 @@ class FirebaseService {
         updatedAt: DateTime.now(),
       );
 
-      await docRef.set({
+      final data = {
         ...merchant.toJson(),
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-      });
+      };
+
+      if ((walletAddresses?.isNotEmpty ?? false)) {
+        data['walletsGenerated'] = true;
+        data['walletsGeneratedAt'] = FieldValue.serverTimestamp();
+      }
+
+      await docRef.set(data);
 
       return merchant;
     } catch (e) {
@@ -154,11 +188,21 @@ class FirebaseService {
       final docRef = _firestore.collection(_merchantsCollection).doc(merchant.id);
       
       final updatedMerchant = merchant.copyWith(updatedAt: DateTime.now());
-      
-      await docRef.update({
+
+      final data = {
         ...updatedMerchant.toJson(),
         'updatedAt': FieldValue.serverTimestamp(),
-      });
+      };
+
+      // If wallet addresses exist, ensure backend flag is set
+      if ((updatedMerchant.walletAddresses?.isNotEmpty ?? false)) {
+        data['walletsGenerated'] = true;
+        data['walletsGeneratedAt'] = FieldValue.serverTimestamp();
+      } else {
+        data['walletsGenerated'] = false;
+      }
+
+      await docRef.update(data);
 
       return updatedMerchant;
     } catch (e) {
@@ -269,6 +313,102 @@ class FirebaseService {
     }
   }
 
+  // Admin helper: get user by id (for auth provider role resolution)
+  Future<Map<String, dynamic>?> getUserById(String uid) async {
+    try {
+      final doc = await _firestore.collection(_usersCollection).doc(uid).get();
+      return doc.exists ? doc.data() : null;
+    } catch (e) {
+      AppLogger.e('Error fetching user by id: $e', error: e);
+      return null;
+    }
+  }
+
+  // Admin: list merchants that require KYC review
+  Future<List<models.Merchant>> getMerchantsForKycReview({int limit = 50}) async {
+    try {
+      final querySnapshot = await _firestore
+          .collection(_merchantsCollection)
+          .where('kycStatus', whereIn: ['pending', 'under-review'])
+          .orderBy('createdAt', descending: true)
+          .limit(limit)
+          .get();
+
+      return querySnapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return models.Merchant.fromJson(data);
+      }).toList();
+    } catch (e) {
+      AppLogger.e('Error fetching merchants for KYC review: $e', error: e);
+      return [];
+    }
+  }
+
+  // Admin: update merchant kyc status
+  Future<void> updateMerchantKycStatus(String merchantId, String newStatus, {String? reason}) async {
+    // If a cloud function base URL is configured, prefer invoking the callable function
+    if (_functionsBaseUrl != null) {
+      try {
+        final idToken = await _auth.currentUser?.getIdToken();
+        if (idToken != null) {
+          final url = Uri.parse('${_functionsBaseUrl!.replaceAll(RegExp(r'/*$'), '')}/updateMerchantKyc');
+          final resp = await http.post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $idToken',
+            },
+            body: jsonEncode({'merchantId': merchantId, 'newStatus': newStatus, 'reason': reason}),
+          );
+
+          if (resp.statusCode >= 200 && resp.statusCode < 300) {
+            // success; function already writes audit logs server-side
+            return;
+          } else {
+            AppLogger.e('Functions call failed (${resp.statusCode}): ${resp.body}');
+            // fallthrough to direct update
+          }
+        }
+      } catch (fnError) {
+        AppLogger.e('Error calling functions endpoint: $fnError', error: fnError);
+        // continue to fallback
+      }
+    }
+
+    // Fallback: direct Firestore update and client-side audit log
+    try {
+      await _firestore.collection(_merchantsCollection).doc(merchantId).update({
+        'kycStatus': newStatus,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Audit log: record who changed the status and when
+      try {
+        final audit = {
+          'merchantId': merchantId,
+          'newStatus': newStatus,
+          'reason': reason ?? '',
+          'changedBy': currentUserId ?? 'unknown',
+          'changedAt': FieldValue.serverTimestamp(),
+        };
+        await _firestore.collection('admin_audit_logs').add(audit);
+      } catch (auditError) {
+        AppLogger.e('Failed to write admin audit log: $auditError', error: auditError);
+      }
+
+      AppLogger.d('Merchant $merchantId KYC status updated to $newStatus');
+    } catch (e) {
+      AppLogger.e('Error updating merchant KYC status: $e', error: e);
+      rethrow;
+    }
+  }
+
+  /// Configure a base URL for callable Cloud Functions (e.g. https://us-central1-<proj>.cloudfunctions.net)
+  void setFunctionsBaseUrl(String baseUrl) {
+    _functionsBaseUrl = baseUrl;
+  }
+
   // Helper methods
   bool _isSetupComplete({
     required String businessName,
@@ -308,6 +448,67 @@ class FirebaseService {
     });
   }
 
+  /// Ensure wallet documents exist in the 'wallets' collection for a merchant.
+  /// Uses deterministic document ids of the form '<merchantId>_<network>' so
+  /// repeated calls are idempotent.
+  Future<void> upsertMerchantWallets(String merchantId, Map<String, String> walletAddresses) async {
+    try {
+      final batch = _firestore.batch();
+
+      AppLogger.d('DEBUG: Preparing to upsert ${walletAddresses.length} wallets for merchant $merchantId');
+      walletAddresses.forEach((network, address) {
+        final docId = '${merchantId}_${network.toLowerCase()}';
+        final docRef = _firestore.collection('wallets').doc(docId);
+        AppLogger.d('DEBUG: Upserting wallet doc $docId -> $address');
+        batch.set(docRef, {
+          'merchantId': merchantId,
+          'chain': network,
+          'publicAddress': address,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      });
+
+      await batch.commit();
+      AppLogger.d('DEBUG: Upserted ${walletAddresses.length} wallet documents for merchant $merchantId');
+    } catch (e) {
+      AppLogger.e('Failed to upsert merchant wallets: $e', error: e);
+      rethrow;
+    }
+  }
+
+  /// Generate deterministic wallet addresses for a merchant and persist them.
+  /// Returns the generated map of network->address.
+  Future<Map<String, String>> generateAndSaveMerchantWallets(String merchantId) async {
+    try {
+      final userId = currentUserId;
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Generate addresses deterministically
+      final wallets = CryptoWalletService.generateWalletAddresses(merchantId: merchantId, userId: userId);
+
+      // Save wallet addresses on merchant document and mark walletsGenerated
+      final merchantRef = _firestore.collection(_merchantsCollection).doc(merchantId);
+      await merchantRef.set({
+        'walletAddresses': wallets,
+        'walletsGenerated': true,
+        'walletsGeneratedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      // Upsert per-network wallet docs
+      await upsertMerchantWallets(merchantId, wallets);
+
+      AppLogger.d('DEBUG: Generated and saved ${wallets.length} wallets for merchant $merchantId');
+      return wallets;
+    } catch (e) {
+      AppLogger.e('Failed to generate and save merchant wallets: $e', error: e);
+      rethrow;
+    }
+  }
+
   Stream<List<models.Invoice>> watchMerchantInvoices(String merchantId) {
     return _firestore
         .collection(_invoicesCollection)
@@ -338,7 +539,7 @@ class FirebaseService {
       }
       return null;
     } catch (e) {
-      print('Error getting invoice: $e');
+      AppLogger.e('Error getting invoice: $e', error: e);
       return null;
     }
   }
@@ -363,9 +564,9 @@ class FirebaseService {
           .doc(invoiceId)
           .update(updateData);
       
-      print('Invoice status updated: $invoiceId -> $status');
+      AppLogger.d('Invoice status updated: $invoiceId -> $status');
     } catch (e) {
-      print('Error updating invoice status: $e');
+      AppLogger.e('Error updating invoice status: $e', error: e);
       rethrow;
     }
   }
@@ -377,9 +578,9 @@ class FirebaseService {
           .collection('transactions')
           .doc(transaction.id)
           .set(transaction.toJson());
-      print('Transaction saved successfully: ${transaction.id}');
+      AppLogger.d('Transaction saved successfully: ${transaction.id}');
     } catch (e) {
-      print('Error saving transaction: $e');
+      AppLogger.e('Error saving transaction: $e', error: e);
       rethrow;
     }
   }
@@ -410,7 +611,7 @@ class FirebaseService {
           .map((doc) => models.Transaction.fromJson({...doc.data() as Map<String, dynamic>, 'id': doc.id}))
           .toList();
     } catch (e) {
-      print('Error getting transactions: $e');
+      AppLogger.e('Error getting transactions: $e', error: e);
       return [];
     }
   }
@@ -446,9 +647,9 @@ class FirebaseService {
           .doc(transactionId)
           .update(updateData);
       
-      print('Transaction status updated: $transactionId -> $status');
+      AppLogger.d('Transaction status updated: $transactionId -> $status');
     } catch (e) {
-      print('Error updating transaction status: $e');
+      AppLogger.e('Error updating transaction status: $e', error: e);
       rethrow;
     }
   }
@@ -460,9 +661,9 @@ class FirebaseService {
           .collection('payment_links')
           .doc(paymentLink.id)
           .set(paymentLink.toJson());
-      print('Payment link saved successfully: ${paymentLink.id}');
+      AppLogger.d('Payment link saved successfully: ${paymentLink.id}');
     } catch (e) {
-      print('Error saving payment link: $e');
+      AppLogger.e('Error saving payment link: $e', error: e);
       rethrow;
     }
   }
@@ -479,7 +680,7 @@ class FirebaseService {
       }
       return null;
     } catch (e) {
-      print('Error getting payment link: $e');
+      AppLogger.e('Error getting payment link: $e', error: e);
       return null;
     }
   }
@@ -496,7 +697,7 @@ class FirebaseService {
           .map((doc) => models.PaymentLink.fromJson({...doc.data(), 'id': doc.id}))
           .toList();
     } catch (e) {
-      print('Error getting payment links: $e');
+      AppLogger.e('Error getting payment links: $e', error: e);
       return [];
     }
   }
@@ -537,9 +738,9 @@ class FirebaseService {
         });
       });
       
-      print('Payment link usage updated: $paymentLinkId');
+      AppLogger.d('Payment link usage updated: $paymentLinkId');
     } catch (e) {
-      print('Error updating payment link usage: $e');
+      AppLogger.e('Error updating payment link usage: $e', error: e);
       rethrow;
     }
   }
@@ -551,9 +752,9 @@ class FirebaseService {
           .collection('customers')
           .doc(customer.id)
           .set(customer.toJson());
-      print('Customer saved successfully: ${customer.id}');
+      AppLogger.d('Customer saved successfully: ${customer.id}');
     } catch (e) {
-      print('Error saving customer: $e');
+      AppLogger.e('Error saving customer: $e', error: e);
       rethrow;
     }
   }
@@ -573,7 +774,7 @@ class FirebaseService {
       }
       return null;
     } catch (e) {
-      print('Error getting customer by email: $e');
+      AppLogger.e('Error getting customer by email: $e', error: e);
       return null;
     }
   }
@@ -590,7 +791,7 @@ class FirebaseService {
           .map((doc) => models.Customer.fromJson({...doc.data(), 'id': doc.id}))
           .toList();
     } catch (e) {
-      print('Error getting customers: $e');
+      AppLogger.e('Error getting customers: $e', error: e);
       return [];
     }
   }
@@ -617,9 +818,9 @@ class FirebaseService {
         });
       });
       
-      print('Customer stats updated: $customerId');
+      AppLogger.d('Customer stats updated: $customerId');
     } catch (e) {
-      print('Error updating customer stats: $e');
+      AppLogger.e('Error updating customer stats: $e', error: e);
       rethrow;
     }
   }
@@ -680,7 +881,7 @@ class FirebaseService {
         'recentTransactions': transactions.take(10).map((t) => t.toJson()).toList(),
       };
     } catch (e) {
-      print('Error getting merchant analytics: $e');
+      AppLogger.e('Error getting merchant analytics: $e', error: e);
       return {
         'totalRevenue': 0.0,
         'totalTransactions': 0,
@@ -689,6 +890,20 @@ class FirebaseService {
         'dailyRevenue': <String, double>{},
         'recentTransactions': <Map<String, dynamic>>[],
       };
+    }
+  }
+
+  /// Save a receipt record for merchant/transaction. `id` should be unique (e.g. 'receipt_<txId>').
+  Future<void> saveReceipt(String id, Map<String, dynamic> data) async {
+    try {
+      await _firestore.collection('receipts').doc(id).set({
+        ...data,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      AppLogger.d('Receipt saved: $id');
+    } catch (e) {
+      AppLogger.e('Error saving receipt $id: $e', error: e);
+      rethrow;
     }
   }
 }

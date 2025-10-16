@@ -1,5 +1,4 @@
-import 'dart:math';
-import 'dart:typed_data';
+// removed unused imports
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
@@ -359,4 +358,13 @@ class CryptoWalletService {
     // Tron addresses: Start with T, Base58 encoded
     return RegExp(r'^T[1-9A-HJ-NP-Za-km-z]{33}$').hasMatch(address);
   }
+}
+
+/// Top-level helper for running wallet generation in a separate isolate via
+/// `compute()`. Accepts a Map with keys 'merchantId' and 'userId'. Returns the
+/// same Map<String,String> output as `CryptoWalletService.generateWalletAddresses`.
+Map<String, String> computeGenerateWalletAddresses(Map<String, String> args) {
+  final merchantId = args['merchantId'] ?? '';
+  final userId = args['userId'] ?? '';
+  return CryptoWalletService.generateWalletAddresses(merchantId: merchantId, userId: userId);
 }

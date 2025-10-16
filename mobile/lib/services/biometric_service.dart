@@ -1,10 +1,11 @@
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:local_auth_android/local_auth_android.dart';
-import 'package:local_auth_darwin/local_auth_darwin.dart';
+import 'package:flutter/foundation.dart';
+// Removed unused imports
+// import 'package:local_auth_android/local_auth_android.dart';
+// import 'package:local_auth_darwin/local_auth_darwin.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/models.dart';
 
 class BiometricService {
   static final BiometricService _instance = BiometricService._internal();
@@ -24,7 +25,7 @@ class BiometricService {
     try {
       return await _localAuth.isDeviceSupported();
     } catch (e) {
-      print('Error checking device support: $e');
+      debugPrint('Error checking device support: $e');
       return false;
     }
   }
@@ -35,7 +36,7 @@ class BiometricService {
       final List<BiometricType> availableBiometrics = await _localAuth.getAvailableBiometrics();
       return availableBiometrics.isNotEmpty;
     } catch (e) {
-      print('Error checking biometrics enrollment: $e');
+      debugPrint('Error checking biometrics enrollment: $e');
       return false;
     }
   }
@@ -45,7 +46,7 @@ class BiometricService {
     try {
       return await _localAuth.getAvailableBiometrics();
     } catch (e) {
-      print('Error getting available biometrics: $e');
+      debugPrint('Error getting available biometrics: $e');
       return [];
     }
   }
@@ -90,22 +91,6 @@ class BiometricService {
       // Perform authentication
       final bool didAuthenticate = await _localAuth.authenticate(
         localizedReason: reason,
-        authMessages: const [
-          AndroidAuthMessages(
-            signInTitle: 'Biometric Authentication',
-            cancelButton: 'Cancel',
-            deviceCredentialsRequiredTitle: 'Device Credentials Required',
-            deviceCredentialsSetupDescription: 'Device credentials are not set up on your device. Go to Settings > Security to set up.',
-            goToSettingsButton: 'Go to Settings',
-            goToSettingsDescription: 'Set up biometric authentication on your device to use this feature.',
-          ),
-          IOSAuthMessages(
-            cancelButton: 'Cancel',
-            goToSettingsButton: 'Go to Settings',
-            goToSettingsDescription: 'Set up biometric authentication on your device to use this feature.',
-            lockOut: 'Biometric authentication is locked. Please use device passcode.',
-          ),
-        ],
         options: AuthenticationOptions(
           biometricOnly: biometricOnly,
           stickyAuth: stickyAuth,

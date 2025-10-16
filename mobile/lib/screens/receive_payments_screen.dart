@@ -1,7 +1,16 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:provider/provider.dart';
+import 'dart:async';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
+
 import '../models/wallet_address.dart';
+import '../models/models.dart' as models;
 import '../services/wallet_service.dart';
+import '../services/firebase_service.dart';
+import '../utils/app_logger.dart';
+import '../providers/merchant_provider.dart';
 
 class ReceivePaymentsScreen extends StatefulWidget {
   final String merchantId;
@@ -22,6 +31,50 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
   String? currentPaymentLink;
   bool nfcAvailable = false;
   bool isNFCWriting = false;
+  String _qrPayload = '';
+  StreamSubscription<List<models.Transaction>>? _txSub;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureQuickReceive());
+  }
+
+  Future<void> _ensureQuickReceive() async {
+    setState(() => isLoading = true);
+    try {
+      final merchantId = widget.merchantId;
+      final svc = FirebaseService();
+      final merchant = await svc.getMerchant(merchantId);
+      Map<String, String> walletsMap = {};
+
+      if (merchant == null || (merchant.walletAddresses?.isEmpty ?? true)) {
+        walletsMap = await svc.generateAndSaveMerchantWallets(merchantId);
+      } else {
+        walletsMap = merchant.walletAddresses;
+      }
+
+      final address = walletsMap[selectedNetwork] ?? '';
+      if (address.isNotEmpty) {
+        _qrPayload = 'pay:$address?token=$selectedToken&network=$selectedNetwork';
+
+        _txSub?.cancel();
+        _txSub = svc.watchMerchantTransactions(merchantId).listen((txs) {
+          for (final t in txs) {
+            try {
+              if (t.toAddress == address && t.status == 'paid') {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Payment received: ₦${t.amountNaira}')));
+              }
+            } catch (_) {}
+          }
+        });
+      }
+    } catch (e, st) {
+      AppLogger.e('Quick receive setup failed: $e', error: e, stackTrace: st);
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
 
   final List<Map<String, dynamic>> supportedNetworks = [
     {
@@ -42,6 +95,8 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final selectedNetworkData = supportedNetworks.firstWhere((n) => n['code'] == selectedNetwork);
     final wallet = wallets.firstWhere(
       (w) => w.network == selectedNetwork,
@@ -54,7 +109,7 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
       ),
     );
     return Scaffold(
-      appBar: AppBar(title: const Text('Receive Payment')),
+      appBar: AppBar(title: Text('Receive Payment', style: TextStyle(color: colorScheme.primary))),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -62,38 +117,74 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Quick Receive (static QR/address for in-person payments)
                   _buildSectionCard(
-                    title: 'Payment Details',
+                    title: 'Quick Receive (in-person)',
                     child: Column(
                       children: [
-                        TextField(
-                          controller: _amountController,
-                          decoration: const InputDecoration(
-                            labelText: 'Amount (NGN)',
-                            prefixText: '\u20a6 ',
-                            border: OutlineInputBorder(),
-                          ),
-                          keyboardType: TextInputType.number,
+                        if (_qrPayload.isNotEmpty)
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamed(context, '/qr-view-v2', arguments: {
+                                'payload': _qrPayload,
+                                'network': selectedNetwork,
+                                'token': selectedToken,
+                                'crypto': 0.0,
+                                'merchantId': widget.merchantId,
+                                'paymentId': null,
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey[300]!),
+                              ),
+                              child: QrImageView(
+                                data: _qrPayload,
+                                version: QrVersions.auto,
+                                size: 220,
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.black,
+                              ),
+                            ),
+                          )
+                        else
+                          const SizedBox(height: 8),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  if (_qrPayload.isEmpty) return;
+                                  await Clipboard.setData(ClipboardData(text: _qrPayload));
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied payment payload')));
+                                },
+                                icon: const Icon(Icons.copy, size: 18),
+                                label: const Text('Copy'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  if (_qrPayload.isEmpty) return;
+                                  try {
+                                    await SharePlus.instance.share(ShareParams(text: _qrPayload, subject: 'Payment Request'));
+                                  } catch (e) {
+                                    AppLogger.e('Share failed: $e', error: e);
+                                  }
+                                },
+                                icon: const Icon(Icons.share, size: 18),
+                                label: const Text('Share'),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: _descriptionController,
-                          decoration: const InputDecoration(
-                            labelText: 'Description',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.link),
-                          label: const Text('Generate Payment Link'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                        ),
+                        const SizedBox(height: 12),
+                        Text('Waiting for payment...', style: TextStyle(color: Colors.grey[600])),
                       ],
                     ),
                   ),
@@ -125,13 +216,13 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
                                   }
                                 });
                               },
-                              child: Container(
+                                child: Container(
                                 decoration: BoxDecoration(
-                                  color: isSelected ? network['color'] : Colors.grey[200],
+                                  color: isSelected ? colorScheme.primary : Colors.grey[200],
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: isSelected ? network['color'] : Colors.grey[300]!,
-                                    width: 2,
+                                    color: isSelected ? colorScheme.primary : Colors.grey[300]!,
+                                    width: isSelected ? 2 : 1,
                                   ),
                                 ),
                                 child: Row(
@@ -141,7 +232,7 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
                                       network['icon'],
                                       style: TextStyle(
                                         fontSize: 20,
-                                        color: isSelected ? Colors.white : Colors.grey[600],
+                                        color: isSelected ? colorScheme.onPrimary : Colors.grey[600],
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -149,7 +240,7 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
                                       network['code'],
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: isSelected ? Colors.white : Colors.grey[700],
+                                        color: isSelected ? colorScheme.onPrimary : Colors.grey[700],
                                       ),
                                     ),
                                   ],
@@ -171,7 +262,7 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(vertical: 12),
                                       decoration: BoxDecoration(
-                                        color: isSelected ? Colors.blue : Colors.grey[200],
+                                        color: isSelected ? colorScheme.primary : Colors.grey[200],
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(
@@ -179,7 +270,7 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          color: isSelected ? Colors.white : Colors.grey[700],
+                                          color: isSelected ? colorScheme.onPrimary : Colors.grey[700],
                                         ),
                                       ),
                                     ),
@@ -201,7 +292,7 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.grey[100],
+                              color: theme.cardColor,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(color: Colors.grey[300]!),
                             ),
@@ -213,7 +304,7 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
                                       selectedNetworkData['icon'],
                                       style: TextStyle(
                                         fontSize: 24,
-                                        color: selectedNetworkData['color'],
+                                        color: isLoading ? Colors.grey : colorScheme.primary,
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -230,12 +321,16 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
                                 ),
                                 const SizedBox(height: 12),
                                 ElevatedButton.icon(
-                                  onPressed: () {},
+                                  onPressed: () async {
+                                    if (wallet.address.isEmpty) return;
+                                    await Clipboard.setData(ClipboardData(text: wallet.address));
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied address')));
+                                  },
                                   icon: const Icon(Icons.copy, size: 18),
                                   label: const Text('Copy Address'),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: selectedNetworkData['color'],
-                                    foregroundColor: Colors.white,
+                                    backgroundColor: colorScheme.primary,
+                                    foregroundColor: colorScheme.onPrimary,
                                   ),
                                 ),
                               ],
@@ -297,15 +392,15 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.green),
-                            ),
+                                color: colorScheme.secondary.withAlpha((0.08 * 255).round()),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: colorScheme.secondary),
+                                ),
                             child: Row(
                               children: [
                                 Icon(
                                   Icons.nfc,
-                                  color: Colors.green,
+                                    color: colorScheme.secondary,
                                   size: 24,
                                 ),
                                 const SizedBox(width: 12),
@@ -313,20 +408,20 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
-                                        'NFC Ready',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.green,
+                                        Text(
+                                          'NFC Ready',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: colorScheme.secondary,
+                                          ),
                                         ),
-                                      ),
-                                      const Text(
-                                        'Tap-to-pay is ready to use',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.green,
+                                        Text(
+                                          'Tap-to-pay is ready to use',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: colorScheme.secondary,
+                                          ),
                                         ),
-                                      ),
                                     ],
                                   ),
                                 ),
@@ -341,10 +436,10 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
                                   onPressed: () {},
                                   icon: const Icon(Icons.nfc, size: 18),
                                   label: const Text('Write NFC Tag'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.orange,
-                                    foregroundColor: Colors.white,
-                                  ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: colorScheme.tertiary,
+                                      foregroundColor: colorScheme.onTertiary,
+                                    ),
                                 ),
                               ),
                             ],
@@ -353,27 +448,27 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.blue[50],
+                              color: colorScheme.secondary.withAlpha((0.12 * 255).round()),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: Colors.blue[200]!),
+                              border: Border.all(color: colorScheme.secondary.withAlpha((0.28 * 255).round())),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   '📱 How to use NFC:',
-                                  style: TextStyle(
+                                  style: theme.textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.blue[800],
+                                    color: colorScheme.secondary,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   '• Write NFC Tag: Program a physical NFC tag/card for your shop\n'
                                   '• Customer taps their phone on the NFC tag to pay',
-                                  style: TextStyle(
+                                  style: theme.textTheme.bodyMedium?.copyWith(
                                     fontSize: 12,
-                                    color: Colors.blue[700],
+                                    color: theme.textTheme.bodyMedium?.color?.withAlpha((0.85 * 255).round()),
                                   ),
                                 ),
                               ],
@@ -418,6 +513,7 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
   void dispose() {
     _amountController.dispose();
     _descriptionController.dispose();
+    _txSub?.cancel();
     super.dispose();
   }
 }

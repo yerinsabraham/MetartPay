@@ -80,6 +80,7 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
       );
 
       // Close loading dialog
+      if (!mounted) return;
       Navigator.pop(context);
 
       if (success && mounted) {
@@ -115,6 +116,7 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
         );
       } else {
         // Show error dialog
+        if (!mounted) return;
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -167,7 +169,7 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
+                      color: Colors.grey.withAlpha((0.1 * 255).round()),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -178,7 +180,7 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: MetartPayColors.primary.withOpacity(0.1),
+                        color: MetartPayColors.primary.withAlpha((0.1 * 255).round()),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
@@ -220,7 +222,7 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
+                      color: Colors.grey.withAlpha((0.1 * 255).round()),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -242,11 +244,15 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                     // Full Name
                     TextFormField(
                       controller: _fullNameController,
-                      decoration: InputDecoration(
+                        decoration: InputDecoration(
                         labelText: 'Full Name *',
                         hintText: 'Enter your full legal name',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1,
+                          ),
                         ),
                         prefixIcon: const Icon(Icons.person_outline),
                       ),
@@ -264,12 +270,16 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                     const SizedBox(height: 16),
                     
                     // ID Type Dropdown
-                    DropdownButtonFormField<String>(
-                      value: _selectedIdType,
+                      DropdownButtonFormField<String>(
+                        initialValue: _selectedIdType,
                       decoration: InputDecoration(
                         labelText: 'ID Type *',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1,
+                          ),
                         ),
                         prefixIcon: const Icon(Icons.credit_card),
                       ),
@@ -297,11 +307,15 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                     // ID Number
                     TextFormField(
                       controller: _idNumberController,
-                      decoration: InputDecoration(
+                        decoration: InputDecoration(
                         labelText: 'ID Number *',
                         hintText: 'Enter your ID number',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1,
+                          ),
                         ),
                         prefixIcon: const Icon(Icons.confirmation_number),
                       ),
@@ -321,11 +335,15 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                     // BVN
                     TextFormField(
                       controller: _bvnController,
-                      decoration: InputDecoration(
+                        decoration: InputDecoration(
                         labelText: 'BVN (Bank Verification Number)',
                         hintText: 'Enter your 11-digit BVN',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1,
+                          ),
                         ),
                         prefixIcon: const Icon(Icons.account_balance),
                       ),
@@ -349,11 +367,15 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                     // Address
                     TextFormField(
                       controller: _addressController,
-                      decoration: InputDecoration(
+                        decoration: InputDecoration(
                         labelText: 'Residential Address *',
                         hintText: 'Enter your full address',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1,
+                          ),
                         ),
                         prefixIcon: const Icon(Icons.location_on_outlined),
                       ),

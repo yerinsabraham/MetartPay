@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../utils/app_logger.dart';
 
 class CryptoPriceService {
   static const String _baseUrl = 'https://api.coingecko.com/api/v3';
@@ -71,7 +72,7 @@ class CryptoPriceService {
     } catch (e) {
       // Return cached prices if available, otherwise throw error
       if (_priceCache.isNotEmpty) {
-        print('Using cached prices due to API error: $e');
+        AppLogger.w('Using cached prices due to API error: $e');
         return _getCachedPrices(cryptoList);
       }
       throw Exception('Failed to fetch crypto prices: $e');
@@ -84,7 +85,7 @@ class CryptoPriceService {
       final prices = await getCryptoPrices(cryptos: [crypto], baseCurrency: baseCurrency);
       return prices[crypto];
     } catch (e) {
-      print('Error fetching price for $crypto: $e');
+      AppLogger.e('Error fetching price for $crypto', error: e);
       return null;
     }
   }
@@ -98,7 +99,7 @@ class CryptoPriceService {
       }
       return null;
     } catch (e) {
-      print('Error converting NGN to $cryptoSymbol: $e');
+      AppLogger.e('Error converting NGN to $cryptoSymbol', error: e);
       return null;
     }
   }
@@ -112,7 +113,7 @@ class CryptoPriceService {
       }
       return null;
     } catch (e) {
-      print('Error converting $cryptoSymbol to NGN: $e');
+      AppLogger.e('Error converting $cryptoSymbol to NGN', error: e);
       return null;
     }
   }
@@ -129,7 +130,7 @@ class CryptoPriceService {
       }
       return null;
     } catch (e) {
-      print('Error fetching USD to NGN rate: $e');
+      AppLogger.e('Error fetching USD to NGN rate', error: e);
       return null;
     }
   }

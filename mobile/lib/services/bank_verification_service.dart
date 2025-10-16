@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 /// Nigerian Bank Account Verification Service
@@ -59,7 +60,7 @@ class BankVerificationService {
           }
         }
       } catch (e) {
-        print('DEBUG: Failed to fetch banks from Paystack API: $e');
+        debugPrint('DEBUG: Failed to fetch banks from Paystack API: $e');
       }
     }
     
@@ -139,7 +140,7 @@ class BankVerificationService {
             throw Exception('HTTP ${response.statusCode}');
           }
         } catch (e) {
-          print('DEBUG: Paystack API failed: $e');
+          debugPrint('DEBUG: Paystack API failed: $e');
           // Fall through to simulation mode
         }
       }

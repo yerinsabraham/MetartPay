@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
-import '../models/models.dart';
+// removed unused models import
 import '../models/wallet_address.dart';
+import '../utils/app_logger.dart';
 
 class WalletService {
   static const String _baseUrl = ApiConfig.baseUrl;
@@ -31,7 +32,7 @@ class WalletService {
 
       throw Exception('Failed to load wallets: ${response.statusCode}');
     } catch (e) {
-      print('WalletService.getMerchantWallets error: $e');
+      AppLogger.e('WalletService.getMerchantWallets error', error: e);
       throw Exception('Failed to load wallets: $e');
     }
   }
@@ -60,7 +61,7 @@ class WalletService {
 
       throw Exception('Failed to generate wallets: ${response.statusCode}');
     } catch (e) {
-      print('WalletService.generateWallets error: $e');
+      AppLogger.e('WalletService.generateWallets error', error: e);
       throw Exception('Failed to generate wallets: $e');
     }
   }
@@ -89,7 +90,7 @@ class WalletService {
 
       throw Exception('Failed to load wallet balances: ${response.statusCode}');
     } catch (e) {
-      print('WalletService.getWalletBalances error: $e');
+      AppLogger.e('WalletService.getWalletBalances error', error: e);
       throw Exception('Failed to load wallet balances: $e');
     }
   }
@@ -178,7 +179,7 @@ class WalletService {
         ),
       ];
     } catch (e) {
-      print('WalletService.getWalletAddresses error: $e');
+      AppLogger.e('WalletService.getWalletAddresses error', error: e);
       throw Exception('Failed to load wallet addresses: $e');
     }
   }

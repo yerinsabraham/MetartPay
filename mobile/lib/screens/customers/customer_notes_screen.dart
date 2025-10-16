@@ -201,7 +201,7 @@ class _CustomerNotesScreenState extends State<CustomerNotesScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withAlpha((0.1 * 255).round()),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
@@ -280,7 +280,7 @@ class _CustomerNotesScreenState extends State<CustomerNotesScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: _selectedType,
+                      initialValue: _selectedType,
                     decoration: const InputDecoration(
                       labelText: 'Type',
                       border: OutlineInputBorder(),
@@ -302,7 +302,7 @@ class _CustomerNotesScreenState extends State<CustomerNotesScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: _selectedPriority,
+                      initialValue: _selectedPriority,
                     decoration: const InputDecoration(
                       labelText: 'Priority',
                       border: OutlineInputBorder(),

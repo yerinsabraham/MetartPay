@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../services/payment_link_service.dart';
+import '../utils/app_logger.dart';
 import '../providers/merchant_provider.dart';
 
 class PaymentLinkProvider with ChangeNotifier {
@@ -11,10 +12,12 @@ class PaymentLinkProvider with ChangeNotifier {
   List<Map<String, dynamic>> _paymentLinks = [];
   bool _isLoading = false;
   String? _error;
+  bool _usedCache = false;
 
   List<Map<String, dynamic>> get paymentLinks => _paymentLinks;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  bool get usedCache => _usedCache;
 
   /// Load payment links for current merchant
   Future<void> loadPaymentLinks({String? status}) async {
@@ -27,12 +30,32 @@ class PaymentLinkProvider with ChangeNotifier {
         throw Exception('No merchant selected');
       }
 
-      _paymentLinks = await _paymentLinkService.getPaymentLinks(
+      final dynamic result = await _paymentLinkService.getPaymentLinks(
         merchant.id,
         status: status,
       );
+
+      // service now returns { links: [...], fromCache: bool }
+      if (result is Map<String, dynamic>) {
+        final linksRaw = result['links'];
+        if (linksRaw is Iterable) {
+          _paymentLinks = List<Map<String, dynamic>>.from(linksRaw);
+        } else if (linksRaw is Map && linksRaw['data'] is Iterable) {
+          _paymentLinks = List<Map<String, dynamic>>.from(linksRaw['data']);
+        } else {
+          _paymentLinks = [];
+        }
+        _usedCache = result['fromCache'] == true;
+      } else if (result is Iterable) {
+        // backward compatibility
+        _paymentLinks = List<Map<String, dynamic>>.from(result);
+        _usedCache = false;
+      } else {
+        _paymentLinks = [];
+        _usedCache = false;
+      }
     } catch (e) {
-      print('Error loading payment links: $e');
+      AppLogger.e('Error loading payment links: $e', error: e);
       _setError(e.toString());
     } finally {
       _setLoading(false);
@@ -72,7 +95,7 @@ class PaymentLinkProvider with ChangeNotifier {
 
       return result;
     } catch (e) {
-      print('Error creating payment link: $e');
+      AppLogger.e('Error creating payment link: $e', error: e);
       _setError(e.toString());
       return null;
     } finally {
@@ -93,7 +116,7 @@ class PaymentLinkProvider with ChangeNotifier {
         token: token,
       );
     } catch (e) {
-      print('Error generating QR code: $e');
+      AppLogger.e('Error generating QR code: $e', error: e);
       _setError(e.toString());
       return null;
     }
@@ -119,7 +142,7 @@ class PaymentLinkProvider with ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Error updating payment link status: $e');
+      AppLogger.e('Error updating payment link status: $e', error: e);
       _setError(e.toString());
     } finally {
       _setLoading(false);
@@ -138,7 +161,7 @@ class PaymentLinkProvider with ChangeNotifier {
       _paymentLinks.removeWhere((link) => link['id'] == linkId);
       notifyListeners();
     } catch (e) {
-      print('Error deleting payment link: $e');
+      AppLogger.e('Error deleting payment link: $e', error: e);
       _setError(e.toString());
     } finally {
       _setLoading(false);

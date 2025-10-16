@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../services/security_service.dart';
+import '../services/firebase_service.dart';
+import '../utils/app_logger.dart';
 
 class AuthProvider extends ChangeNotifier {
   FirebaseAuth? _auth;
@@ -10,12 +12,16 @@ class AuthProvider extends ChangeNotifier {
   User? _user;
   bool _isLoading = false;
   String? _error;
+  bool _isAdmin = false;
+
+  final FirebaseService _firebaseService = FirebaseService();
 
   User? get user => _user;
   User? get currentUser => _user;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isAuthenticated => _user != null;
+  bool get isAdmin => _isAdmin;
 
   AuthProvider() {
     _initializeAuth();
@@ -26,12 +32,34 @@ class AuthProvider extends ChangeNotifier {
       _auth = FirebaseAuth.instance;
       _auth?.authStateChanges().listen((User? user) {
         _user = user;
+        // load user document and admin flag when auth changes
+        if (_user != null) {
+          _loadUserRole(_user!.uid);
+        } else {
+          _isAdmin = false;
+        }
         notifyListeners();
       });
-      print('✅ DEBUG: AuthProvider initialized with Firebase Auth');
+  AppLogger.d('✅ DEBUG: AuthProvider initialized with Firebase Auth');
     } catch (e) {
-      print('❌ DEBUG: AuthProvider failed to initialize Firebase Auth: $e');
+  AppLogger.e('❌ DEBUG: AuthProvider failed to initialize Firebase Auth: $e', error: e);
       _setError('Firebase Auth not available');
+    }
+  }
+
+  Future<void> _loadUserRole(String uid) async {
+    try {
+      final userDoc = await _firebaseService.getUserById(uid);
+      if (userDoc != null) {
+        _isAdmin = userDoc['isAdmin'] == true;
+      } else {
+        _isAdmin = false;
+      }
+      notifyListeners();
+    } catch (e) {
+  AppLogger.e('DEBUG: Failed to load user role: $e', error: e);
+      _isAdmin = false;
+      notifyListeners();
     }
   }
 
@@ -51,35 +79,33 @@ class AuthProvider extends ChangeNotifier {
       _setError(null);
 
       if (_auth == null) {
-        print('❌ DEBUG: Firebase Auth not initialized for login');
+  AppLogger.e('❌ DEBUG: Firebase Auth not initialized for login');
         _setError('Firebase Auth not available');
         return false;
       }
 
-      print('🔍 DEBUG: Starting login for email: $email');
+  AppLogger.d('🔍 DEBUG: Starting login for email: $email');
 
       final userCredential = await _auth!.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      print('✅ DEBUG: Login successful!');
+  AppLogger.d('✅ DEBUG: Login successful!');
       
       // Create security session
       if (userCredential.user != null) {
         try {
           await _securityService.createSession(userId: userCredential.user!.uid);
-          print('✅ DEBUG: Security session created');
+          AppLogger.d('✅ DEBUG: Security session created');
         } catch (e) {
-          print('⚠️ DEBUG: Failed to create security session: $e');
+          AppLogger.w('⚠️ DEBUG: Failed to create security session: $e', error: e);
         }
       }
       
       return true;
     } on FirebaseAuthException catch (e) {
-      print('❌ DEBUG: Login FirebaseAuthException');
-      print('❌ DEBUG: Error code: ${e.code}');
-      print('❌ DEBUG: Error message: ${e.message}');
+  AppLogger.e('❌ DEBUG: Login FirebaseAuthException: ${e.code} ${e.message}', error: e);
       
       String errorMessage;
       switch (e.code) {
@@ -101,7 +127,7 @@ class AuthProvider extends ChangeNotifier {
       _setError(errorMessage);
       return false;
     } catch (e) {
-      print('❌ DEBUG: Login general exception: $e');
+  AppLogger.e('❌ DEBUG: Login general exception: $e', error: e);
       _setError('Login failed: $e');
       return false;
     } finally {
@@ -119,34 +145,31 @@ class AuthProvider extends ChangeNotifier {
       _setError(null);
 
       if (_auth == null) {
-        print('❌ DEBUG: Firebase Auth not initialized');
+  AppLogger.e('❌ DEBUG: Firebase Auth not initialized');
         _setError('Firebase Auth not available');
         return false;
       }
 
-      print('🔍 DEBUG: Starting registration for email: $email');
-      print('🔍 DEBUG: Firebase Auth instance: ${_auth.toString()}');
-      print('🔍 DEBUG: Current user: ${_auth?.currentUser?.email ?? 'None'}');
+  AppLogger.d('🔍 DEBUG: Starting registration for email: $email');
+  AppLogger.d('🔍 DEBUG: Firebase Auth instance: ${_auth.toString()}');
+  AppLogger.d('🔍 DEBUG: Current user: ${_auth?.currentUser?.email ?? 'None'}');
 
       UserCredential result = await _auth!.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      print('✅ DEBUG: Registration successful!');
-      print('✅ DEBUG: User UID: ${result.user?.uid}');
-      print('✅ DEBUG: User email: ${result.user?.email}');
+  AppLogger.d('✅ DEBUG: Registration successful!');
+  AppLogger.d('✅ DEBUG: User UID: ${result.user?.uid}');
+  AppLogger.d('✅ DEBUG: User email: ${result.user?.email}');
 
       // Update user profile with name
       await result.user?.updateDisplayName(name);
-      print('✅ DEBUG: Display name updated to: $name');
+  AppLogger.d('✅ DEBUG: Display name updated to: $name');
 
       return true;
     } on FirebaseAuthException catch (e) {
-      print('❌ DEBUG: FirebaseAuthException caught');
-      print('❌ DEBUG: Error code: ${e.code}');
-      print('❌ DEBUG: Error message: ${e.message}');
-      print('❌ DEBUG: Stack trace: ${e.stackTrace}');
+  AppLogger.e('❌ DEBUG: FirebaseAuthException caught: ${e.code} ${e.message}', error: e, stackTrace: e.stackTrace);
       
       String errorMessage;
       switch (e.code) {
@@ -171,13 +194,11 @@ class AuthProvider extends ChangeNotifier {
       _setError(errorMessage);
       return false;
     } catch (e) {
-      print('❌ DEBUG: General exception caught');
-      print('❌ DEBUG: Exception: $e');
-      print('❌ DEBUG: Exception type: ${e.runtimeType}');
+  AppLogger.e('❌ DEBUG: General exception caught: $e', error: e);
       _setError('Unexpected error: $e');
       return false;
     } finally {
-      print('🔍 DEBUG: Registration attempt completed');
+  AppLogger.d('🔍 DEBUG: Registration attempt completed');
       _setLoading(false);
     }
   }
@@ -217,9 +238,9 @@ class AuthProvider extends ChangeNotifier {
       if (userCredential?.user != null) {
         try {
           await _securityService.createSession(userId: userCredential!.user!.uid);
-          print('✅ DEBUG: Security session created for Google sign-in');
+          AppLogger.d('✅ DEBUG: Security session created for Google sign-in');
         } catch (e) {
-          print('⚠️ DEBUG: Failed to create security session: $e');
+          AppLogger.w('⚠️ DEBUG: Failed to create security session: $e', error: e);
         }
       }
       
@@ -257,9 +278,9 @@ class AuthProvider extends ChangeNotifier {
       // End security session first
       try {
         await _securityService.endSession(reason: 'user_logout');
-        print('✅ DEBUG: Security session ended');
+        AppLogger.d('✅ DEBUG: Security session ended');
       } catch (e) {
-        print('⚠️ DEBUG: Failed to end security session: $e');
+  AppLogger.w('⚠️ DEBUG: Failed to end security session: $e', error: e);
       }
       
       if (_auth != null) {

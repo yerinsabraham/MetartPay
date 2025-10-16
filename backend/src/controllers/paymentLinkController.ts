@@ -116,6 +116,109 @@ export class PaymentLinkController {
   }
 
   /**
+   * Create a payment record for client-initiated payments (server-side)
+   * Returns { paymentId, qrPayload }
+   */
+  async createPaymentForClient(payload: { merchantId: string; amountNgn: number; token: string; network: string; description?: string }) {
+    const { merchantId, amountNgn, token, network, description } = payload;
+
+    // Validate merchant exists and wallets are present
+    const merchantRef = db.collection('merchants').doc(merchantId);
+    const merchantSnap = await merchantRef.get();
+    if (!merchantSnap.exists) throw new Error('Merchant not found');
+
+    const merchantData = merchantSnap.data();
+    if (!merchantData?.walletsGenerated) throw new Error('Merchant wallets not generated');
+
+    // Find wallet for the chosen network.
+    // Some merchants may store chain names differently (e.g. 'TRON' vs 'TRC20').
+    // Fetch merchant wallets and match heuristically so we don't fail on naming differences.
+    const walletsSnap = await db.collection('wallets').where('merchantId', '==', merchantId).get();
+    if (walletsSnap.empty) throw new Error('No wallets for merchant');
+    const wallets = walletsSnap.docs.map(d => d.data() as any);
+
+    const normalize = (s: string) => (s || '').toString().replace(/[^a-z0-9]/gi, '').toLowerCase();
+    // Map common synonyms for TRON/TRC20/usdt-tron -> 'trx'
+    const tronSynonyms = new Set(['tron', 'trc', 'trc20', 'trc-20', 'usdttron', 'usdt_tron', 'usdt-tron', 'trx']);
+    const desiredRaw = (network || '').toString();
+    let desiredNorm = normalize(desiredRaw);
+    if (tronSynonyms.has(desiredNorm)) desiredNorm = 'trx';
+
+    const normalizedToken = (token || '').toString().replace(/[^a-z0-9]/gi, '').toLowerCase();
+
+    let wallet = wallets.find((w: any) => {
+      const chainRaw = (w.chain || '').toString();
+      const chainNorm = normalize(chainRaw);
+
+      // Exact match
+      if (chainNorm === desiredNorm) return true;
+
+      // Containment match (covers e.g. 'trx_usdt' and 'trx')
+      if (chainNorm.includes(desiredNorm) || desiredNorm.includes(chainNorm)) return true;
+
+      // Token-aware match: if user asked for USDT on a TRON-like network, accept chains like 'trx_usdt' or 'trxusdt'
+      if (desiredNorm === 'trx' && normalizedToken.includes('usdt') && chainNorm.startsWith('trx') && chainNorm.includes('usdt')) return true;
+
+      // If chain is token-prefixed like 'trc_usdt' normalize and compare
+      if (tronSynonyms.has(chainNorm) && desiredNorm === 'trx') return true;
+
+      return false;
+    });
+
+    if (!wallet) {
+      // As a last-resort fallback, if the merchant has any chain that starts with 'trx' (common TRON canonical), pick it.
+      const trxFallback = wallets.find((w: any) => (w.chain || '').toString().toLowerCase().startsWith('trx'));
+      if (trxFallback) {
+        wallet = trxFallback;
+        console.warn('Falling back to TRX wallet for network', { merchantId, requestedNetwork: network, selectedChain: wallet.chain, selectedAddress: wallet.publicAddress });
+      } else {
+        console.error('No wallet matching network', { merchantId, requestedNetwork: network, availableChains: wallets.map((w: any) => w.chain) });
+        throw new Error('No wallet for selected network');
+      }
+    }
+
+    console.info('Selected wallet for network', { merchantId, requestedNetwork: network, selectedChain: wallet.chain, selectedAddress: wallet.publicAddress });
+
+    // Get crypto prices and compute cryptoAmount
+    const prices = await this.getCryptoPrices();
+    const priceKey = token.toLowerCase();
+    const ngnToCrypto = prices[priceKey] || 1650;
+    const cryptoAmount = parseFloat((amountNgn / ngnToCrypto).toFixed(6));
+
+    // Create payment document in 'payments' collection with server privileges
+    const paymentData = {
+      merchantId,
+      amountNgn,
+      cryptoAmount,
+      token,
+      network,
+      address: (wallet.publicAddress || '').toLowerCase(),
+      description: description || '',
+      autoConvert: true,
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const paymentRef = await db.collection('payments').add(paymentData);
+
+    const qrPayload = `pay:${paymentRef.id}?amount=${cryptoAmount}&token=${token}&network=${network}`;
+
+    await paymentRef.update({ qrPayload });
+
+    // Return additional useful fields for the client to render the QR view immediately
+    return {
+      paymentId: paymentRef.id,
+      qrPayload,
+      cryptoAmount,
+      address: paymentData.address,
+      token,
+      network,
+  expiresAt: null,
+    };
+  }
+
+  /**
    * Get payment links for a merchant
    */
   async getPaymentLinks(req: Request, res: Response): Promise<void> {

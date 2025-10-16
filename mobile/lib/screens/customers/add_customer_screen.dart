@@ -60,10 +60,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                 ? const SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Text(
                     'Save',
@@ -285,7 +282,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                         }
                       });
                     },
-                    activeColor: Colors.purple,
+                    activeThumbColor: Colors.purple,
                   ),
                 ],
               ),
@@ -459,8 +456,15 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       final customerProvider = Provider.of<CustomerProvider>(context, listen: false);
       final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
 
+      // Capture values from context before any await to avoid using BuildContext across async gaps
       if (merchantProvider.currentMerchant == null) {
         throw Exception('No merchant found');
+      }
+      final merchantId = merchantProvider.currentMerchant!.id;
+      final createdByUid = Provider.of<AuthProvider>(context, listen: false).currentUser?.uid;
+
+      if (createdByUid == null) {
+        throw Exception('No authenticated user');
       }
 
       final firstName = _firstNameController.text.trim();
@@ -501,7 +505,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       );
 
       await customerProvider.addCustomer(
-        merchantProvider.currentMerchant!.id,
+        merchantId,
         customer,
       );
 
@@ -509,12 +513,12 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       if (_notesController.text.trim().isNotEmpty) {
         final note = CustomerNote(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
-          merchantId: merchantProvider.currentMerchant!.id,
+          merchantId: merchantId,
           customerId: customer.id,
           title: 'Initial Note',
           content: _notesController.text.trim(),
           priority: 'low',
-          createdBy: Provider.of<AuthProvider>(context, listen: false).currentUser!.uid,
+          createdBy: createdByUid,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );

@@ -57,7 +57,8 @@ class _SessionManagementScreenState extends State<SessionManagementScreen> {
 
           return RefreshIndicator(
             onRefresh: () async {
-              await securityProvider.loadActiveSessions(authProvider.currentUser!.uid);
+                  final uid = authProvider.currentUser?.uid;
+                  if (uid != null) await securityProvider.loadActiveSessions(uid);
             },
             child: Column(
               children: [
@@ -260,7 +261,7 @@ class _SessionManagementScreenState extends State<SessionManagementScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: riskColor.withOpacity(0.1),
+                      color: riskColor.withAlpha((0.1 * 255).round()),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: riskColor),
                     ),
@@ -347,7 +348,7 @@ class _SessionManagementScreenState extends State<SessionManagementScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
+            color: Colors.grey.withAlpha((0.3 * 255).round()),
             spreadRadius: 1,
             blurRadius: 3,
             offset: const Offset(0, -2),
@@ -446,17 +447,17 @@ class _SessionManagementScreenState extends State<SessionManagementScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
+                // close dialog using dialog's context
                 Navigator.of(context).pop();
-                await securityProvider.endSession(session.id);
-                
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Session ended successfully'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
+                final id = session.id;
+                await securityProvider.endSession(id);
+                if (!mounted) return;
+                ScaffoldMessenger.of(this.context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Session ended successfully'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               child: const Text('End Session'),
@@ -488,16 +489,17 @@ class _SessionManagementScreenState extends State<SessionManagementScreen> {
             ElevatedButton(
               onPressed: () async {
                 Navigator.of(context).pop();
-                await securityProvider.endAllOtherSessions(authProvider.currentUser!.uid);
-                
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('All other sessions ended successfully'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
+                final uid = authProvider.currentUser?.uid;
+                if (uid != null) {
+                  await securityProvider.endAllOtherSessions(uid);
                 }
+                if (!mounted) return;
+                ScaffoldMessenger.of(this.context).showSnackBar(
+                  const SnackBar(
+                    content: Text('All other sessions ended successfully'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               child: const Text('End Sessions'),
@@ -513,14 +515,14 @@ class _SessionManagementScreenState extends State<SessionManagementScreen> {
     SecurityProvider securityProvider,
     AuthProvider authProvider,
   ) async {
-    await securityProvider.loadActiveSessions(authProvider.currentUser!.uid);
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sessions refreshed'),
-        ),
-      );
-    }
+    final uid = authProvider.currentUser?.uid;
+    if (uid == null) return;
+    await securityProvider.loadActiveSessions(uid);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Sessions refreshed'),
+      ),
+    );
   }
 }

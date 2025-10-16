@@ -2,25 +2,31 @@ import 'package:flutter/material.dart';
 
 class MetartPayColors {
   // Official MetartPay brand colors
-  static const Color primary = Color(0xFF681f28);      // Main brand color
-  static const Color secondary = Color(0xFFf79816);    // Orange accent
-  static const Color tertiary = Color(0xFFe05414);     // Red accent
+  // Official app theme color updated to #c62b14
+  static const Color primary = Color(0xFFC62B14);      // Main brand color (updated)
+  static const Color secondary = Color(0xFFf79816);    // Orange accent (kept)
+  static const Color tertiary = Color(0xFFe05414);     // Red accent (kept)
+  // Darker primary used for selected borders/highlights
+  static const Color primaryDark = Color(0xFF9E2410);
+  // Border color (60% opacity of primary)
+  // Avoid deprecated withOpacity use for analyzer; construct color with RGBA
+  static Color primaryBorder60 = const Color.fromRGBO(198, 43, 20, 0.6);
   
   // Gradient colors
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFFf79816), Color(0xFFe05414), Color(0xFF681f28)],
+    colors: [Color(0xFFF79A3A), Color(0xFFE05414), Color(0xFFC62B14)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
   
   static const LinearGradient lightGradient = LinearGradient(
-    colors: [Color(0xFFf79816), Color(0xFFe05414)],
+    colors: [Color(0xFFFFB869), Color(0xFFE05414)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
   
   static const LinearGradient darkGradient = LinearGradient(
-    colors: [Color(0xFFe05414), Color(0xFF681f28)],
+    colors: [Color(0xFFE05414), Color(0xFF9E2410)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -33,15 +39,16 @@ class MetartPayLogo extends StatelessWidget {
 
   const MetartPayLogo({
     super.key,
-    this.height = 32,
+    this.height = 40,
     this.isDarkBackground = false,
     this.color,
   });
 
   @override
   Widget build(BuildContext context) {
+    final asset = isDarkBackground ? 'assets/icons/app_logo white.png' : 'assets/icons/app_logo black.png';
     return Image.asset(
-      'assets/images/app_logo_white.png', // Always use white background logo
+      asset,
       height: height,
       color: color,
       colorBlendMode: color != null ? BlendMode.srcIn : null,
@@ -65,6 +72,7 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
   final Widget? leading;
   final bool showLogo;
+  final bool plainWhiteBackground;
   final VoidCallback? onLogoTap;
   final PreferredSizeWidget? bottom;
 
@@ -74,6 +82,7 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.actions,
     this.leading,
     this.showLogo = false,
+    this.plainWhiteBackground = false,
     this.onLogoTap,
     this.bottom,
   });
@@ -81,54 +90,47 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: MetartPayColors.primaryGradient,
-      ),
+      decoration: plainWhiteBackground
+          ? const BoxDecoration(color: Colors.white)
+          : const BoxDecoration(gradient: MetartPayColors.primaryGradient),
       child: AppBar(
-        title: showLogo 
-          ? GestureDetector(
-              onTap: onLogoTap,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const MetartPayLogo(
-                    height: 36,
-                    isDarkBackground: true,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ],
+        // When `showLogo` is true we only render the app icon (black PNG suited
+        // for the gradient background) and omit the textual label as requested.
+        title: showLogo
+            ? GestureDetector(
+                onTap: onLogoTap,
+                child: MetartPayLogo(
+                  height: 56,
+                  // Per UI instruction: when the header is plain white, use the
+                  // white logo asset. When the header uses gradient, use the
+                  // black logo variant so it contrasts with the gradient.
+                  isDarkBackground: plainWhiteBackground ? true : false,
+                ),
+              )
+            : Text(
+                title,
+                style: TextStyle(
+                  color: plainWhiteBackground ? Colors.black : Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            )
-          : Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+        // Align title/logo to the left for a compact header layout
+        centerTitle: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: leading,
         actions: actions?.map((action) {
-          // Ensure action buttons have white color
+          // When on a plain white background action icons should be black
           if (action is IconButton) {
             return IconButton(
               onPressed: action.onPressed,
               icon: action.icon,
-              color: Colors.white,
+              color: plainWhiteBackground ? Colors.black : Colors.white,
             );
           }
           return action;
         }).toList(),
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: plainWhiteBackground ? Colors.black : Colors.white),
         bottom: bottom,
       ),
     );
@@ -165,7 +167,7 @@ class GradientCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius ?? 12),
         boxShadow: [
           BoxShadow(
-            color: MetartPayColors.primary.withOpacity(0.2),
+            color: MetartPayColors.primary.withAlpha((0.2 * 255).round()),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),

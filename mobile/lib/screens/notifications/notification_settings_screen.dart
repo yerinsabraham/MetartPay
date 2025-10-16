@@ -25,7 +25,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   Future<void> _loadSettings() async {
     final notificationProvider = context.read<NotificationProvider>();
     await notificationProvider.loadNotificationSettings();
-    
+    if (!mounted) return;
+
     setState(() {
       _settings = notificationProvider.settings;
       _isLoading = false;
@@ -39,28 +40,26 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     
     try {
       await notificationProvider.updateNotificationSettings(_settings!);
-      
+      if (!mounted) return;
+
       setState(() {
         _hasChanges = false;
       });
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Settings saved successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Settings saved successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save settings: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save settings: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -266,7 +265,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withAlpha((0.1 * 255).round()),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.send, color: Colors.blue),
@@ -366,8 +365,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: enabled
-                    ? MetartPayColors.primary.withOpacity(0.1)
-                    : Colors.grey.withOpacity(0.1),
+                    ? MetartPayColors.primary.withAlpha((0.1 * 255).round())
+                    : Colors.grey.withAlpha((0.1 * 255).round()),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -393,7 +392,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
       trailing: Switch(
         value: value,
         onChanged: enabled ? onChanged : null,
-        activeColor: MetartPayColors.primary,
+        // activeThumbColor expects a Color? (not a MaterialStateProperty)
+        activeThumbColor: MetartPayColors.primary,
       ),
       enabled: enabled,
     );
@@ -404,7 +404,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: MetartPayColors.primary.withOpacity(0.1),
+          color: MetartPayColors.primary.withAlpha((0.1 * 255).round()),
           borderRadius: BorderRadius.circular(8),
         ),
         child: const Icon(

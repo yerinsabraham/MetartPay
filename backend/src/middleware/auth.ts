@@ -26,6 +26,18 @@ export const authenticateToken = async (
     }
 
     // Demo mode - allow demo tokens for testing
+    // Support tokens like 'demo-merchant:<merchantId>' which will set the uid to the merchantId
+    if (token.startsWith('demo-merchant:')) {
+      const parts = token.split(':');
+      const merchantId = parts[1] || `demo-${Date.now()}`;
+      req.user = {
+        uid: merchantId,
+        email: `${merchantId}@demo.metartpay`,
+        admin: true,
+      };
+      return next();
+    }
+
     if (token.startsWith('demo-') || token.includes('demo')) {
       req.user = {
         uid: 'demo-user-' + Date.now(),

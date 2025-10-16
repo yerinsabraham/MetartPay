@@ -62,7 +62,7 @@ class SecurityProvider extends ChangeNotifier {
         orElse: () => _activeSessions.isNotEmpty ? _activeSessions.first : _activeSessions.first,
       );
     } catch (e) {
-      print('Error loading active sessions: $e');
+        debugPrint('Error loading active sessions: $e');
       _activeSessions = [];
       _currentSession = null;
     }
@@ -80,7 +80,7 @@ class SecurityProvider extends ChangeNotifier {
         await loadActiveSessions(_currentSession!.userId);
       }
     } catch (e) {
-      print('Error ending session: $e');
+        debugPrint('Error ending session: $e');
     }
   }
 
@@ -89,7 +89,7 @@ class SecurityProvider extends ChangeNotifier {
       await _securityService.endAllOtherSessions(userId);
       await loadActiveSessions(userId);
     } catch (e) {
-      print('Error ending all other sessions: $e');
+        debugPrint('Error ending all other sessions: $e');
     }
   }
 
@@ -97,7 +97,7 @@ class SecurityProvider extends ChangeNotifier {
     try {
       return await _securityService.refreshSession();
     } catch (e) {
-      print('Error refreshing session: $e');
+        debugPrint('Error refreshing session: $e');
       return false;
     }
   }
@@ -121,7 +121,7 @@ class SecurityProvider extends ChangeNotifier {
         limit: limit,
       );
     } catch (e) {
-      print('Error loading security logs: $e');
+        debugPrint('Error loading security logs: $e');
       _securityLogs = [];
     }
 
@@ -151,7 +151,7 @@ class SecurityProvider extends ChangeNotifier {
         await loadSecurityLogs(userId);
       }
     } catch (e) {
-      print('Error logging security event: $e');
+        debugPrint('Error logging security event: $e');
     }
   }
 
@@ -163,7 +163,7 @@ class SecurityProvider extends ChangeNotifier {
     try {
       _securityAlerts = await _securityService.detectSuspiciousActivity(userId);
     } catch (e) {
-      print('Error loading security alerts: $e');
+        debugPrint('Error loading security alerts: $e');
       _securityAlerts = [];
     }
 
@@ -184,7 +184,7 @@ class SecurityProvider extends ChangeNotifier {
     try {
       _biometricCapability = await _biometricService.getBiometricCapability();
     } catch (e) {
-      print('Error loading biometric capability: $e');
+        debugPrint('Error loading biometric capability: $e');
       _biometricCapability = null;
     }
 

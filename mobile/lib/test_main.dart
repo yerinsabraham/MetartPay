@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  print('🚀 DEBUG: Starting simple test app (no Firebase)');
+  debugPrint('🚀 DEBUG: Starting simple test app (no Firebase)');
   runApp(const SimpleTestApp());
 }
 

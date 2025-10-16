@@ -71,6 +71,57 @@ app.use('/api/auth', authRoutes);
 app.use('/api/merchants', merchantRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/payments', paymentRoutes);
+
+// Bootstrap endpoint to set initial admin by email using ADMIN_BOOTSTRAP_SECRET
+app.post('/api/admin/set-admin', async (req, res) => {
+    try {
+        const { email, secret } = req.body || {};
+        if (!email) return res.status(400).json({ error: 'email required' });
+
+        const configured = process.env.ADMIN_BOOTSTRAP_SECRET || '';
+        if (!configured || configured !== secret) {
+            return res.status(403).json({ error: 'invalid or expired token' });
+        }
+
+        // Ensure bootstrap not already used
+        const metaRef = db.collection('admin_bootstrap').doc('metadata');
+        const metaDoc = await metaRef.get();
+        if (metaDoc.exists && metaDoc.data()?.used === true) {
+            return res.status(403).json({ error: 'bootstrap secret already used' });
+        }
+
+        const auth = (await import('firebase-admin')).auth();
+        const user = await auth.getUserByEmail(email.toLowerCase());
+        const uid = user.uid;
+
+        const existingClaims = user.customClaims || {};
+        const newClaims = Object.assign({}, existingClaims, { admin: true });
+        await auth.setCustomUserClaims(uid, newClaims as any);
+
+        await db.collection('users').doc(uid).set({ isAdmin: true, updatedAt: new Date() }, { merge: true });
+
+        await db.collection('admin_audit_logs').add({
+            action: 'setAdminViaBootstrap',
+            targetEmail: email.toLowerCase(),
+            targetUid: uid,
+            changedBy: 'bootstrap',
+            changedAt: new Date(),
+            viaBootstrap: true,
+        });
+
+        await metaRef.set({ used: true, usedByEmail: email.toLowerCase(), usedAt: new Date() }, { merge: true });
+
+        return res.json({ success: true, uid });
+    } catch (err) {
+        console.error('bootstrap set-admin error', err);
+        return res.status(500).json({ error: 'internal' });
+    }
+});
+
+// verify-admin endpoint removed
+
+// Mount protected admin routes after bootstrap endpoint so the bootstrap path is
+// reachable without admin auth.
 app.use('/api/admin', adminRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/wallets', walletRoutes);

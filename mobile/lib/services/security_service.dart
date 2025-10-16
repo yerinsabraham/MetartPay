@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import '../models/models.dart';
+import '../utils/app_logger.dart';
 
 class SecurityService {
   static final SecurityService _instance = SecurityService._internal();
@@ -96,7 +97,7 @@ class SecurityService {
         'lastActivity': DateTime.now().toIso8601String(),
       });
     } catch (e) {
-      print('Error updating session activity: $e');
+      AppLogger.e('Error updating session activity', error: e);
     }
   }
 
@@ -129,7 +130,7 @@ class SecurityService {
       await _clearCurrentSession();
       _currentSessionId = null;
     } catch (e) {
-      print('Error ending session: $e');
+      AppLogger.e('Error ending session', error: e);
     }
   }
 
@@ -148,7 +149,7 @@ class SecurityService {
           .where((session) => !session.isExpired())
           .toList();
     } catch (e) {
-      print('Error getting active sessions: $e');
+      AppLogger.e('Error getting active sessions', error: e);
       return [];
     }
   }
@@ -171,7 +172,7 @@ class SecurityService {
         _currentSessionId = null;
       }
     } catch (e) {
-      print('Error ending specific session: $e');
+      AppLogger.e('Error ending specific session', error: e);
     }
   }
 
@@ -195,7 +196,7 @@ class SecurityService {
         severity: 'medium',
       );
     } catch (e) {
-      print('Error ending all other sessions: $e');
+      AppLogger.e('Error ending all other sessions', error: e);
     }
   }
 
@@ -230,7 +231,7 @@ class SecurityService {
           .doc(securityLog.id)
           .set(securityLog.toJson());
     } catch (e) {
-      print('Error logging security event: $e');
+      AppLogger.e('Error logging security event', error: e);
     }
   }
 
@@ -266,7 +267,7 @@ class SecurityService {
           .map((doc) => SecurityLog.fromJson(doc.data() as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      print('Error getting security logs: $e');
+      AppLogger.e('Error getting security logs', error: e);
       return [];
     }
   }
@@ -289,7 +290,7 @@ class SecurityService {
       await _checkConcurrentSessions(userId, alerts);
       
     } catch (e) {
-      print('Error detecting suspicious activity: $e');
+      AppLogger.e('Error detecting suspicious activity', error: e);
     }
     
     return alerts;
@@ -310,7 +311,7 @@ class SecurityService {
       final session = UserSession.fromJson(doc.data()!);
       return session.isActive && !session.isExpired();
     } catch (e) {
-      print('Error validating session: $e');
+      AppLogger.e('Error validating session', error: e);
       return false;
     }
   }
@@ -373,7 +374,7 @@ class SecurityService {
         };
       }
     } catch (e) {
-      print('Error getting device info: $e');
+      AppLogger.e('Error getting device info', error: e);
       return {
         'deviceName': 'Unknown Device',
         'deviceModel': 'Unknown Model',

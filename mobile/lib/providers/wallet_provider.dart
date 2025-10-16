@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/wallet_service.dart';
 import '../services/firebase_service.dart';
+import '../utils/app_logger.dart';
 
 class WalletProvider with ChangeNotifier {
   final WalletService _walletService = WalletService();
@@ -53,12 +54,12 @@ class WalletProvider with ChangeNotifier {
       if (idToken == null) throw Exception('Failed to get authentication token');
       _wallets = await _walletService.getMerchantWallets(merchantId, idToken);
       
-      print('DEBUG: Loaded ${_wallets.length} wallets for merchant $merchantId');
+      AppLogger.d('DEBUG: Loaded ${_wallets.length} wallets for merchant $merchantId');
       notifyListeners();
       
     } catch (e) {
       _setError('Failed to load wallets: $e');
-      print('DEBUG: Error loading wallets: $e');
+      AppLogger.e('DEBUG: Error loading wallets: $e', error: e);
     } finally {
       _setLoading(false);
     }
@@ -79,13 +80,13 @@ class WalletProvider with ChangeNotifier {
       if (idToken == null) throw Exception('Failed to get authentication token');
       _wallets = await _walletService.generateWallets(merchantId, idToken);
       
-      print('DEBUG: Generated ${_wallets.length} wallets for merchant $merchantId');
+      AppLogger.d('DEBUG: Generated ${_wallets.length} wallets for merchant $merchantId');
       notifyListeners();
       return true;
       
     } catch (e) {
       _setError('Failed to generate wallets: $e');
-      print('DEBUG: Error generating wallets: $e');
+      AppLogger.e('DEBUG: Error generating wallets: $e', error: e);
       return false;
     } finally {
       _setLoading(false);
@@ -106,11 +107,11 @@ class WalletProvider with ChangeNotifier {
       if (idToken == null) throw Exception('Failed to get authentication token');
       _balances = await _walletService.getWalletBalances(merchantId, idToken);
       
-      print('DEBUG: Loaded balances for ${_balances.length} wallets');
+      AppLogger.d('DEBUG: Loaded balances for ${_balances.length} wallets');
       notifyListeners();
       
     } catch (e) {
-      print('DEBUG: Error loading balances: $e');
+      AppLogger.e('DEBUG: Error loading balances: $e', error: e);
       // Don't set error for balance loading failures - it's not critical
     } finally {
       _setLoading(false);
@@ -172,9 +173,9 @@ class WalletProvider with ChangeNotifier {
   Future<void> copyAddressToClipboard(String address) async {
     try {
       // You can add clipboard functionality here
-      print('DEBUG: Copied address to clipboard: $address');
+      AppLogger.d('DEBUG: Copied address to clipboard: $address');
     } catch (e) {
-      print('DEBUG: Failed to copy address: $e');
+      AppLogger.e('DEBUG: Failed to copy address: $e', error: e);
     }
   }
 }

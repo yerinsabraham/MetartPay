@@ -15,14 +15,13 @@ class CustomerInteractionsScreen extends StatefulWidget {
 }
 
 class _CustomerInteractionsScreenState extends State<CustomerInteractionsScreen> {
-  final _typeController = TextEditingController();
   final _notesController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  String? _selectedType;
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _typeController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -180,7 +179,7 @@ class _CustomerInteractionsScreenState extends State<CustomerInteractionsScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
-                controller: _typeController,
+                  initialValue: _selectedType,
                 decoration: const InputDecoration(
                   labelText: 'Interaction Type',
                   border: OutlineInputBorder(),
@@ -194,14 +193,12 @@ class _CustomerInteractionsScreenState extends State<CustomerInteractionsScreen>
                   DropdownMenuItem(value: 'compliment', child: Text('Compliment')),
                   DropdownMenuItem(value: 'other', child: Text('Other')),
                 ],
+                onChanged: (v) => setState(() => _selectedType = v),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please select an interaction type';
                   }
                   return null;
-                },
-                onChanged: (value) {
-                  _typeController.text = value ?? '';
                 },
               ),
               const SizedBox(height: 16),
@@ -225,7 +222,7 @@ class _CustomerInteractionsScreenState extends State<CustomerInteractionsScreen>
         actions: [
           TextButton(
             onPressed: () {
-              _typeController.clear();
+              setState(() => _selectedType = null);
               _notesController.clear();
               Navigator.of(context).pop();
             },
@@ -261,7 +258,7 @@ class _CustomerInteractionsScreenState extends State<CustomerInteractionsScreen>
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         customerId: widget.customer.id,
         merchantId: widget.customer.merchantId,
-        type: _typeController.text,
+        type: _selectedType ?? 'other',
         subject: 'Customer Interaction',
         content: _notesController.text.trim(),
         scheduledAt: DateTime.now(),

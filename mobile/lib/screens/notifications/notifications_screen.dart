@@ -278,7 +278,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withAlpha((0.1 * 255).round()),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -315,7 +315,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
           leading: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: _getNotificationColor(notification.type).withOpacity(0.1),
+              color: _getNotificationColor(notification.type).withAlpha((0.1 * 255).round()),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -452,7 +452,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
     // Handle action URL if present
     if (notification.actionUrl != null) {
       // Navigate to action URL
-      print('Navigate to: ${notification.actionUrl}');
+      debugPrint('Navigate to: ${notification.actionUrl}');
     }
   }
 
@@ -483,7 +483,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: _getNotificationColor(notification.type).withOpacity(0.1),
+                      color: _getNotificationColor(notification.type).withAlpha((0.1 * 255).round()),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(

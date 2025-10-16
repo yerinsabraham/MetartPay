@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../services/notification_service.dart';
+import '../utils/app_logger.dart';
 
 class NotificationProvider with ChangeNotifier {
   final NotificationService _notificationService = NotificationService();
@@ -29,7 +30,7 @@ class NotificationProvider with ChangeNotifier {
 
   /// Initialize notification provider
   Future<void> initialize(String merchantId) async {
-    print('NotificationProvider: Initializing for merchant: $merchantId');
+    AppLogger.d('NotificationProvider: Initializing for merchant: $merchantId');
     
     try {
       _isLoading = true;
@@ -53,7 +54,7 @@ class NotificationProvider with ChangeNotifier {
 
     } catch (e) {
       _error = e.toString();
-      print('NotificationProvider: Error initializing: $e');
+      AppLogger.e('NotificationProvider: Error initializing: $e', error: e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -76,7 +77,7 @@ class NotificationProvider with ChangeNotifier {
 
     } catch (e) {
       _error = e.toString();
-      print('NotificationProvider: Error loading notifications: $e');
+      AppLogger.e('NotificationProvider: Error loading notifications: $e', error: e);
     } finally {
       if (refresh) {
         _isLoading = false;
@@ -91,7 +92,7 @@ class NotificationProvider with ChangeNotifier {
       _settings = await _notificationService.getNotificationSettings();
       notifyListeners();
     } catch (e) {
-      print('NotificationProvider: Error loading settings: $e');
+      AppLogger.e('NotificationProvider: Error loading settings: $e', error: e);
     }
   }
 
@@ -103,7 +104,7 @@ class NotificationProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _error = e.toString();
-      print('NotificationProvider: Error updating settings: $e');
+      AppLogger.e('NotificationProvider: Error updating settings: $e', error: e);
       notifyListeners();
     }
   }
@@ -124,7 +125,7 @@ class NotificationProvider with ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('NotificationProvider: Error marking as read: $e');
+      AppLogger.e('NotificationProvider: Error marking as read: $e', error: e);
     }
   }
 
@@ -146,7 +147,7 @@ class NotificationProvider with ChangeNotifier {
       _unreadCount = 0;
       notifyListeners();
     } catch (e) {
-      print('NotificationProvider: Error marking all as read: $e');
+      AppLogger.e('NotificationProvider: Error marking all as read: $e', error: e);
     }
   }
 
@@ -160,7 +161,7 @@ class NotificationProvider with ChangeNotifier {
       await _updateUnreadCount();
       notifyListeners();
     } catch (e) {
-      print('NotificationProvider: Error deleting notification: $e');
+      AppLogger.e('NotificationProvider: Error deleting notification: $e', error: e);
     }
   }
 
@@ -175,7 +176,7 @@ class NotificationProvider with ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('NotificationProvider: Error archiving notification: $e');
+      AppLogger.e('NotificationProvider: Error archiving notification: $e', error: e);
     }
   }
 
@@ -186,7 +187,7 @@ class NotificationProvider with ChangeNotifier {
 
   /// Handle notification received
   void _handleNotificationReceived(AppNotification notification) {
-    print('NotificationProvider: Notification received: ${notification.title}');
+    AppLogger.d('NotificationProvider: Notification received: ${notification.title}');
     
     // Add to beginning of list
     _notifications.insert(0, notification);
@@ -196,7 +197,7 @@ class NotificationProvider with ChangeNotifier {
 
   /// Handle notification tapped
   void _handleNotificationTapped(AppNotification notification) {
-    print('NotificationProvider: Notification tapped: ${notification.title}');
+    AppLogger.d('NotificationProvider: Notification tapped: ${notification.title}');
     
     // Mark as read if not already
     if (!notification.isRead) {
@@ -206,13 +207,13 @@ class NotificationProvider with ChangeNotifier {
     // Handle action URL if present
     if (notification.actionUrl != null) {
       // Navigate to action URL (would need navigation context)
-      print('NotificationProvider: Should navigate to: ${notification.actionUrl}');
+      AppLogger.d('NotificationProvider: Should navigate to: ${notification.actionUrl}');
     }
   }
 
   /// Handle token refresh
   void _handleTokenRefresh(String token) {
-    print('NotificationProvider: FCM token refreshed: $token');
+    AppLogger.d('NotificationProvider: FCM token refreshed: $token');
     // Could trigger any necessary updates here
   }
 
