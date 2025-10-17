@@ -141,7 +141,85 @@ class PaymentsServiceV2 {
     required String network,
     required String address,
     required String merchantId,
+    // When true (or when global AppConfig.SOLANA_ADDRESS_ONLY_QR is true),
+    // build an address-only Solana QR (solana:<address>) instead of
+    // including amount/spl-token etc. Useful as a temporary fallback.
+    bool forceAddressOnlyForSolana = true,
   }) {
+    // Normalize inputs
+    final t = token.toUpperCase();
+    final net = network.toUpperCase();
+
+    // Helper to format amounts
+    String amt(double v) => v.toString();
+
+    // Known token contract/mint mappings (DevNet / placeholders). Add real addresses as needed.
+    const solanaMints = {
+      'USDC': 'Es9vMFrzaCERa...replace_with_real_devnet_mint',
+      'USDT': 'BQ...replace_usdt_devnet'
+    };
+
+    const ethereumContracts = {
+      'USDT': '0x0000000000000000000000000000000000000000', // replace with real contract if available
+      'USDC': '0x0000000000000000000000000000000000000000'
+    };
+
+    // SOL / Solana (supports native SOL and SPL tokens)
+    if (net.startsWith('SOL')) {
+      // If configured to force address-only, return the simple payload
+      // (explicit solana:<address>) so wallets open a manual-send flow.
+      try {
+        final forceGlobal = AppConfig.SOLANA_ADDRESS_ONLY_QR;
+        if (forceAddressOnlyForSolana || forceGlobal) {
+          return 'solana:${address}';
+        }
+      } catch (_) {
+        // If any issue reading AppConfig, fall back to safe simple payload
+        return 'solana:${address}';
+      }
+      if (t == 'SOL' || t == 'SOLANA') {
+        return 'solana:${address}?amount=${amt(cryptoAmount)}';
+      }
+      // SPL token
+      final mint = solanaMints[t] ?? '';
+      if (mint.isNotEmpty) {
+        return 'solana:${address}?spl-token=${Uri.encodeComponent(mint)}&amount=${amt(cryptoAmount)}';
+      }
+      // Fallback to simple solana URI without spl-token
+      return 'solana:${address}?amount=${amt(cryptoAmount)}';
+    }
+
+    // Ethereum / EVM networks (ETH, BSC treated similarly for native coin)
+    if (net == 'ETH' || net == 'ETHEREUM' || net == 'BSC' || net == 'BSC_MAINNET') {
+      if (t == 'ETH' || net == 'ETH' || net == 'ETHEREUM') {
+        // value in wei
+        final wei = (cryptoAmount * 1e18).round();
+        return 'ethereum:${address}?value=${wei.toString()}';
+      }
+      // ERC20 token - include contract if known
+      final contract = ethereumContracts[t] ?? '';
+      if (contract.isNotEmpty) {
+        return 'ethereum:${address}?token=${Uri.encodeComponent(contract)}&amount=${amt(cryptoAmount)}';
+      }
+    }
+
+    // Bitcoin
+    if (net == 'BTC' || net == 'BITCOIN') {
+      return 'bitcoin:${address}?amount=${amt(cryptoAmount)}';
+    }
+
+    // Tron (TRX native, TRC20 tokens)
+    if (net.startsWith('TR') || net.startsWith('TRC') || net == 'TRX') {
+      // native TRX
+      if (t == 'TRX') {
+        return 'tron:${address}?amount=${amt(cryptoAmount)}';
+      }
+      // TRC20 token - no standard widely-adopted format; include contract param if known
+      // For now include token name as token param and fall back to address only
+      return 'tron:${address}?token=${Uri.encodeComponent(t)}&amount=${amt(cryptoAmount)}';
+    }
+
+    // Default: legacy app-specific payload
     final encodedAddress = Uri.encodeComponent(address);
     final encodedMerchant = Uri.encodeComponent(merchantId);
     return 'metartpay://pay?amount=${cryptoAmount.toString()}&token=$token&network=$network&address=$encodedAddress&merchant=$encodedMerchant&paymentId=$paymentId';

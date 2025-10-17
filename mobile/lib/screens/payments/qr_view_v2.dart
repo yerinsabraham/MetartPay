@@ -7,6 +7,7 @@ import '../../services/firebase_service.dart';
 import '../../utils/app_logger.dart';
 import '../../models/models.dart' as models;
 import '../../utils/app_config.dart';
+import '../../services/payments_service_v2.dart';
 
 class CountdownTimer extends StatefulWidget {
   final DateTime expiresAt;
@@ -104,6 +105,26 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
         }
       }
     });
+
+    // If payload empty but we have address/token/network, synthesize a proper network payload
+    if ((_payload == null || _payload.isEmpty) && _address != null && _token.isNotEmpty && _paymentId != null) {
+      try {
+        final double cryptoAmount = _crypto;
+        _payload = PaymentsServiceV2.buildQrPayload(
+          paymentId: _paymentId!,
+          cryptoAmount: cryptoAmount,
+          token: _token,
+          network: _token == 'BTC' ? 'BTC' : (_token == 'SOL' ? 'SOL' : _token),
+          address: _address!,
+          merchantId: _merchantId ?? '',
+          // For Solana, respect the global AppConfig fallback to address-only
+          forceAddressOnlyForSolana: true,
+        );
+        AppLogger.d('Synthesized payload for QR: $_payload');
+      } catch (e) {
+        AppLogger.w('Failed to synthesize QR payload: $e');
+      }
+    }
 
     // Subscribe to transactions if merchantId provided
     if (_merchantId != null) {
@@ -260,24 +281,73 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
                             padding: const EdgeInsets.symmetric(horizontal: 8.0),
                             child: SelectableText(_address!, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Monospace')),
                           ),
+                          const SizedBox(height: 6),
+                          // Helper text for Solana users when using address-only QR
+                          if ((_payload.startsWith('solana:') || (_address != null && _token == 'SOL')))
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Text(
+                                'Scan this QR in your Solana wallet and enter the amount in your wallet. (Solana Pay prefill disabled)',
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.bodySmall?.copyWith(color: Colors.black54),
+                              ),
+                            ),
                           const SizedBox(height: 8),
                           if (_expiresAt != null) CountdownTimer(expiresAt: _expiresAt!),
                           const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 12,
+                            runSpacing: 8,
                             children: [
                               // Copy address only
-                              ElevatedButton.icon(onPressed: () async { await Clipboard.setData(ClipboardData(text: _address ?? _payload)); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Address copied'))); }, icon: const Icon(Icons.copy), label: const Text('Copy')),
-                              const SizedBox(width: 12),
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  await Clipboard.setData(ClipboardData(text: _address ?? _payload));
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Address copied')));
+                                },
+                                icon: const Icon(Icons.copy),
+                                label: const Text('Copy'),
+                              ),
+
                               // Share payload string
-                              ElevatedButton.icon(onPressed: () async { try { await SharePlus.instance.share(ShareParams(text: _payload, subject: 'Payment Request')); } catch (e) { AppLogger.e('Share failed: $e', error: e); } }, icon: const Icon(Icons.share), label: const Text('Share')),
-                              const SizedBox(width: 12),
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  try {
+                                    await SharePlus.instance.share(ShareParams(text: _payload, subject: 'Payment Request'));
+                                  } catch (e) {
+                                    AppLogger.e('Share failed: $e', error: e);
+                                  }
+                                },
+                                icon: const Icon(Icons.share),
+                                label: const Text('Share'),
+                              ),
+
                               // Dev-only: small text button to simulate payment received
                               if (AppConfig.devMockCreate)
-                                TextButton(onPressed: () {
-                                  setState(() => _confirmed = true);
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Simulated payment received')));
-                                }, child: const Text('Simulate'), style: TextButton.styleFrom(foregroundColor: Colors.orange)),
+                                TextButton(
+                                  onPressed: () {
+                                    setState(() => _confirmed = true);
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Simulated payment received')));
+                                  },
+                                  child: const Text('Simulate'),
+                                  style: TextButton.styleFrom(foregroundColor: Colors.orange),
+                                ),
+                              // Dev-only: copy raw QR payload (for faster reproduction/testing)
+                              if (AppConfig.devMockCreate)
+                                TextButton.icon(
+                                  onPressed: () async {
+                                    try {
+                                      await Clipboard.setData(ClipboardData(text: _payload));
+                                      AppLogger.d('Dev: QR payload copied to clipboard: $_payload');
+                                      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payload copied')));
+                                    } catch (e) {
+                                      AppLogger.e('Failed to copy payload: $e', error: e);
+                                    }
+                                  },
+                                  icon: const Icon(Icons.bug_report, color: Colors.orange),
+                                  label: const Text('Copy payload'),
+                                ),
                             ],
                           ),
                         ],

@@ -11,4 +11,10 @@ class AppConfig {
   // When true the mobile app will synthesize a server-shaped payment
   // response locally (no Firestore write). Must be false in production.
   static const bool devMockCreate = bool.fromEnvironment('METARTPAY_DEV_MOCK_CREATE', defaultValue: false);
+
+  // When true, generate Solana QR codes as address-only (solana:<address>)
+  // instead of full Solana Pay URIs with amount/params. Toggleable via
+  // --dart-define=SOLANA_ADDRESS_ONLY_QR=false when building if you want
+  // to re-enable full Solana Pay URIs.
+  static const bool SOLANA_ADDRESS_ONLY_QR = bool.fromEnvironment('SOLANA_ADDRESS_ONLY_QR', defaultValue: true);
 }
