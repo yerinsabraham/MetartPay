@@ -208,10 +208,20 @@ export class TransactionMonitorController {
         status = 'confirming';
       }
 
-      // Check if amount is sufficient
+      // Check if amount is sufficient. If monitored.expectedAmount is not set
+      // (address-only flow), accept any positive incoming transfer as sufficient.
       const receivedAmount = parseFloat(transfer.amount);
-      if (receivedAmount < monitored.expectedAmount * 0.99) { // 1% tolerance
-        status = 'insufficient';
+      if (typeof monitored.expectedAmount === 'number') {
+        if (receivedAmount < monitored.expectedAmount * 0.99) { // 1% tolerance
+          status = 'insufficient';
+        }
+      } else {
+        // No expected amount configured -> accept as sufficient if > 0
+        if (receivedAmount > 0) {
+          // keep status as determined from confirmations
+        } else {
+          status = 'insufficient';
+        }
       }
 
       // Create transaction record

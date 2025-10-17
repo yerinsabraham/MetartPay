@@ -119,7 +119,7 @@ export class PaymentLinkController {
    * Create a payment record for client-initiated payments (server-side)
    * Returns { paymentId, qrPayload }
    */
-  async createPaymentForClient(payload: { merchantId: string; amountNgn: number; token: string; network: string; description?: string }) {
+  async createPaymentForClient(payload: { merchantId: string; amountNgn?: number; token: string; network: string; description?: string }) {
     const { merchantId, amountNgn, token, network, description } = payload;
 
     // Validate merchant exists and wallets are present
@@ -179,34 +179,47 @@ export class PaymentLinkController {
 
     console.info('Selected wallet for network', { merchantId, requestedNetwork: network, selectedChain: wallet.chain, selectedAddress: wallet.publicAddress });
 
-    // Get crypto prices and compute cryptoAmount
+    // Determine whether this is an address-only (no amount) payment. If amountNgn
+    // is not provided or is zero/negative for Solana, create a payment with
+    // status 'awaiting_onchain' so the backend will reconcile on-chain events.
+    let cryptoAmount: number | null = null;
     const prices = await this.getCryptoPrices();
     const priceKey = token.toLowerCase();
     const ngnToCrypto = prices[priceKey] || 1650;
-    const cryptoAmount = parseFloat((amountNgn / ngnToCrypto).toFixed(6));
 
-    // Create payment document in 'payments' collection with server privileges
-    const paymentData = {
+    const addressLower = (wallet.publicAddress || '').toLowerCase();
+
+    const isSolana = (network || '').toString().toUpperCase().startsWith('SOL');
+    const hasAmount = typeof amountNgn === 'number' && amountNgn > 0;
+
+    if (hasAmount) {
+      cryptoAmount = parseFloat((amountNgn! / ngnToCrypto).toFixed(6));
+    }
+
+    const paymentData: any = {
       merchantId,
-      amountNgn,
-      cryptoAmount,
+      amountNgn: hasAmount ? amountNgn : null,
+      cryptoAmount: hasAmount ? cryptoAmount : null,
       token,
       network,
-      address: (wallet.publicAddress || '').toLowerCase(),
+      address: addressLower,
       description: description || '',
       autoConvert: true,
-      status: 'pending',
+      status: hasAmount ? 'pending' : (isSolana ? 'awaiting_onchain' : 'pending'),
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
     const paymentRef = await db.collection('payments').add(paymentData);
 
-    const qrPayload = `pay:${paymentRef.id}?amount=${cryptoAmount}&token=${token}&network=${network}`;
+    // For address-only Solana payments we set the QR payload to the simple
+    // address (solana:<address>) so wallets will open a manual-send flow.
+    const qrPayload = (!hasAmount && isSolana)
+      ? `solana:${addressLower}`
+      : `pay:${paymentRef.id}?amount=${cryptoAmount}&token=${token}&network=${network}`;
 
     await paymentRef.update({ qrPayload });
 
-    // Return additional useful fields for the client to render the QR view immediately
     return {
       paymentId: paymentRef.id,
       qrPayload,
@@ -214,7 +227,7 @@ export class PaymentLinkController {
       address: paymentData.address,
       token,
       network,
-  expiresAt: null,
+      expiresAt: null,
     };
   }
 
