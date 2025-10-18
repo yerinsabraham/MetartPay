@@ -8,7 +8,7 @@ on:
 
 jobs:
   run-emulator-and-tests:
-    runs-on: ubuntu-latest
+  runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Install firebase-tools
         run: |
@@ -31,13 +31,24 @@ jobs:
         run: |
           # Start emulators in background
           firebase emulators:start --only functions,firestore --project=metartpay-bac2f &
-          # Wait for emulator UI to be up
-          sleep 6
+          # Poll Functions emulator root endpoint until ready (up to 60s)
+          SECONDS=0
+          until curl -sSf "http://127.0.0.1:5001/" >/dev/null 2>&1 || [ $SECONDS -ge 60 ]; do
+            sleep 2
+            SECONDS=$((SECONDS + 2))
+            echo "Waiting for Functions emulator... ${SECONDS}s"
+          done
+          if [ $SECONDS -ge 60 ]; then
+            echo "Functions emulator did not become ready after 60s" >&2
+            exit 1
+          fi
 
       - name: Run integration simulate test
         env:
           FIRESTORE_EMULATOR_HOST: 127.0.0.1:8080
-          DEV_SIMULATE_KEY: dev-local-key
+          DEV_SIMULATE_KEY: ${{ secrets.DEV_SIMULATE_KEY }}
+          DEV_CLEANUP_KEY: ${{ secrets.DEV_CLEANUP_KEY }}
+          NODE_ENV: development
         working-directory: backend
         run: |
           node tools/integration_simulate_test.js
