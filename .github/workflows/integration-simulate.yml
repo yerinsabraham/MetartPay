@@ -31,6 +31,34 @@ jobs:
         run: |
           npm install -g firebase-tools@11
 
+      - name: Print firebase-tools version
+        run: |
+          echo "firebase-tools: $(firebase --version)"
+
+      - name: Setup Java (required by some emulators)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Validate required secrets
+        shell: bash
+        env:
+          DEV_SIMULATE_KEY: ${{ secrets.DEV_SIMULATE_KEY }}
+          DEV_CLEANUP_KEY: ${{ secrets.DEV_CLEANUP_KEY }}
+        run: |
+          if [ -z "$DEV_SIMULATE_KEY" ] || [ -z "$DEV_CLEANUP_KEY" ]; then
+            echo "ERROR: Required secrets DEV_SIMULATE_KEY or DEV_CLEANUP_KEY are not set for this workflow run." >&2
+            echo "If this is a pull request from a fork, GitHub will not expose repository secrets; re-run on the main repository or configure a test secret." >&2
+            exit 1
+          fi
+
+      - name: Patch backend package.json engines for emulator
+        working-directory: .
+        run: |
+          echo "Patching backend/package.json engines.node -> 18 for Functions emulator";
+          node -e "const fs=require('fs');const p='backend/package.json';if(!fs.existsSync(p)){console.error('backend/package.json not found');process.exit(0);}const j=JSON.parse(fs.readFileSync(p));j.engines=j.engines||{};j.engines.node='18';fs.writeFileSync(p,JSON.stringify(j,null,2));console.log('patched');"
+
       - name: Install backend deps
         working-directory: backend
         run: |
