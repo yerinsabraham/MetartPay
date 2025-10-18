@@ -1,5 +1,8 @@
 import fs from 'fs';
 
+// Integration tests can take longer; increase timeout
+jest.setTimeout(30000);
+
 // Set up a lightweight mock for Firestore before requiring any app modules
 const collections: Record<string, Map<string, any>> = {};
 function makeCollection(name: string) {
