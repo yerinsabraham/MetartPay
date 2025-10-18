@@ -1,7 +1,16 @@
 name: Integration - simulate-confirm
 
 on:
+  push:
+    branches:
+      - feature/simulate-integration-final
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/integration-simulate.yml'
   pull_request:
+    branches:
+      - main
     paths:
       - 'backend/**'
       - '.github/workflows/integration-simulate.yml'
