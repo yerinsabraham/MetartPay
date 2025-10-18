@@ -25,7 +25,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18'
 
       - name: Install firebase-tools
         run: |
@@ -47,8 +47,7 @@ jobs:
           DEV_SIMULATE_KEY: ${{ secrets.DEV_SIMULATE_KEY }}
           DEV_CLEANUP_KEY: ${{ secrets.DEV_CLEANUP_KEY }}
         run: |
-          # If secrets are present, expose them to subsequent steps via GITHUB_ENV.
-          # If not, write safe fallback test values so CI (including forks) can run emulators.
+          # Use GitHub secrets if available; otherwise expose safe fallbacks so forks/CI can run.
           if [ -n "$DEV_SIMULATE_KEY" ] && [ -n "$DEV_CLEANUP_KEY" ]; then
             echo "Using provided secrets for DEV_SIMULATE_KEY and DEV_CLEANUP_KEY";
             echo "DEV_SIMULATE_KEY=$DEV_SIMULATE_KEY" >> $GITHUB_ENV;
@@ -83,13 +82,18 @@ jobs:
           echo "--- head of backend/dist/index.js ---";
           if [ -f backend/dist/index.js ]; then head -n 120 backend/dist/index.js || true; else echo "backend/dist/index.js not found"; fi
 
-      - name: Run integration simulate test under emulators
+      - name: Show patched backend/package.json (debug)
+        run: |
+          echo "--- backend/package.json after CI patch ---";
+          cat backend/package.json || true;
+
+      - name: Run integration simulate test under emulators (debug)
         working-directory: backend
         env:
           FIRESTORE_EMULATOR_HOST: 127.0.0.1:8080
           NODE_ENV: development
         run: |
-          # Use emulators:exec to start emulators, run the test script, and shut down cleanly
-          # DEV_SIMULATE_KEY / DEV_CLEANUP_KEY are provided via $GITHUB_ENV (either real secrets or CI fallbacks)
+          # Use emulators:exec --debug to capture emulator internals. DEV keys are provided via $GITHUB_ENV.
           echo "Using DEV_SIMULATE_KEY=$(printenv DEV_SIMULATE_KEY)";
-          firebase emulators:exec --project=metartpay-bac2f "node tools/integration_simulate_test.js"
+          echo "Node version: $(node -v)";
+          firebase emulators:exec --project=metartpay-bac2f --debug "node tools/integration_simulate_test.js"
