@@ -17,7 +17,7 @@ on:
 
 jobs:
   run-emulator-and-tests:
-  runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
