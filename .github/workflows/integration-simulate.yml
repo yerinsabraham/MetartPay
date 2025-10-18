@@ -83,10 +83,12 @@ jobs:
           echo "Attempting to start firebase-functions binary on port 8977 and fetch /__/functions.yaml";
           if [ -f backend/node_modules/.bin/firebase-functions ]; then
             echo "Found firebase-functions binary";
-            backend/node_modules/.bin/firebase-functions --port=8977 > backend/firebase-functions.log 2>&1 &
+            # Ensure the binary binds to our chosen control port and exposes the control API
+            FUNCTIONS_CONTROL_API=true PORT=8977 backend/node_modules/.bin/firebase-functions > backend/firebase-functions.log 2>&1 &
             FN_PID=$!;
             echo "firebase-functions PID: $FN_PID";
-            sleep 2;
+            # Wait a bit longer for the binary to initialize and bind
+            sleep 4;
             MANIFEST_URL="http://127.0.0.1:8977/__/functions.yaml";
             echo "Fetching manifest from $MANIFEST_URL";
             curl -sS "$MANIFEST_URL" -o backend/functions_manifest.json || true;
@@ -106,7 +108,8 @@ jobs:
           echo "Debug wrapper: start firebase-functions on port 8977 and tail its log while emulators start";
           if [ -f backend/node_modules/.bin/firebase-functions ]; then
             echo "Starting firebase-functions -> backend/firebase-functions.log";
-            backend/node_modules/.bin/firebase-functions --port=8977 > backend/firebase-functions.log 2>&1 &
+            # Start firebase-functions with control API enabled and PORT set so it doesn't try to bind to 8080
+            FUNCTIONS_CONTROL_API=true PORT=8977 backend/node_modules/.bin/firebase-functions > backend/firebase-functions.log 2>&1 &
             FN_PID=$!;
             echo "firebase-functions PID: $FN_PID";
 
