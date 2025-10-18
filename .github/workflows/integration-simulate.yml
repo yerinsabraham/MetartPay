@@ -69,11 +69,7 @@ jobs:
         working-directory: backend
         run: |
           echo "Running normalize pipeline: generate manifest and normalize it";
-          # Fast path: if a checked-in normalized manifest exists, skip generation
-          if [ -f functions_manifest.normalized.json ]; then
-            echo "Found checked-in normalized manifest; skipping generation and normalization";
-            exit 0;
-          fi
+          # No checked-in normalized manifest found or we prefer dynamic generation — proceed to generate and normalize
           # Ensure firebase-functions binary is available and generate manifest file
           if [ -f node_modules/.bin/firebase-functions ]; then
             echo "Generating manifest to functions_manifest.json";

@@ -37,7 +37,8 @@ if ($Latest) {
         $url = "https://api.github.com/repos/$owner/$repo/actions/runs?per_page=1"
         $resp = Invoke-RestMethod -Uri $url -Headers $hdrTmp -Method Get -ErrorAction Stop
         if ($resp.workflow_runs -and $resp.workflow_runs.Count -gt 0) {
-            $RunId = [int]$resp.workflow_runs[0].id
+            # Parse as Int64 to avoid overflow for large run ids
+            $RunId = [long]$resp.workflow_runs[0].id
             Write-Host "Discovered latest run id: $RunId"
         } else {
             Write-Host "No workflow runs found to use for -Latest"
