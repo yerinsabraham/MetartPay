@@ -100,6 +100,27 @@ jobs:
             echo "firebase-functions binary not found at backend/node_modules/.bin/firebase-functions";
           fi
 
+      - name: Start functions and tail logs while emulators start (debug wrapper)
+        working-directory: .
+        run: |
+          echo "Debug wrapper: start firebase-functions on port 8977 and tail its log while emulators start";
+          if [ -f backend/node_modules/.bin/firebase-functions ]; then
+            echo "Starting firebase-functions -> backend/firebase-functions.log";
+            backend/node_modules/.bin/firebase-functions --port=8977 > backend/firebase-functions.log 2>&1 &
+            FN_PID=$!;
+            echo "firebase-functions PID: $FN_PID";
+
+            # Background tail loop: print last 30 lines every 8 seconds for up to 10 iterations
+            ( for i in 1 2 3 4 5 6 7 8 9 10; do echo "--- tail iteration $i ---"; sleep 8; if [ -f backend/firebase-functions.log ]; then tail -n 30 backend/firebase-functions.log || true; fi; done ) &
+            TAIL_PID=$!;
+
+            # Wait a short while for emulators to be started by the next step (this wrapper just ensures we have a log tail)
+            sleep 2;
+            echo "Debug wrapper launched tail (PID $TAIL_PID) and functions (PID $FN_PID)";
+          else
+            echo "firebase-functions binary not found, skipping debug wrapper";
+          fi
+
       - name: Smoke load built backend (detect runtime parse errors)
         working-directory: .
         run: |
