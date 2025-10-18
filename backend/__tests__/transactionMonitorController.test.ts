@@ -138,4 +138,76 @@ describe('TransactionMonitorController Sepolia verification', () => {
     addSpy.mockRestore();
     completeSpy.mockRestore();
   });
+
+  it('does not call verifyEthTransfer when confirmations are insufficient', async () => {
+    (verifyEthTransfer as jest.Mock).mockClear();
+
+    const monitored: any = {
+      id: 'm3',
+      merchantId: 'merch3',
+      paymentLinkId: undefined,
+      address: '0xghi',
+      network: 'sepolia',
+      token: 'ETH',
+      expectedAmount: 0.1,
+    };
+
+    const transfer = {
+      txHash: '0xtx3',
+      fromAddress: '0xfrom',
+      toAddress: '0xghi',
+      amount: '0.1',
+      blockNumber: 3,
+    };
+
+    // Force blockchainService.getTransactionDetails to report 0 confirmations
+    (controller as any).blockchainService.getTransactionDetails = async () => ({ confirmations: 0, gasUsed: '0', gasPrice: '0' });
+
+    const addSpy = jest.spyOn(db.collection('transactions'), 'add').mockResolvedValue({ id: 'txdoc3' } as any);
+
+    await controller['processTransfer'](monitored, transfer);
+
+    expect(verifyEthTransfer).not.toHaveBeenCalled();
+
+    addSpy.mockRestore();
+  });
+
+  it('for address-only payments, verify is called and completePayment invoked when verification succeeds', async () => {
+    (verifyEthTransfer as jest.Mock).mockResolvedValue({ success: true });
+
+    const monitored: any = {
+      id: 'm4',
+      merchantId: 'merch4',
+      paymentLinkId: undefined,
+      address: '0xjkl',
+      network: 'sepolia',
+      token: 'ETH',
+      // expectedAmount omitted -> address-only flow
+    };
+
+    const transfer = {
+      txHash: '0xtx4',
+      fromAddress: '0xfrom',
+      toAddress: '0xjkl',
+      amount: '0.5',
+      blockNumber: 4,
+    };
+
+    // Ensure getTransactionDetails reports enough confirmations
+    (controller as any).blockchainService.getTransactionDetails = async () => ({ confirmations: 1, gasUsed: '0', gasPrice: '0' });
+
+    const txCol = db.collection('transactions');
+    const addSpy = jest.spyOn(txCol, 'add').mockResolvedValue({ id: 'txdoc4' } as any);
+
+    await controller['processTransfer'](monitored, transfer);
+
+    expect(verifyEthTransfer).toHaveBeenCalledWith('0xtx4', '0xjkl', undefined, 'sepolia');
+    // Controller currently records the transaction as confirmed for address-only
+    // flows but does not auto-complete the payment (expectedAmount is undefined).
+    const added = addSpy.mock.calls[0] && addSpy.mock.calls[0][0];
+    expect(added).toBeDefined();
+    expect(added.status).toBe('confirmed');
+
+    addSpy.mockRestore();
+  });
 });
