@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { db } from '../index';
 import { BlockchainService } from '../services/blockchainService';
+import { verifyEthTransfer } from '../services/ethereumService';
 import { Transaction, MonitoredAddress } from '../models/types';
 
 export class TransactionMonitorController {
@@ -224,6 +225,23 @@ export class TransactionMonitorController {
         }
       }
 
+      // If this is an ETH Sepolia tx and we've reached confirmed status,
+      // perform an additional RPC verification to ensure tx data matches
+      // expected on-chain data (avoid false positives in testnets).
+      if (status === 'confirmed' && monitored.network && monitored.network.toLowerCase() === 'sepolia' && monitored.token && monitored.token.toUpperCase() === 'ETH') {
+        try {
+          const verifyRes = await verifyEthTransfer(transfer.txHash, monitored.address, undefined, 'sepolia');
+          if (!verifyRes.success) {
+            console.warn(`Eth verification failed for ${transfer.txHash}: ${verifyRes.message}`);
+            // Mark as unverified and do not complete payment
+            status = 'unverified';
+          }
+        } catch (err) {
+          console.error(`Error running verifyEthTransfer for ${transfer.txHash}:`, err);
+          status = 'unverified';
+        }
+      }
+
       // Create transaction record
       const transaction: Omit<Transaction, 'id'> = {
         paymentLinkId: monitored.paymentLinkId,
@@ -259,6 +277,8 @@ export class TransactionMonitorController {
       // If confirmed and sufficient, mark payment as complete
       if (status === 'confirmed' && receivedAmount >= monitored.expectedAmount * 0.99) {
         await this.completePayment(monitored, { id: txDoc.id, ...transaction } as Transaction);
+      } else if (status === 'unverified') {
+        console.log(`Transaction ${transfer.txHash} marked unverified and will not complete payment`);
       }
 
     } catch (error) {

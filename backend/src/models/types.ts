@@ -67,7 +67,7 @@ export interface Transaction {
   blockNumber: number;
   confirmations: number;
   requiredConfirmations: number;
-  status: 'pending' | 'confirming' | 'confirmed' | 'failed' | 'insufficient';
+  status: 'pending' | 'confirming' | 'confirmed' | 'failed' | 'insufficient' | 'unverified';
   observedAt: Date;
   confirmedAt?: Date;
   gasUsed?: number;
