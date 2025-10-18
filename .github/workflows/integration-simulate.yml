@@ -1,4 +1,4 @@
-name: Integration - simulate-confirm
+﻿name: Integration - simulate-confirm
 
 on:
   push:
@@ -76,6 +76,13 @@ jobs:
         run: |
           echo "--- backend/package.json after CI patch ---";
           cat backend/package.json || true;
+
+      - name: Smoke load built backend (detect runtime parse errors)
+        working-directory: .
+        run: |
+          echo "Node version: $(node -v)";
+          echo "Attempting to require the built backend to catch runtime errors";
+          node -e "try{ require('./backend/dist/index.js'); console.log('backend/dist/index.js loaded OK'); } catch(e){ console.error('ERROR loading backend/dist/index.js:', e && e.stack || e); process.exit(2); }"
 
       - name: Run integration simulate test under emulators (debug)
         working-directory: backend
