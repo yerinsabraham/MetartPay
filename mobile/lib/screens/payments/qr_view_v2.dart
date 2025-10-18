@@ -7,6 +7,7 @@ import '../../services/firebase_service.dart';
 import '../../utils/app_logger.dart';
 import '../../models/models.dart' as models;
 import '../../utils/app_config.dart';
+import '../../services/payments_service_v2.dart';
 
 class CountdownTimer extends StatefulWidget {
   final DateTime expiresAt;
@@ -57,6 +58,7 @@ class QRViewV2 extends StatefulWidget {
 
 class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin {
   String _payload = '';
+  // UI enforces address-only Solana QR payloads to maximize compatibility.
   double _crypto = 0.0;
   String _token = '';
   String? _merchantId;
@@ -105,8 +107,49 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
       }
     });
 
+    // Normalize Solana payloads: always display address-only (strip query params)
+    // so the in-app QR exactly matches the safe simple payload shown in tools/.
+    try {
+      if (_payload != null && _payload.startsWith('solana:')) {
+        final parts = _payload.split(':');
+        if (parts.length > 1) {
+          // Preserve original casing from backend/terminal. Only strip query params and trim.
+          final addr = parts[1].split('?')[0];
+          _address = addr;
+          _payload = 'solana:$addr';
+          // Trim to remove any accidental whitespace/newlines that could break scanners
+          _payload = _payload.trim();
+          AppLogger.d('Normalized Solana payload to address-only (preserved case): $_payload');
+        }
+      }
+    } catch (e) {
+      AppLogger.w('Failed to normalize Solana payload: $e');
+    }
+
+    // If payload empty but we have address/token/network, synthesize a proper network payload
+    if ((_payload == null || _payload.isEmpty) && _address != null && _token.isNotEmpty && _paymentId != null) {
+      try {
+        final double cryptoAmount = _crypto;
+        // Default synthesize to address-only for safety; UI allows toggling to prefill
+        _payload = PaymentsServiceV2.buildQrPayload(
+          paymentId: _paymentId!,
+          cryptoAmount: cryptoAmount,
+          token: _token,
+          network: _token == 'BTC' ? 'BTC' : (_token == 'SOL' ? 'SOL' : _token),
+          address: _address!,
+          merchantId: _merchantId ?? '',
+          // For Solana, default to address-only. The UI toggle will rebuild payload
+          // with prefill when requested.
+          forceAddressOnlyForSolana: true,
+        );
+        AppLogger.d('Synthesized payload for QR: $_payload');
+      } catch (e) {
+        AppLogger.w('Failed to synthesize QR payload: $e');
+      }
+    }
+
     // Subscribe to transactions if merchantId provided
-    if (_merchantId != null) {
+    if (_merchantId != null && !AppConfig.devMockCreate) {
       _txSub = _svc.watchMerchantTransactions(_merchantId!).listen((txs) {
         for (final t in txs) {
           try {
@@ -124,8 +167,13 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
                 return;
               }
             }
-          } catch (_) {}
+          } catch (err) {
+            AppLogger.w('Error processing transaction stream item: $err');
+          }
         }
+      }, onError: (err) {
+        // Log and swallow Firestore permission errors so the UI doesn't crash.
+        AppLogger.e('Merchant transactions stream error: $err', error: err);
       });
     }
   }
@@ -238,10 +286,29 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
                             builder: (context, child) => Transform.scale(scale: _confirmed ? 1.0 : _pulseAnim.value, child: child),
                             child: Stack(
                               alignment: Alignment.center,
-                              children: [
-                                QrImageView(data: _payload, size: qrSize),
-                                // Overlay small logo at center if asset exists
-                                Image.asset('assets/icons/app_logo_qr.png', height: qrSize * 0.18, errorBuilder: (c, e, s) => const SizedBox()),
+                                children: [
+                                  QrImageView(
+                                  data: _payload,
+                                  size: qrSize,
+                                  errorCorrectionLevel: QrErrorCorrectLevel.H,
+                                ),
+                                // Use a smaller white rounded square behind the logo and
+                                // increase error correction so the center doesn't remove
+                                // more data than can be recovered.
+                                Container(
+                                  width: qrSize * 0.12,
+                                  height: qrSize * 0.12,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                ),
+                                Image.asset(
+                                  'assets/icons/app logo qr.png',
+                                  width: qrSize * 0.10,
+                                  height: qrSize * 0.10,
+                                  fit: BoxFit.contain,
+                                ),
                               ],
                             ),
                           ),
@@ -256,30 +323,55 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
                               ],
                             ),
                           const SizedBox(height: 8),
+                          // For Solana we show a static 'Address Only' chip and keep the UI minimal.
+                          if ((_payload.startsWith('solana:') || (_address != null && _token == 'SOL')))
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  Chip(label: Text('Address Only'), backgroundColor: Colors.grey),
+                                ],
+                              ),
+                            ),
                           if (_address != null) Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8.0),
                             child: SelectableText(_address!, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Monospace')),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
                           if (_expiresAt != null) CountdownTimer(expiresAt: _expiresAt!),
                           const SizedBox(height: 8),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // Copy address only
-                              ElevatedButton.icon(onPressed: () async { await Clipboard.setData(ClipboardData(text: _address ?? _payload)); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Address copied'))); }, icon: const Icon(Icons.copy), label: const Text('Copy')),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () async {
+                                    await Clipboard.setData(ClipboardData(text: _address ?? _payload));
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Address copied')));
+                                  },
+                                  icon: const Icon(Icons.copy),
+                                  label: const Text('Copy'),
+                                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
+                                ),
+                              ),
                               const SizedBox(width: 12),
-                              // Share payload string
-                              ElevatedButton.icon(onPressed: () async { try { await SharePlus.instance.share(ShareParams(text: _payload, subject: 'Payment Request')); } catch (e) { AppLogger.e('Share failed: $e', error: e); } }, icon: const Icon(Icons.share), label: const Text('Share')),
-                              const SizedBox(width: 12),
-                              // Dev-only: small text button to simulate payment received
-                              if (AppConfig.devMockCreate)
-                                TextButton(onPressed: () {
-                                  setState(() => _confirmed = true);
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Simulated payment received')));
-                                }, child: const Text('Simulate'), style: TextButton.styleFrom(foregroundColor: Colors.orange)),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () async {
+                                    try {
+                                      await SharePlus.instance.share(ShareParams(text: _payload, subject: 'Payment Request'));
+                                    } catch (e) {
+                                      AppLogger.e('Share failed: $e', error: e);
+                                    }
+                                  },
+                                  icon: const Icon(Icons.share),
+                                  label: const Text('Share'),
+                                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
+                                ),
+                              ),
                             ],
                           ),
+                          // (Removed dev-only copy payload button for production runs)
                         ],
                       ),
                     ),

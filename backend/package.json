@@ -9,8 +9,12 @@
     "deploy": "npm run build && firebase deploy --only functions",
     "deploy:staging": "npm run build && firebase use staging && firebase deploy --only functions,firestore:rules",
     "test": "jest",
+    "backfill:references": "node tools/backfill_references.js",
+    "validate:cluster-mints": "node tools/validate_cluster_mints.js",
     "lint": "eslint src/**/*.ts",
-    "serve": "npm run build && firebase emulators:start --only functions"
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "integration:test": "node tools/integration_simulate_test.js",
+    "cleanup:synthetic": "node tools/cleanup_synthetic.js"
   },
   "engines": {
     "node": "20"
@@ -21,9 +25,10 @@
     "axios": "^1.12.2",
     "bcryptjs": "^2.4.3",
     "bip39": "^3.1.0",
+    "bs58": "^5.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "ethers": "^6.15.0",
+    "ethers": "^6.8.0",
     "express": "^4.18.2",
     "firebase-admin": "^12.0.0",
     "firebase-functions": "^6.5.0",
@@ -50,7 +55,7 @@
     "@typescript-eslint/parser": "^7.0.2",
     "eslint": "^8.57.0",
     "jest": "^29.7.0",
-    "ts-jest": "^29.1.2",
+    "ts-jest": "^29.4.5",
     "typescript": "^5.3.3"
   },
   "keywords": [

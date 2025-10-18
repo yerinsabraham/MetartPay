@@ -17,6 +17,7 @@ import webhookRoutes from './routes/webhooks';
 import walletRoutes from './routes/wallets';
 import { paymentLinkRoutes } from './routes/paymentLinks';
 import { transactionMonitorRoutes } from './routes/transactionMonitor';
+import { debugRoutes } from './routes/debug';
 import { errorHandler, notFound } from './middleware/errorHandler';
 
 // Load environment variables
@@ -71,6 +72,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/merchants', merchantRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/payments', paymentRoutes);
+// Also mount without the '/api' prefix so the Firebase Functions onRequest wrapper
+// (which exposes this app at the path /.../api) will correctly route requests that
+// arrive at '/payments/...' when the function base path already includes 'api'.
+app.use('/payments', paymentRoutes);
 
 // Bootstrap endpoint to set initial admin by email using ADMIN_BOOTSTRAP_SECRET
 app.post('/api/admin/set-admin', async (req, res) => {
@@ -127,6 +132,9 @@ app.use('/api/webhooks', webhookRoutes);
 app.use('/api/wallets', walletRoutes);
 app.use('/api/payment-links', paymentLinkRoutes);
 app.use('/api/transactions', transactionMonitorRoutes);
+if (process.env.ENABLE_DEV_DEBUG === 'true') {
+    app.use('/api/debug', debugRoutes);
+}
 
 // Public payment page routes (no /api prefix)
 app.get('/pay/:linkId', async (req, res) => {

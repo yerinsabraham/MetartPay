@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { db } from '../index';
 import { BlockchainService } from '../services/blockchainService';
+import { verifyEthTransfer } from '../services/ethereumService';
 import { Transaction, MonitoredAddress } from '../models/types';
 
 export class TransactionMonitorController {
@@ -208,10 +209,37 @@ export class TransactionMonitorController {
         status = 'confirming';
       }
 
-      // Check if amount is sufficient
+      // Check if amount is sufficient. If monitored.expectedAmount is not set
+      // (address-only flow), accept any positive incoming transfer as sufficient.
       const receivedAmount = parseFloat(transfer.amount);
-      if (receivedAmount < monitored.expectedAmount * 0.99) { // 1% tolerance
-        status = 'insufficient';
+      if (typeof monitored.expectedAmount === 'number') {
+        if (receivedAmount < monitored.expectedAmount * 0.99) { // 1% tolerance
+          status = 'insufficient';
+        }
+      } else {
+        // No expected amount configured -> accept as sufficient if > 0
+        if (receivedAmount > 0) {
+          // keep status as determined from confirmations
+        } else {
+          status = 'insufficient';
+        }
+      }
+
+      // If this is an ETH Sepolia tx and we've reached confirmed status,
+      // perform an additional RPC verification to ensure tx data matches
+      // expected on-chain data (avoid false positives in testnets).
+      if (status === 'confirmed' && monitored.network && monitored.network.toLowerCase() === 'sepolia' && monitored.token && monitored.token.toUpperCase() === 'ETH') {
+        try {
+          const verifyRes = await verifyEthTransfer(transfer.txHash, monitored.address, undefined, 'sepolia');
+          if (!verifyRes.success) {
+            console.warn(`Eth verification failed for ${transfer.txHash}: ${verifyRes.message}`);
+            // Mark as unverified and do not complete payment
+            status = 'unverified';
+          }
+        } catch (err) {
+          console.error(`Error running verifyEthTransfer for ${transfer.txHash}:`, err);
+          status = 'unverified';
+        }
       }
 
       // Create transaction record
@@ -249,6 +277,8 @@ export class TransactionMonitorController {
       // If confirmed and sufficient, mark payment as complete
       if (status === 'confirmed' && receivedAmount >= monitored.expectedAmount * 0.99) {
         await this.completePayment(monitored, { id: txDoc.id, ...transaction } as Transaction);
+      } else if (status === 'unverified') {
+        console.log(`Transaction ${transfer.txHash} marked unverified and will not complete payment`);
       }
 
     } catch (error) {

@@ -23,11 +23,13 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
   int _step = 1;
   String? _selectedOptionKey;
   // tokens grid definition for step 2
-  final List<Map<String, String>> _tokenOptions = [
+    final List<Map<String, String>> _tokenOptions = [
     {'key': 'BTC', 'label': 'Bitcoin (BTC)', 'asset': 'assets/icons/bitcoin-logo.png', 'network': 'BTC', 'standard': ''},
+    // Solana options: selecting these will immediately create an address-only QR
+    {'key': 'SOL', 'label': 'Solana (SOL)', 'asset': 'assets/icons/solana-logo.png', 'network': 'SOL', 'standard': ''},
+    {'key': 'USDC_SOL', 'label': 'USDC – Solana', 'asset': 'assets/icons/usdc-logo.png', 'network': 'SOL', 'standard': 'SPL'},
+    {'key': 'USDT_SOL', 'label': 'USDT – Solana', 'asset': 'assets/icons/usdt-logo.png', 'network': 'SOL', 'standard': 'SPL'},
     {'key': 'USDT_BSC', 'label': 'USDT – BSC', 'asset': 'assets/icons/usdt-logo.png', 'network': 'BSC', 'standard': 'BEP20'},
-    {'key': 'USDT_SOL', 'label': 'USDT – Solana', 'asset': 'assets/icons/usdt-logo.png', 'network': 'SOL', 'standard': ''},
-    {'key': 'USDC_SOL', 'label': 'USDC – Solana', 'asset': 'assets/icons/usdc-logo.png', 'network': 'SOL', 'standard': ''},
     {'key': 'USDT_ETH', 'label': 'USDT – Ethereum', 'asset': 'assets/icons/usdt-logo.png', 'network': 'ETH', 'standard': 'ERC20'},
     {'key': 'USDC_ETH', 'label': 'USDC – Ethereum', 'asset': 'assets/icons/usdc-logo.png', 'network': 'ETH', 'standard': 'ERC20'},
     {'key': 'USDT_TRC', 'label': 'USDT – TRON', 'asset': 'assets/icons/usdt-logo.png', 'network': 'TRC20', 'standard': 'TRC20'},
@@ -47,6 +49,18 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
       _selectedOptionKey = _token == 'BTC' ? 'BTC' : '${_token}_$_network';
     }
 
+    // Respect route arguments that may preselect a network/token and skip the amount step
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? {};
+      final skip = args['skipAmountStep'] as bool? ?? false;
+      final defNet = args['defaultNetwork'] as String?;
+      final defTok = args['defaultToken'] as String?;
+      if (defNet != null) _network = defNet;
+      if (defTok != null) _token = defTok;
+      if (_token.isNotEmpty && _network.isNotEmpty) _selectedOptionKey = _token == 'BTC' ? 'BTC' : '${_token}_$_network';
+      if (skip) setState(() => _step = 2);
+    });
+
     // Ensure merchant data is loaded so we don't show "No merchant selected" when merchant exists
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
@@ -56,10 +70,8 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
     });
   }
 
-  Future<void> _generate() async {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _generate({double? amountOverride}) async {
     setState(() => _loading = true);
-
     try {
       final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
       final merchantId = merchantProvider.currentMerchant?.id;
@@ -68,11 +80,19 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
         return;
       }
 
-      final amount = double.parse(_amountController.text);
-      // Create payment through controller (this will ensure wallets and persist record)
+      double amount = 0.0;
+      if (amountOverride != null) {
+        amount = amountOverride;
+      } else if (_step == 2 && _amountController.text.isNotEmpty) {
+        amount = double.parse(_amountController.text);
+      }
+
+      // For Solana selections, create payment without amount so backend returns address-only QR
+      final isSol = (_network.toUpperCase().startsWith('SOL') || _network.toUpperCase() == 'SOL');
+
       final result = await _controller.createPayment(
         merchantId: merchantId,
-        amountNgn: amount,
+        amountNgn: isSol ? 0.0 : amount,
         token: _token,
         network: _network,
         description: null,
@@ -86,7 +106,7 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
       Navigator.pushNamed(context, '/qr-view-v2', arguments: {
         'network': result['network'] ?? _network,
         'token': result['token'] ?? _token,
-        'naira': amount,
+        'naira': isSol ? null : amount,
         'crypto': result['cryptoAmount'] ?? 0.0,
         'payload': qrPayload,
         'paymentId': result['paymentId'],
@@ -114,6 +134,125 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (_step == 1) ...[
+                const Text('Step 1 — Choose Token / Network', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1.9,
+                  children: _tokenOptions.map((t) {
+                    final key = t['key']!;
+                    return InkWell(
+                      onTap: () async {
+                        setState(() {
+                          _selectedOptionKey = key;
+                          final parts = key.split('_');
+                          if (parts.length == 1) {
+                            _token = parts[0];
+                            _network = parts[0];
+                          } else {
+                            _token = parts[0];
+                            _network = parts[1];
+                          }
+                        });
+
+                        // Only select on tile tap. Do NOT auto-generate for Solana here.
+                        // The user must tap Next (at the bottom) to proceed. This prevents
+                        // accidental generation and gives the user a chance to change
+                        // selection before progressing.
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: _selectedOptionKey == key ? MetartPayColors.primaryDark : Colors.grey.shade300,
+                            width: _selectedOptionKey == key ? 2 : 1,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.white,
+                        ),
+                        child: Row(
+                          children: [
+                            Image.asset(
+                              t['asset']!,
+                              height: 20,
+                              errorBuilder: (context, error, stackTrace) => const Icon(Icons.monetization_on, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    t['label']!,
+                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if ((t['standard'] ?? '').isNotEmpty) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      t['standard']!,
+                                      style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('Back')),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _loading ? null : () async {
+                          // If nothing selected, prompt user
+                          if (_selectedOptionKey == null) {
+                            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select a token/network first')));
+                            return;
+                          }
+                          // Ensure merchant data loaded when moving to amount step
+                          final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+                          if (merchantProvider.currentMerchant == null && !merchantProvider.hasAttemptedLoad) {
+                            await merchantProvider.loadUserMerchants();
+                          }
+
+                          // If selected network is Solana, generate immediate address-only QR
+                          final parts = _selectedOptionKey!.split('_');
+                          final selNet = parts.length == 1 ? parts[0] : parts[1];
+                          if (selNet.toUpperCase().startsWith('SOL')) {
+                            await _generate(amountOverride: 0.0);
+                            return;
+                          }
+
+                          // Otherwise, advance to amount input
+                          setState(() => _step = 2);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: _loading ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Next'),
+                      ),
+                    ),
+                  ],
+                ),
+              ] else if (_step == 2) ...[
+                // Amount input for non-Solana networks
                 // Top-left NGN badge
                 Align(
                   alignment: Alignment.centerLeft,
@@ -158,104 +297,6 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
                 const SizedBox(height: 20),
                 Row(
                   children: [
-                    OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Back'),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          if (!_formKey.currentState!.validate()) return;
-                          setState(() => _step = 2);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text('Next'),
-                      ),
-                    ),
-                  ],
-                ),
-              ] else if (_step == 2) ...[
-                const Text('Step 2 — Choose Token / Network', style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  // Reduce aspect ratio to increase button height and avoid overflow on small screens
-                  childAspectRatio: 1.9,
-                  children: _tokenOptions.map((t) {
-                    final key = t['key']!;
-                    return InkWell(
-                      onTap: () {
-                        setState(() {
-                          // Select the full option key (e.g., 'USDT_SOL') so each button
-                          // is independent.
-                          _selectedOptionKey = key;
-
-                          final parts = key.split('_');
-                          if (parts.length == 1) {
-                            _token = parts[0];
-                            _network = parts[0];
-                          } else {
-                            _token = parts[0];
-                            _network = parts[1];
-                          }
-                        });
-                      },
-                        child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        decoration: BoxDecoration(
-                          // Default: light gray border to indicate clickable buttons.
-                          // Selected: solid brand color (reddish) to clearly indicate selection.
-                          border: Border.all(
-                            color: _selectedOptionKey == key ? MetartPayColors.primaryDark : Colors.grey.shade300,
-                            width: _selectedOptionKey == key ? 2 : 1,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                          color: Colors.white,
-                        ),
-                        child: Row(
-                          children: [
-                            Image.asset(t['asset']!, height: 20),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    t['label']!,
-                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  if ((t['standard'] ?? '').isNotEmpty) ...[
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      t['standard']!,
-                                      style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
                     OutlinedButton(onPressed: () => setState(() => _step = 1), child: const Text('Back')),
                     const SizedBox(width: 12),
                     Expanded(
@@ -266,6 +307,7 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
                           if (merchantProvider.currentMerchant == null && !merchantProvider.hasAttemptedLoad) {
                             await merchantProvider.loadUserMerchants();
                           }
+                          if (!_formKey.currentState!.validate()) return;
                           await _generate();
                         },
                         style: ElevatedButton.styleFrom(

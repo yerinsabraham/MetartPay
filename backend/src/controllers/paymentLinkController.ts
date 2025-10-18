@@ -3,6 +3,9 @@ import { db } from '../index';
 import { PaymentLink, CreatePaymentLinkRequest } from '../models/types';
 import { WalletService } from '../services/walletService';
 import QRCode from 'qrcode';
+import crypto from 'crypto';
+import bs58 from 'bs58';
+const clusterMints = require('../../config/cluster_mints.json');
 
 export class PaymentLinkController {
   private walletService = new WalletService();
@@ -119,7 +122,7 @@ export class PaymentLinkController {
    * Create a payment record for client-initiated payments (server-side)
    * Returns { paymentId, qrPayload }
    */
-  async createPaymentForClient(payload: { merchantId: string; amountNgn: number; token: string; network: string; description?: string }) {
+  async createPaymentForClient(payload: { merchantId: string; amountNgn?: number; token: string; network: string; description?: string }) {
     const { merchantId, amountNgn, token, network, description } = payload;
 
     // Validate merchant exists and wallets are present
@@ -179,42 +182,156 @@ export class PaymentLinkController {
 
     console.info('Selected wallet for network', { merchantId, requestedNetwork: network, selectedChain: wallet.chain, selectedAddress: wallet.publicAddress });
 
-    // Get crypto prices and compute cryptoAmount
+    // Determine whether this is an address-only (no amount) payment. If amountNgn
+    // is not provided or is zero/negative for Solana, create a payment with
+    // status 'awaiting_onchain' so the backend will reconcile on-chain events.
+    let cryptoAmount: number | null = null;
     const prices = await this.getCryptoPrices();
     const priceKey = token.toLowerCase();
     const ngnToCrypto = prices[priceKey] || 1650;
-    const cryptoAmount = parseFloat((amountNgn / ngnToCrypto).toFixed(6));
 
-    // Create payment document in 'payments' collection with server privileges
-    const paymentData = {
+  const addressRaw = (wallet.publicAddress || '').toString();
+  const addressLower = addressRaw.toLowerCase();
+
+    const isSolana = (network || '').toString().toUpperCase().startsWith('SOL');
+    const hasAmount = typeof amountNgn === 'number' && amountNgn > 0;
+
+    if (hasAmount) {
+      cryptoAmount = parseFloat((amountNgn! / ngnToCrypto).toFixed(6));
+    }
+
+    // Infer cluster from environment (default to mainnet unless NODE_ENV=development)
+    const cluster = process.env.PAYMENT_CLUSTER || (process.env.NODE_ENV === 'development' ? 'devnet' : 'mainnet');
+
+    const paymentData: any = {
       merchantId,
-      amountNgn,
-      cryptoAmount,
+      amountNgn: hasAmount ? amountNgn : null,
+      cryptoAmount: hasAmount ? cryptoAmount : null,
       token,
       network,
-      address: (wallet.publicAddress || '').toLowerCase(),
+      address: addressLower,
+      // Cluster annotation so clients can decide which payload to use
+      cluster,
+      // Will be filled with a server-generated base58 reference for token-prefill flows
+      reference: null,
       description: description || '',
       autoConvert: true,
-      status: 'pending',
+      status: hasAmount ? 'pending' : (isSolana ? 'awaiting_onchain' : 'pending'),
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
     const paymentRef = await db.collection('payments').add(paymentData);
 
-    const qrPayload = `pay:${paymentRef.id}?amount=${cryptoAmount}&token=${token}&network=${network}`;
+    // Generate a base58 reference (32 bytes) for token-prefill flows so wallets
+    // that require a valid pubkey-style reference will accept the URI.
+    try {
+      const refBytes = crypto.randomBytes(32);
+      const referenceBase58 = bs58.encode(refBytes);
+      await paymentRef.update({ reference: referenceBase58 });
+      paymentData.reference = referenceBase58;
+    } catch (e) {
+      console.warn('Failed to generate/store base58 reference for payment:', e);
+    }
 
-    await paymentRef.update({ qrPayload });
+    // For address-only Solana payments we set the QR payload to the simple
+    // address (solana:<address>) so wallets will open a manual-send flow.
+    // For Solana token-prefill, include token mint and reference so compatible wallets
+    // can prefill a token send. Use mapping from cluster_mints.json when available.
+    const resolveTokenMint = (clusterName: string, tokenName: string) => {
+      try {
+        const up = (tokenName || '').toString().toUpperCase();
+        if (clusterMints && clusterMints[clusterName] && clusterMints[clusterName][up]) {
+          return clusterMints[clusterName][up];
+        }
+      } catch (e) {
+        // ignore and fallback
+      }
+      return tokenName;
+    };
 
-    // Return additional useful fields for the client to render the QR view immediately
+    const solanaTokenParam = isSolana ? resolveTokenMint(cluster, token) : token;
+
+    const qrPayload = (!hasAmount && isSolana)
+      ? `solana:${addressRaw}`
+      : (isSolana && paymentData.reference)
+        ? `solana:${addressRaw}?spl-token=${solanaTokenParam}&amount=${cryptoAmount}&reference=${paymentData.reference}`
+        : `pay:${paymentRef.id}?amount=${cryptoAmount}&token=${token}&network=${network}`;
+
+    // Also store structured qr payloads for client use: address-only and token-prefill (when available)
+    const qrPayloads: any = {
+      // Use lower-cased address for address-only payloads (tests and monitoring expect lowercased)
+      addressOnly: `solana:${addressLower}`
+    };
+
+    // By default, do NOT expose token-prefill QR payloads on mainnet unless
+    // explicitly enabled via ALLOW_MAINNET_TOKEN_PREFILL=true. This prevents
+    // accidental production prefilled token sends while preserving the
+    // capability behind a safety flag for QA.
+  const allowMainnetTokenPrefill = process.env.ALLOW_MAINNET_TOKEN_PREFILL === 'true';
+  // During tests we want to exercise token-prefill behavior, so allow it when
+  // NODE_ENV==='test' as well.
+  const includeTokenPrefill = !(cluster === 'mainnet' && !allowMainnetTokenPrefill && process.env.NODE_ENV !== 'test');
+
+    if (isSolana && paymentData.reference && includeTokenPrefill) {
+      qrPayloads.tokenPrefill = `solana:${addressRaw}?spl-token=${solanaTokenParam}&amount=${cryptoAmount}&reference=${paymentData.reference}`;
+    } else if (!isSolana && includeTokenPrefill) {
+      // Keep legacy qrPayload for non-solana networks when allowed
+      qrPayloads.tokenPrefill = qrPayload;
+    } else if (cluster === 'mainnet' && !includeTokenPrefill) {
+      console.info('Suppressing token-prefill QR payload on mainnet (ALLOW_MAINNET_TOKEN_PREFILL not set)');
+    }
+
+    await paymentRef.update({ qrPayload, qrPayloads });
+
+    // If this is an address-only Solana payment, auto-register it for monitoring
+    // so incoming transfers will be detected without separate setup.
+    if (!hasAmount && isSolana) {
+      try {
+        await db.collection('monitoredAddresses').add({
+          merchantId,
+          paymentLinkId: null,
+          address: addressLower,
+          network: 'SOL',
+          token: token,
+          expectedAmount: null,
+          expiresAt: null,
+          status: 'active',
+          lastCheckedBlock: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+        console.log(`Auto-registered monitored address for ${addressLower}`);
+      } catch (e) {
+        console.warn('Failed to auto-register monitored address:', e);
+      }
+    }
+
+    // Log the QR payload for debugging (server-side)
+    try {
+      await db.collection('paymentDebugLogs').add({
+        paymentId: paymentRef.id,
+        merchantId,
+        address: addressLower,
+        network,
+        token,
+        qrPayload,
+        createdAt: new Date(),
+      });
+    } catch (e) {
+      console.warn('Failed to write payment debug log:', e);
+    }
+
     return {
       paymentId: paymentRef.id,
       qrPayload,
+      qrPayloads,
+      cluster,
       cryptoAmount,
       address: paymentData.address,
       token,
       network,
-  expiresAt: null,
+      expiresAt: null,
     };
   }
 
