@@ -7,6 +7,9 @@ param(
     [long]$RunId = 0,
     [Parameter(Mandatory=$false, HelpMessage='If set, fetch the latest run id automatically')]
     [switch]$Latest
+    ,
+    [Parameter(Mandatory=$false, HelpMessage='Timeout in minutes for polling (default 6)')]
+    [int]$TimeoutMinutes = 6
 )
 
 # Read token from environment
@@ -57,10 +60,11 @@ $hdr = @{
     'User-Agent' = 'local-script'
 }
 
-# Poll the run status until completed (or until we reach max polls)
-$maxPolls = 60
+# Poll the run status until completed (or until timeout)
 $pollInterval = 6  # seconds
 $r = $null
+# Compute max polls from requested timeout (seconds)
+$maxPolls = [int]([math]::Ceiling(($TimeoutMinutes * 60) / $pollInterval))
 
 try {
     for ($i = 0; $i -lt $maxPolls; $i++) {
