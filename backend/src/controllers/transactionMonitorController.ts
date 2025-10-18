@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { db } from '../index';
 import { BlockchainService } from '../services/blockchainService';
-import { verifyEthTransfer } from '../services/ethereumService';
+import { verifyEvmTransfer } from '../services/ethereumService';
 import { Transaction, MonitoredAddress } from '../models/types';
 
 export class TransactionMonitorController {
@@ -225,20 +225,25 @@ export class TransactionMonitorController {
         }
       }
 
-      // If this is an ETH Sepolia tx and we've reached confirmed status,
-      // perform an additional RPC verification to ensure tx data matches
-      // expected on-chain data (avoid false positives in testnets).
-      if (status === 'confirmed' && monitored.network && monitored.network.toLowerCase() === 'sepolia' && monitored.token && monitored.token.toUpperCase() === 'ETH') {
-        try {
-          const verifyRes = await verifyEthTransfer(transfer.txHash, monitored.address, undefined, 'sepolia');
-          if (!verifyRes.success) {
-            console.warn(`Eth verification failed for ${transfer.txHash}: ${verifyRes.message}`);
-            // Mark as unverified and do not complete payment
+      // If this appears to be an EVM chain (ETH, BSC, MATIC, etc.) and
+      // we've reached confirmed status, perform an on-chain verification
+      // using verifyEvmTransfer. For ERC20 tokens, prefer transfer.tokenAddress
+      // or monitored.metadata.tokenAddress as the token contract address.
+      if (status === 'confirmed' && monitored.network && monitored.token) {
+        const net = monitored.network.toLowerCase();
+        const evmNets = ['sepolia', 'mainnet', 'polygon', 'matic', 'bsc', 'binance-smart-chain'];
+        if (evmNets.includes(net)) {
+          try {
+            const tokenAddr = transfer.tokenAddress || (monitored as any).metadata?.tokenAddress || undefined;
+            const verifyRes = await verifyEvmTransfer(transfer.txHash, monitored.address, undefined, net, tokenAddr);
+            if (!verifyRes.success) {
+              console.warn(`EVM verification failed for ${transfer.txHash}: ${verifyRes.message}`);
+              status = 'unverified';
+            }
+          } catch (err) {
+            console.error(`Error running verifyEvmTransfer for ${transfer.txHash}:`, err);
             status = 'unverified';
           }
-        } catch (err) {
-          console.error(`Error running verifyEthTransfer for ${transfer.txHash}:`, err);
-          status = 'unverified';
         }
       }
 

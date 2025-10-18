@@ -44,7 +44,7 @@ jest.mock('../src/services/blockchainService', () => ({
 }));
 
 import { TransactionMonitorController } from '../src/controllers/transactionMonitorController';
-import { verifyEthTransfer } from '../src/services/ethereumService';
+import { verifyEvmTransfer } from '../src/services/ethereumService';
 import { db } from '../src/index';
 
 jest.mock('../src/services/ethereumService');
@@ -58,9 +58,9 @@ describe('TransactionMonitorController Sepolia verification', () => {
     // For processTransfer we'll call it with a monitored address object and a fake transfer
   });
 
-  it('marks transaction unverified when verifyEthTransfer fails', async () => {
+  it('marks transaction unverified when verifyEvmTransfer fails', async () => {
     // Arrange
-    (verifyEthTransfer as jest.Mock).mockResolvedValue({ success: false, message: 'rpc fail' });
+    (verifyEvmTransfer as jest.Mock).mockResolvedValue({ success: false, message: 'rpc fail' });
 
     const monitored: any = {
       id: 'm1',
@@ -91,7 +91,7 @@ describe('TransactionMonitorController Sepolia verification', () => {
     await controller['processTransfer'](monitored, transfer);
 
     // Assert
-    expect(verifyEthTransfer).toHaveBeenCalledWith('0xtx1', '0xabc', undefined, 'sepolia');
+  expect(verifyEvmTransfer).toHaveBeenCalledWith('0xtx1', '0xabc', undefined, 'sepolia', undefined);
     expect(addSpy).toHaveBeenCalled();
 
     // The mock add received the transaction object; check that status was 'unverified'
@@ -105,8 +105,8 @@ describe('TransactionMonitorController Sepolia verification', () => {
     completeSpy.mockRestore();
   });
 
-  it('completes payment when verifyEthTransfer succeeds and amount sufficient', async () => {
-    (verifyEthTransfer as jest.Mock).mockResolvedValue({ success: true });
+  it('completes payment when verifyEvmTransfer succeeds and amount sufficient', async () => {
+    (verifyEvmTransfer as jest.Mock).mockResolvedValue({ success: true });
 
     const monitored: any = {
       id: 'm2',
@@ -132,15 +132,15 @@ describe('TransactionMonitorController Sepolia verification', () => {
 
     await controller['processTransfer'](monitored, transfer);
 
-    expect(verifyEthTransfer).toHaveBeenCalledWith('0xtx2', '0xdef', undefined, 'sepolia');
+  expect(verifyEvmTransfer).toHaveBeenCalledWith('0xtx2', '0xdef', undefined, 'sepolia', undefined);
     expect(completeSpy).toHaveBeenCalled();
 
     addSpy.mockRestore();
     completeSpy.mockRestore();
   });
 
-  it('does not call verifyEthTransfer when confirmations are insufficient', async () => {
-    (verifyEthTransfer as jest.Mock).mockClear();
+  it('does not call verifyEvmTransfer when confirmations are insufficient', async () => {
+    (verifyEvmTransfer as jest.Mock).mockClear();
 
     const monitored: any = {
       id: 'm3',
@@ -167,13 +167,13 @@ describe('TransactionMonitorController Sepolia verification', () => {
 
     await controller['processTransfer'](monitored, transfer);
 
-    expect(verifyEthTransfer).not.toHaveBeenCalled();
+  expect(verifyEvmTransfer).not.toHaveBeenCalled();
 
     addSpy.mockRestore();
   });
 
   it('for address-only payments, verify is called and completePayment invoked when verification succeeds', async () => {
-    (verifyEthTransfer as jest.Mock).mockResolvedValue({ success: true });
+  (verifyEvmTransfer as jest.Mock).mockResolvedValue({ success: true });
 
     const monitored: any = {
       id: 'm4',
@@ -201,7 +201,7 @@ describe('TransactionMonitorController Sepolia verification', () => {
 
     await controller['processTransfer'](monitored, transfer);
 
-    expect(verifyEthTransfer).toHaveBeenCalledWith('0xtx4', '0xjkl', undefined, 'sepolia');
+  expect(verifyEvmTransfer).toHaveBeenCalledWith('0xtx4', '0xjkl', undefined, 'sepolia', undefined);
     // Controller currently records the transaction as confirmed for address-only
     // flows but does not auto-complete the payment (expectedAmount is undefined).
     const added = addSpy.mock.calls[0] && addSpy.mock.calls[0][0];
