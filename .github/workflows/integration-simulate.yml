@@ -76,6 +76,13 @@ jobs:
           echo "Building backend (TypeScript -> dist)";
           npm run build
 
+      - name: Show built backend files (debug)
+        run: |
+          echo "Listing backend/dist";
+          ls -la backend/dist || true;
+          echo "--- head of backend/dist/index.js ---";
+          if [ -f backend/dist/index.js ]; then head -n 120 backend/dist/index.js || true; else echo "backend/dist/index.js not found"; fi
+
       - name: Run integration simulate test under emulators
         working-directory: backend
         env:
