@@ -145,3 +145,51 @@ export const updatePendingTransactions = onSchedule({
     throw error;
   }
 });
+
+/**
+ * Callable cleanup function to remove synthetic transactions older than X days.
+ * This function is dev-only and requires DEV_CLEANUP_KEY in the request headers
+ * when called via HTTP emulation. It is NOT scheduled by default.
+ */
+export const cleanupSyntheticTransactions = async (_req: any, _res: any) => {
+  const allowed = process.env.NODE_ENV !== 'production';
+  if (!allowed) {
+    console.warn('cleanupSyntheticTransactions called in production - rejecting');
+    return { success: false, error: 'Not allowed in production' };
+  }
+
+  // header guard for safety
+  const providedKey = (_req && (_req.headers && (_req.headers['x-dev-cleanup-key'] || _req.headers['x-dev-simulate-key']))) || '';
+  const expectedKey = process.env.DEV_CLEANUP_KEY || 'dev-cleanup-key';
+  if (providedKey !== expectedKey) {
+    console.warn('cleanupSyntheticTransactions invalid or missing key');
+    return { success: false, error: 'Invalid or missing cleanup key' };
+  }
+
+  try {
+    const { db } = await import('./index');
+    const cutoff = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000); // 3 days
+    const snapshot = await db.collection('transactions')
+      .where('metadata.synthetic', '==', true)
+      .where('createdAt', '<=', cutoff)
+      .get();
+
+    if (snapshot.empty) {
+      console.log('No synthetic transactions older than 3 days to delete');
+      return { success: true, deleted: 0 };
+    }
+
+    const batch = db.batch();
+    let count = 0;
+    snapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+      count++;
+    });
+    await batch.commit();
+    console.log(`Deleted ${count} synthetic transactions`);
+    return { success: true, deleted: count };
+  } catch (err) {
+    console.error('cleanupSyntheticTransactions error:', err);
+    return { success: false, error: err instanceof Error ? err.message : 'cleanup failed' };
+  }
+};
