@@ -6,7 +6,7 @@
  * is safe to commit now and expand after PR merge.
  */
 
-import { Provider, getDefaultProvider, JsonRpcProvider, id as solidityId } from 'ethers';
+import { Provider, getDefaultProvider, JsonRpcProvider, Interface } from 'ethers';
 
 export type EthNetwork = 'sepolia' | 'mainnet' | 'goerli' | string;
 
@@ -98,50 +98,48 @@ export async function verifyEvmTransfer(
       };
     }
 
-    // ERC20 verification: look for Transfer event in logs
-    // Transfer(address indexed from, address indexed to, uint256 value)
-  const transferTopic = solidityId('Transfer(address,address,uint256)');
-    // Filter logs by txHash's receipt logs (we already have receipt)
+    // ERC20 verification: use ethers.Interface to decode Transfer logs robustly
+    const ERC20_IFACE = new Interface(['event Transfer(address indexed from, address indexed to, uint256 value)']);
     const logs = receipt.logs || [];
-    // Normalize token contract address
     const tokenAddr = tokenContractAddress.toLowerCase();
 
     for (const log of logs) {
       if (!log.address) continue;
       if (log.address.toLowerCase() !== tokenAddr) continue;
       if (!log.topics || log.topics.length === 0) continue;
-      if (log.topics[0] !== transferTopic) continue;
+      try {
+        const parsed: any = ERC20_IFACE.parseLog({ topics: log.topics, data: log.data });
+        if (!parsed || parsed.name !== 'Transfer') continue;
+        // parsed.args: [from, to, value]
+        const from = (parsed.args[0] as string).toLowerCase();
+        const to = (parsed.args[1] as string).toLowerCase();
+        // value may be bigint or BigNumber-like; normalize to string
+        const rawVal: any = parsed.args[2];
+        const gotVal = typeof rawVal === 'bigint' ? rawVal.toString() : rawVal?.toString?.() || '0';
 
-      // topics[1] = from, topics[2] = to
-        try {
-          const from = '0x' + log.topics[1].slice(26).toLowerCase();
-          const to = '0x' + log.topics[2].slice(26).toLowerCase();
-          const data = log.data; // hex encoded uint256
-          const gotVal = BigInt(data);
-
-          if (to !== expectedTo) {
-            return { success: false, txHash, to, message: `ERC20 to mismatch: expected ${expectedTo} got ${to}` };
-          }
-
-          if (expectedValueWei) {
-            const expectedVal = BigInt(expectedValueWei);
-            if (gotVal !== expectedVal) {
-              return { success: false, txHash, valueWei: gotVal.toString(), message: `ERC20 value mismatch: expected ${expectedVal.toString()} got ${gotVal.toString()}` };
-            }
-          }
-
-          return {
-            success: true,
-            txHash,
-            from,
-            to,
-            valueWei: gotVal.toString(),
-            blockNumber: receipt.blockNumber,
-            token: tokenAddr,
-          };
-        } catch (e: any) {
-          continue;
+        if (to !== expectedTo) {
+          return { success: false, txHash, to, message: `ERC20 to mismatch: expected ${expectedTo} got ${to}` };
         }
+
+        if (expectedValueWei) {
+          if (gotVal !== expectedValueWei) {
+            return { success: false, txHash, valueWei: gotVal, message: `ERC20 value mismatch: expected ${expectedValueWei} got ${gotVal}` };
+          }
+        }
+
+        return {
+          success: true,
+          txHash,
+          from,
+          to,
+          valueWei: gotVal,
+          blockNumber: receipt.blockNumber,
+          token: tokenAddr,
+        };
+      } catch (e: any) {
+        // non-decodable log, continue
+        continue;
+      }
     }
 
     return { success: false, txHash, message: 'No matching ERC20 Transfer log found for token' };

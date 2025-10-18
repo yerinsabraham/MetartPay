@@ -19,8 +19,31 @@ jest.mock('ethers', () => {
       return mockTxs[txHash] ? mockTxs[txHash].receipt : null;
     }
   }
+
+  // Minimal Interface shim with getEventTopic and parseLog compatible with ethers.Interface
+  class Interface {
+    fragments: any[];
+    constructor(fragments: any[]) {
+      this.fragments = fragments;
+    }
+    getEventTopic(name: string) {
+      // return a deterministic mock topic for Transfer
+      if (name === 'Transfer') return '0xtransfer_topic_mock';
+      return '0xtopic_' + name;
+    }
+    parseLog(log: { topics: string[]; data: string }) {
+      // Expect topics[1] and topics[2] contain addresses padded; data is hex uint256
+      const topics = log.topics || [];
+      const from = topics[1] ? '0x' + topics[1].slice(26).toLowerCase() : '0xfrom';
+      const to = topics[2] ? '0x' + topics[2].slice(26).toLowerCase() : '0xto';
+      const data = log.data || '0x0';
+      const value = BigInt(data);
+      return { args: [from, to, value] };
+    }
+  }
+
   const getDefaultProvider = (network?: string) => new JsonRpcProvider(`default-${network}`);
-  return { JsonRpcProvider, getDefaultProvider };
+  return { JsonRpcProvider, getDefaultProvider, Interface };
 });
 
 describe('verifyEthTransfer (mocked provider)', () => {
