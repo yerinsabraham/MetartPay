@@ -132,3 +132,4 @@ build/
 # Editor swap/temp files
 *.swp
 *.swo
+tools/job-logs/
