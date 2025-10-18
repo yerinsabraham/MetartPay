@@ -77,6 +77,29 @@ jobs:
           echo "--- backend/package.json after CI patch ---";
           cat backend/package.json || true;
 
+      - name: Dump functions manifest (debug)
+        working-directory: .
+        run: |
+          echo "Attempting to start firebase-functions binary on port 8977 and fetch /__/functions.yaml";
+          if [ -f backend/node_modules/.bin/firebase-functions ]; then
+            echo "Found firebase-functions binary";
+            backend/node_modules/.bin/firebase-functions --port=8977 > backend/firebase-functions.log 2>&1 &
+            FN_PID=$!;
+            echo "firebase-functions PID: $FN_PID";
+            sleep 2;
+            MANIFEST_URL="http://127.0.0.1:8977/__/functions.yaml";
+            echo "Fetching manifest from $MANIFEST_URL";
+            curl -sS "$MANIFEST_URL" -o backend/functions_manifest.json || true;
+            echo "--- head of backend/functions_manifest.json ---";
+            if [ -f backend/functions_manifest.json ]; then head -n 40 backend/functions_manifest.json || true; else echo 'manifest not found'; fi
+            echo "--- validate manifest with node ---";
+            node -e "const fs=require('fs'); try{ const s=fs.readFileSync('backend/functions_manifest.json','utf8'); const j=JSON.parse(s); console.log('manifest parsed OK, endpoints:', Object.keys(j.endpoints||{}).length); if(!j.specVersion) console.error('NO specVersion'); } catch(e){ console.error('manifest parse error', e && e.stack || e); process.exit(1); }" || true;
+            echo "Killing firebase-functions PID $FN_PID";
+            kill $FN_PID || true;
+          else
+            echo "firebase-functions binary not found at backend/node_modules/.bin/firebase-functions";
+          fi
+
       - name: Smoke load built backend (detect runtime parse errors)
         working-directory: .
         run: |
