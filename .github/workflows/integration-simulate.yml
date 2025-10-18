@@ -84,6 +84,25 @@ jobs:
           echo "Attempting to require the built backend to catch runtime errors";
           node -e "try{ require('./backend/dist/index.js'); console.log('backend/dist/index.js loaded OK'); } catch(e){ console.error('ERROR loading backend/dist/index.js:', e && e.stack || e); process.exit(2); }"
 
+      - name: Dump firebase-functions build metadata (debug)
+        working-directory: .
+        run: |
+          echo "--- Looking for firebase-functions binary ---";
+          if [ -f backend/node_modules/.bin/firebase-functions ]; then
+            echo "Found backend/node_modules/.bin/firebase-functions - printing first 200 lines and running with --help";
+            echo "--- file head ---";
+            sed -n '1,200p' backend/node_modules/.bin/firebase-functions || true;
+            echo "--- run --help ---";
+            backend/node_modules/.bin/firebase-functions --help || true;
+            echo "--- run without args (capture stdout/stderr) ---";
+            backend/node_modules/.bin/firebase-functions || true;
+          else
+            echo "No firebase-functions binary at backend/node_modules/.bin/firebase-functions";
+          fi
+
+          echo "--- Searching for functions*.yaml files in repo ---";
+          find . -maxdepth 4 -type f -iname 'functions*.yaml' -print -exec sh -c 'echo "---- {} ----"; sed -n "1,200p" "{}" || true' \; || true
+
       - name: Run integration simulate test under emulators (debug)
         working-directory: backend
         env:
