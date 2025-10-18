@@ -6,6 +6,8 @@
  * is safe to commit now and expand after PR merge.
  */
 
+import { Provider, getDefaultProvider, JsonRpcProvider } from 'ethers';
+
 export type EthNetwork = 'sepolia' | 'mainnet' | 'goerli' | string;
 
 export interface EthVerifyResult {
@@ -33,13 +35,49 @@ export async function verifyEthTransfer(
   expectedValueWei?: string,
   network: EthNetwork = 'sepolia'
 ): Promise<EthVerifyResult> {
-  // TODO: implement using ethers.js Provider + getTransaction/getTransactionReceipt
-  // For now return a not-implemented result so server can import safely.
-  return {
-    success: false,
-    txHash,
-    message: 'Not implemented: replace with ethers.js provider call in a follow-up'
-  };
+  // Build a provider from environment. Prefer ETH_RPC_URL, then default provider.
+  try {
+  const rpcUrl = process.env.ETH_RPC_URL || process.env.ALCHEMY_API_URL || process.env.INFURA_API_URL;
+  const provider: Provider = rpcUrl ? new JsonRpcProvider(rpcUrl) : getDefaultProvider(network);
+
+    // Fetch transaction and receipt
+    const tx = await provider.getTransaction(txHash);
+    if (!tx) {
+      return { success: false, txHash, message: 'Transaction not found' };
+    }
+
+    const receipt = await provider.getTransactionReceipt(txHash);
+    if (!receipt) {
+      return { success: false, txHash, message: 'Transaction receipt not available yet' };
+    }
+
+    // Normalize addresses to lowercase for comparison
+    const actualTo = (tx.to || '').toLowerCase();
+    const expectedTo = expectedToAddress.toLowerCase();
+
+    if (actualTo !== expectedTo) {
+      return { success: false, txHash, to: actualTo, message: `To address mismatch: expected ${expectedTo} got ${actualTo}` };
+    }
+
+    // If expectedValueWei is provided, compare values
+    if (expectedValueWei) {
+      const txValue = tx.value ? tx.value.toString() : '0';
+      if (txValue !== expectedValueWei) {
+        return { success: false, txHash, valueWei: txValue, message: `Value mismatch: expected ${expectedValueWei} got ${txValue}` };
+      }
+    }
+
+    return {
+      success: true,
+      txHash,
+      from: (tx.from || '').toLowerCase(),
+      to: actualTo,
+      valueWei: tx.value ? tx.value.toString() : '0',
+      blockNumber: receipt.blockNumber
+    };
+  } catch (err: any) {
+    return { success: false, txHash, message: `Error verifying tx: ${err?.message || String(err)}` };
+  }
 }
 
 /**
