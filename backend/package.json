@@ -14,10 +14,12 @@
     "lint": "eslint src/**/*.ts",
     "serve": "npm run build && firebase emulators:start --only functions",
     "integration:test": "node tools/integration_simulate_test.js",
-    "cleanup:synthetic": "node tools/cleanup_synthetic.js"
+    "cleanup:synthetic": "node tools/cleanup_synthetic.js",
+    "normalize:manifest": "node tools/normalize_manifest.js",
+    "serve:normalized-manifest": "node tools/serve_normalized_manifest.js"
   },
   "engines": {
-    "node": "20"
+    "node": "18"
   },
   "dependencies": {
     "@solana/spl-token": "^0.3.9",

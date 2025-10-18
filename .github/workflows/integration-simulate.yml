@@ -65,6 +65,28 @@ jobs:
           echo "Building backend (TypeScript -> dist)";
           npm run build
 
+      - name: Generate and normalize functions manifest (debug)
+        working-directory: backend
+        run: |
+          echo "Running normalize pipeline: generate manifest and normalize it";
+          # Ensure firebase-functions binary is available and generate manifest file
+          if [ -f node_modules/.bin/firebase-functions ]; then
+            echo "Generating manifest to functions_manifest.json";
+            FUNCTIONS_MANIFEST_OUTPUT_PATH=functions_manifest.json ./node_modules/.bin/firebase-functions . || true
+          else
+            echo "firebase-functions binary not found; skipping generation";
+          fi
+          # Normalize the manifest so emulator can parse it
+          if [ -f functions_manifest.json ]; then
+            echo "Normalizing manifest";
+            npm run normalize:manifest || true
+            echo "Normalized manifest head:";
+            head -n 200 functions_manifest.normalized.json || true
+          else
+            echo "functions_manifest.json not produced; failing early";
+            ls -la || true
+          fi
+
       - name: Show built backend files (debug)
         run: |
           echo "Listing backend/dist";
@@ -149,4 +171,13 @@ jobs:
         run: |
           echo "Using DEV_SIMULATE_KEY=$(printenv DEV_SIMULATE_KEY)";
           echo "Node version: $(node -v)";
+          # Start a lightweight manifest server that serves normalized manifest at /__/functions.yaml
+          if [ -f node_modules/.bin/node ]; then
+            echo "Starting manifest proxy in background";
+            npm run serve:normalized-manifest &
+            PROXY_PID=$!;
+            sleep 1;
+            echo "Manifest proxy PID: $PROXY_PID";
+          fi
+          # Run emulators; the emulator will fetch /__/functions.yaml from the control API (the proxy)
           firebase emulators:exec --project=metartpay-bac2f --debug "node tools/integration_simulate_test.js"
