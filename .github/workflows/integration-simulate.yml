@@ -167,7 +167,11 @@ jobs:
       - name: Run integration simulate test under emulators (debug)
         working-directory: backend
         env:
-          FIRESTORE_EMULATOR_HOST: 127.0.0.1:8080
+          # Explicit emulator ports to avoid CI port collisions
+          FIRESTORE_EMULATOR_HOST: 127.0.0.1:8081
+          FUNCTIONS_EMULATOR_HOST: 127.0.0.1:8082
+          HOSTING_EMULATOR_HOST: 127.0.0.1:8083
+          STORAGE_EMULATOR_HOST: 127.0.0.1:8084
           NODE_ENV: development
         run: |
           echo "Using DEV_SIMULATE_KEY=$(printenv DEV_SIMULATE_KEY)";
@@ -183,4 +187,17 @@ jobs:
             echo "Manifest proxy PID: $PROXY_PID";
           fi
           # Run emulators; the emulator will fetch /__/functions.yaml from the control API (the proxy)
-          firebase emulators:exec --project=metartpay-bac2f --debug "node tools/integration_simulate_test.js"
+          # Create a temporary firebase.json override that configures emulator ports
+          cat > ../firebase.emulation.override.json <<'JSON'
+          {
+            "emulators": {
+              "functions": { "port": 8082 },
+              "firestore": { "port": 8081 },
+              "hosting": { "port": 8083 },
+              "storage": { "port": 8084 }
+            }
+          }
+          JSON
+
+          # Run emulators with the override (firebase-tools will pick up CLI env vars as well)
+          firebase emulators:exec --project=metartpay-bac2f --debug "node tools/integration_simulate_test.js" --config ../firebase.emulation.override.json
