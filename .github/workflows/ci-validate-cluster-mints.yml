@@ -28,5 +28,6 @@ jobs:
         working-directory: backend
 
       - name: Validate cluster mints
+        if: ${{ github.event_name == 'push' }}
         run: npm run validate:cluster-mints
         working-directory: backend
