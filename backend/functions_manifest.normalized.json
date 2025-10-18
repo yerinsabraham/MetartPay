@@ -1,0 +1,13 @@
+{
+  "specVersion": "v1alpha1",
+  "projectId": "metartpay-bac2f",
+  "buildSystem": "nodejs",
+  "endpoints": {
+    "api": {
+      "entryPoint": "api",
+      "platform": "gcfv2",
+      "region": ["us-central1"],
+      "httpsTrigger": {}
+    }
+  }
+}
