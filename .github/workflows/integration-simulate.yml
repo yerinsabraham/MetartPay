@@ -78,26 +78,17 @@ jobs:
           cat backend/package.json || true;
 
       - name: Dump functions manifest (debug)
-        working-directory: .
+        working-directory: backend
         run: |
-          echo "Attempting to start firebase-functions binary on port 8977 and fetch /__/functions.yaml";
-          if [ -f backend/node_modules/.bin/firebase-functions ]; then
-            echo "Found firebase-functions binary";
-            # Ensure the binary binds to our chosen control port and exposes the control API
-            FUNCTIONS_CONTROL_API=true PORT=8977 backend/node_modules/.bin/firebase-functions > backend/firebase-functions.log 2>&1 &
-            FN_PID=$!;
-            echo "firebase-functions PID: $FN_PID";
-            # Wait a bit longer for the binary to initialize and bind
-            sleep 4;
-            MANIFEST_URL="http://127.0.0.1:8977/__/functions.yaml";
-            echo "Fetching manifest from $MANIFEST_URL";
-            curl -sS "$MANIFEST_URL" -o backend/functions_manifest.json || true;
+          echo "Generating functions manifest using firebase-functions binary (FUNCTIONS_MANIFEST_OUTPUT_PATH)";
+          if [ -f node_modules/.bin/firebase-functions ]; then
+            echo "Found firebase-functions binary in backend";
+            # Generate manifest directly to a file (no HTTP binding required).
+            FUNCTIONS_MANIFEST_OUTPUT_PATH=functions_manifest.json ./node_modules/.bin/firebase-functions . || true
             echo "--- head of backend/functions_manifest.json ---";
-            if [ -f backend/functions_manifest.json ]; then head -n 40 backend/functions_manifest.json || true; else echo 'manifest not found'; fi
+            if [ -f functions_manifest.json ]; then head -n 200 functions_manifest.json || true; else echo 'manifest not found'; fi
             echo "--- validate manifest with node ---";
-            node -e "const fs=require('fs'); try{ const s=fs.readFileSync('backend/functions_manifest.json','utf8'); const j=JSON.parse(s); console.log('manifest parsed OK, endpoints:', Object.keys(j.endpoints||{}).length); if(!j.specVersion) console.error('NO specVersion'); } catch(e){ console.error('manifest parse error', e && e.stack || e); process.exit(1); }" || true;
-            echo "Killing firebase-functions PID $FN_PID";
-            kill $FN_PID || true;
+            node -e "const fs=require('fs'); try{ const s=fs.readFileSync('functions_manifest.json','utf8'); const j=JSON.parse(s); console.log('manifest parsed OK, endpoints:', Object.keys(j.endpoints||{}).length); if(!j.specVersion) console.error('NO specVersion'); } catch(e){ console.error('manifest parse error', e && e.stack || e); process.exit(1); }" || true;
           else
             echo "firebase-functions binary not found at backend/node_modules/.bin/firebase-functions";
           fi
