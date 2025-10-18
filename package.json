@@ -1,0 +1,26 @@
+{
+  "name": "metartpay",
+  "version": "1.0.0",
+  "description": "A pass-through crypto checkout system that accepts USDT/USDC on Ethereum, BSC, and Solana networks, with instant merchant credit in Naira.",
+  "main": "generate-wallets.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yerinsabraham/MetartPay.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yerinsabraham/MetartPay/issues"
+  },
+  "homepage": "https://github.com/yerinsabraham/MetartPay#readme",
+  "dependencies": {
+    "qrcode": "^1.5.1"
+  }
+}

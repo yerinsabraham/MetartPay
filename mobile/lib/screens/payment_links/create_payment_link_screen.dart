@@ -671,12 +671,27 @@ class _CreatePaymentLinkScreenState extends State<CreatePaymentLinkScreen> {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: Colors.grey.shade200),
                       ),
-                      child: QrImageView(
-                        data: shareUrl,
-                        version: QrVersions.auto,
-                        size: 200.0,
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          QrImageView(
+                            data: shareUrl,
+                            version: QrVersions.auto,
+                            size: 200.0,
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
+                            errorCorrectionLevel: QrErrorCorrectLevel.H,
+                          ),
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          Image.asset('assets/icons/app logo qr.png', width: 28, height: 28, fit: BoxFit.contain),
+                        ],
                       ),
                     ),
                   ] else ...[

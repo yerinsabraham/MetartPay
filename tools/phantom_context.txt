@@ -1,0 +1,629 @@
+﻿
+  tools\phantom_pid_log.txt:427:10-16 18:30:43.683 W/ResourceType( 6543): For resource 0x7f1402cf, entry index(719) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:428:10-16 18:30:43.683 W/ResourceType( 6543): For resource 0x7f1402e2, entry index(738) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:429:10-16 18:30:43.683 W/ResourceType( 6543): For resource 0x7f1402cb, entry index(715) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:430:10-16 18:30:43.683 W/ResourceType( 6543): For resource 0x7f1402cc, entry index(716) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:431:10-16 18:30:43.684 W/ResourceType( 6543): For resource 0x7f14032d, entry index(813) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:432:10-16 18:30:43.684 W/ResourceType( 6543): For resource 0x7f14046f, entry index(1135) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:433:10-16 18:30:43.684 W/ResourceType( 6543): For resource 0x7f1405a7, entry index(1447) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:434:10-16 18:30:43.684 W/ResourceType( 6543): For resource 0x7f080346, entry index(838) is 
+beyond type entryCount(597)
+  tools\phantom_pid_log.txt:435:10-16 18:30:43.693 W/ResourceType( 6543): For resource 0x7f14032d, entry index(813) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:436:10-16 18:30:43.693 W/ResourceType( 6543): For resource 0x7f14032b, entry index(811) is 
+beyond type entryCount(223)
+> tools\phantom_pid_log.txt:437:10-16 18:30:43.717 E/phantom-mobile( 6543): SendFungibleFlowError: fungible and 
+senderAddress are undefined, send flow is broken
+  tools\phantom_pid_log.txt:438:10-16 18:30:43.717 E/phantom-mobile( 6543): 
+  tools\phantom_pid_log.txt:439:10-16 18:30:43.717 E/phantom-mobile( 6543): This error is located at:
+  tools\phantom_pid_log.txt:440:10-16 18:30:43.717 E/phantom-mobile( 6543):     at UnsafeSendFungibleSummaryPage (address 
+at index.android.bundle:1:16707608)
+  tools\phantom_pid_log.txt:441:10-16 18:30:43.717 E/phantom-mobile( 6543):     at ErrorBoundary (address at 
+index.android.bundle:1:10487222)
+> tools\phantom_pid_log.txt:442:10-16 18:30:43.717 E/phantom-mobile( 6543):     at SendFungibleFlowErrorBoundary (address 
+at index.android.bundle:1:13595219)
+> tools\phantom_pid_log.txt:443:10-16 18:30:43.717 E/phantom-mobile( 6543):     at SendFungibleFlowErrorBoundary (address 
+at index.android.bundle:1:16698190)
+  tools\phantom_pid_log.txt:444:10-16 18:30:43.717 E/phantom-mobile( 6543):     at SendFungibleSummaryPage (<anonymous>)
+  tools\phantom_pid_log.txt:445:10-16 18:30:43.717 E/phantom-mobile( 6543):     at StaticContainer (address at 
+index.android.bundle:1:10879677)
+  tools\phantom_pid_log.txt:446:10-16 18:30:43.717 E/phantom-mobile( 6543):     at EnsureSingleNavigator (address at 
+index.android.bundle:1:10829916)
+  tools\phantom_pid_log.txt:447:10-16 18:30:43.717 E/phantom-mobile( 6543):     at SceneView (address at 
+index.android.bundle:1:10877829)
+  tools\phantom_pid_log.txt:448:10-16 18:30:43.717 E/phantom-mobile( 6543):     at RNSScreenContentWrapper (<anonymous>)
+  tools\phantom_pid_log.txt:449:10-16 18:30:43.717 E/phantom-mobile( 6543):     at ScreenContentWrapper (<anonymous>)
+  tools\phantom_pid_log.txt:450:10-16 18:30:43.717 E/phantom-mobile( 6543):     at DebugContainer (<anonymous>)
+  tools\phantom_pid_log.txt:451:10-16 18:30:43.717 E/phantom-mobile( 6543):     at RNSScreen (<anonymous>)
+  tools\phantom_pid_log.txt:452:10-16 18:30:43.717 E/phantom-mobile( 6543):     at anonymous (address at 
+index.android.bundle:1:1090784)
+  tools\phantom_pid_log.txt:453:10-16 18:30:43.717 E/phantom-mobile( 6543):     at Suspender (address at 
+index.android.bundle:1:10958796)
+  tools\phantom_pid_log.txt:454:10-16 18:30:43.717 E/phantom-mobile( 6543):     at Suspense (<anonymous>)
+  tools\phantom_pid_log.txt:455:10-16 18:30:43.717 E/phantom-mobile( 6543):     at Freeze (address at index.android.bun
+  tools\phantom_pid_log.txt:456:10-16 18:30:43.718 E/phantom-mobile( 6543): 
+> tools\phantom_pid_log.txt:457:10-16 18:30:43.727 E/unknown:ReactNative( 6543): SendFungibleFlowError: fungible and 
+senderAddress are undefined, send flow is broken
+  tools\phantom_pid_log.txt:458:10-16 18:30:43.727 E/unknown:ReactNative( 6543): 
+  tools\phantom_pid_log.txt:459:10-16 18:30:43.727 E/unknown:ReactNative( 6543): This error is located at:
+  tools\phantom_pid_log.txt:460:10-16 18:30:43.727 E/unknown:ReactNative( 6543):     at UnsafeSendFungibleSummaryPage 
+(address at index.android.bundle:1:16707608)
+  tools\phantom_pid_log.txt:461:10-16 18:30:43.727 E/unknown:ReactNative( 6543):     at ErrorBoundary (address at 
+index.android.bundle:1:10487222)
+> tools\phantom_pid_log.txt:462:10-16 18:30:43.727 E/unknown:ReactNative( 6543):     at SendFungibleFlowErrorBoundary 
+(address at index.android.bundle:1:13595219)
+> tools\phantom_pid_log.txt:463:10-16 18:30:43.727 E/unknown:ReactNative( 6543):     at SendFungibleFlowErrorBoundary 
+(address at index.android.bundle:1:16698190)
+  tools\phantom_pid_log.txt:464:10-16 18:30:43.727 E/unknown:ReactNative( 6543):     at SendFungibleSummaryPage 
+(<anonymous>)
+  tools\phantom_pid_log.txt:465:10-16 18:30:43.727 E/unknown:ReactNative( 6543):     at StaticContainer (address at 
+index.android.bundle:1:10879677)
+  tools\phantom_pid_log.txt:466:10-16 18:30:43.727 E/unknown:ReactNative( 6543):     at EnsureSingleNavigator (address at 
+index.android.bundle:1:10829916)
+  tools\phantom_pid_log.txt:467:10-16 18:30:43.727 E/unknown:ReactNative( 6543):     at SceneView (address at 
+index.android.bundle:1:10877829)
+  tools\phantom_pid_log.txt:468:10-16 18:30:43.727 E/unknown:ReactNative( 6543):     at RNSScreenContentWrapper 
+(<anonymous>)
+  tools\phantom_pid_log.txt:469:10-16 18:30:43.727 E/unknown:ReactNative( 6543):     at ScreenContentWrapper (<anonymous>)
+  tools\phantom_pid_log.txt:470:10-16 18:30:43.727 E/unknown:ReactNative( 6543):     at DebugContainer (<anonymous>)
+  tools\phantom_pid_log.txt:471:10-16 18:30:43.727 E/unknown:ReactNative( 6543):     at RNSScreen (<anonymous>)
+  tools\phantom_pid_log.txt:472:10-16 18:30:43.727 E/unknown:ReactNative( 6543):     at anonymous (address at 
+index.android.bundle:1:1090784)
+  tools\phantom_pid_log.txt:473:10-16 18:30:43.727 E/unknown:ReactNative( 6543):     at Suspender (address at 
+index.android.bundle:1:10958796)
+  tools\phantom_pid_log.txt:474:10-16 18:30:43.727 E/unknown:ReactNative( 6543):     at Suspense (<anonymous>)
+  tools\phantom_pid_log.txt:475:10-16 18:30:43.727 E/unknown:ReactNative( 6543):     at Freeze (address at 
+index.android.bun
+  tools\phantom_pid_log.txt:476:10-16 18:30:43.969 W/ResourceType( 6543): For resource 0x7f140407, entry index(1031) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:477:10-16 18:30:43.969 W/ResourceType( 6543): For resource 0x7f1402d5, entry index(725) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:478:10-16 18:30:43.969 W/ResourceType( 6543): For resource 0x7f1402d7, entry index(727) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:479:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f140407, entry index(1031) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:480:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f140531, entry index(1329) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:481:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f140531, entry index(1329) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:482:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f140429, entry index(1065) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:483:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f14042b, entry index(1067) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:484:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f14042a, entry index(1066) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:485:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f1403fe, entry index(1022) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:486:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f14046a, entry index(1130) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:487:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f14042d, entry index(1069) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:488:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f140532, entry index(1330) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:489:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f1403fe, entry index(1022) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:490:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f140586, entry index(1414) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:491:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f140430, entry index(1072) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:492:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f14040b, entry index(1035) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:493:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f140431, entry index(1073) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:494:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f140547, entry index(1351) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:495:10-16 18:30:43.971 I/chatty  ( 6543): uid=10147(app.phantom) identical 3 lines
+  tools\phantom_pid_log.txt:496:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f140547, entry index(1351) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:497:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f140438, entry index(1080) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:498:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f14055b, entry index(1371) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:499:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f1403b7, entry index(951) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:500:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f14045a, entry index(1114) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:501:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f14043f, entry index(1087) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:502:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f140440, entry index(1088) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:503:10-16 18:30:43.971 W/ResourceType( 6543): For resource 0x7f140457, entry index(1111) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:557:10-16 18:30:43.973 W/ResourceType( 6543): For resource 0x7f1402cf, entry index(719) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:558:10-16 18:30:43.973 W/ResourceType( 6543): For resource 0x7f1402b8, entry index(696) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:559:10-16 18:30:43.974 W/ResourceType( 6543): For resource 0x7f1402cf, entry index(719) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:560:10-16 18:30:43.974 W/ResourceType( 6543): For resource 0x7f1402e2, entry index(738) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:561:10-16 18:30:43.974 W/ResourceType( 6543): For resource 0x7f1402cb, entry index(715) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:562:10-16 18:30:43.974 W/ResourceType( 6543): For resource 0x7f1402cc, entry index(716) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:563:10-16 18:30:43.974 W/ResourceType( 6543): For resource 0x7f14032d, entry index(813) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:564:10-16 18:30:43.974 W/ResourceType( 6543): For resource 0x7f14046f, entry index(1135) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:565:10-16 18:30:43.974 W/ResourceType( 6543): For resource 0x7f1405a7, entry index(1447) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:566:10-16 18:30:43.974 W/ResourceType( 6543): For resource 0x7f080346, entry index(838) is 
+beyond type entryCount(597)
+> tools\phantom_pid_log.txt:567:10-16 18:30:43.977 E/ReactNativeJS( 6543): SendFungibleFlowError: fungible and 
+senderAddress are undefined, send flow is broken
+  tools\phantom_pid_log.txt:568:10-16 18:30:43.977 E/ReactNativeJS( 6543): 
+  tools\phantom_pid_log.txt:569:10-16 18:30:43.977 E/ReactNativeJS( 6543): This error is located at:
+  tools\phantom_pid_log.txt:570:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at UnsafeSendFungibleSummaryPage (address 
+at index.android.bundle:1:16707608)
+  tools\phantom_pid_log.txt:571:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at ErrorBoundary (address at 
+index.android.bundle:1:10487222)
+> tools\phantom_pid_log.txt:572:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at SendFungibleFlowErrorBoundary (address 
+at index.android.bundle:1:13595219)
+> tools\phantom_pid_log.txt:573:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at SendFungibleFlowErrorBoundary (address 
+at index.android.bundle:1:16698190)
+  tools\phantom_pid_log.txt:574:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at SendFungibleSummaryPage (<anonymous>)
+  tools\phantom_pid_log.txt:575:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at StaticContainer (address at 
+index.android.bundle:1:10879677)
+  tools\phantom_pid_log.txt:576:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at EnsureSingleNavigator (address at 
+index.android.bundle:1:10829916)
+  tools\phantom_pid_log.txt:577:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at SceneView (address at 
+index.android.bundle:1:10877829)
+  tools\phantom_pid_log.txt:578:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at RNSScreenContentWrapper (<anonymous>)
+  tools\phantom_pid_log.txt:579:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at ScreenContentWrapper (<anonymous>)
+  tools\phantom_pid_log.txt:580:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at DebugContainer (<anonymous>)
+  tools\phantom_pid_log.txt:581:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at RNSScreen (<anonymous>)
+  tools\phantom_pid_log.txt:582:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at anonymous (address at 
+index.android.bundle:1:1090784)
+  tools\phantom_pid_log.txt:583:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at Suspender (address at 
+index.android.bundle:1:10958796)
+  tools\phantom_pid_log.txt:584:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at Suspense (<anonymous>)
+  tools\phantom_pid_log.txt:585:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at Freeze (address at 
+index.android.bundle:1:10959020)
+  tools\phantom_pid_log.txt:586:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at DelayedFreeze (address at 
+index.android.bundle:1:10958453)
+  tools\phantom_pid_log.txt:587:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at InnerScreen (address at 
+index.android.bundle:1:10954673)
+  tools\phantom_pid_log.txt:588:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at anonymous (address at 
+index.android.bundle:1:10956618)
+  tools\phantom_pid_log.txt:589:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at ScreenStackItem (address at 
+index.android.bundle:1:10965137)
+  tools\phantom_pid_log.txt:590:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at SceneView (address at 
+index.android.bundle:1:12751312)
+  tools\phantom_pid_log.txt:591:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at RNSScreenStack (<anonymous>)
+  tools\phantom_pid_log.txt:592:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at anonymous (address at 
+index.android.bundle:1:10964743)
+  tools\phantom_pid_log.txt:593:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at ScreenStack (address at 
+index.android.bundle:1:10963930)
+  tools\phantom_pid_log.txt:594:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at FrameSizeProvider (address at 
+index.android.bundle:1:10935959)
+  tools\phantom_pid_log.txt:595:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at RCTView (<anonymous>)
+  tools\phantom_pid_log.txt:596:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at anonymous (address at 
+index.android.bundle:1:839367)
+  tools\phantom_pid_log.txt:597:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at SafeAreaProviderCompat (address at 
+index.android.bundle:1:10946913)
+  tools\phantom_pid_log.txt:598:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at NativeStackView (address at 
+index.android.bundle:1:12749718)
+  tools\phantom_pid_log.txt:599:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at PreventRemoveProvider (address at 
+index.android.bundle:1:10852249)
+  tools\phantom_pid_log.txt:600:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at NavigationStateListenerProvider 
+(address at index.android.bundle:1:10880640)
+  tools\phantom_pid_log.txt:601:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at NavigationContent (address at 
+index.android.bundle:1:10880358)
+  tools\phantom_pid_log.txt:602:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at anonymous (address at 
+index.android.bundle:1:10880243)
+  tools\phantom_pid_log.txt:603:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at NativeStackNavigator (address at 
+index.android.bundle:1:12748816)
+  tools\phantom_pid_log.txt:604:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at RCTView (<anonymous>)
+  tools\phantom_pid_log.txt:605:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at anonymous (address at 
+index.android.bundle:1:839367)
+  tools\phantom_pid_log.txt:606:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at anonymous (address at 
+index.android.bundle:1:13332461)
+  tools\phantom_pid_log.txt:607:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at SendFungibleStackNavigator (address at 
+index.android.bundle:1:16677825)
+  tools\phantom_pid_log.txt:608:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at StaticContainer (address at 
+index.android.bundle:1:10879677)
+  tools\phantom_pid_log.txt:609:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at EnsureSingleNavigator (address at 
+index.android.bundle:1:10829916)
+  tools\phantom_pid_log.txt:610:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at SceneView (address at 
+index.android.bundle:1:10877829)
+  tools\phantom_pid_log.txt:611:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at RNSScreenContentWrapper (<anonymous>)
+  tools\phantom_pid_log.txt:612:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at ScreenContentWrapper (<anonymous>)
+  tools\phantom_pid_log.txt:613:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at DebugContainer (<anonymous>)
+  tools\phantom_pid_log.txt:629:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at RCTView (<anonymous>)
+  tools\phantom_pid_log.txt:630:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at anonymous (address at 
+index.android.bundle:1:839367)
+  tools\phantom_pid_log.txt:631:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at SafeAreaProviderCompat (address at 
+index.android.bundle:1:10946913)
+  tools\phantom_pid_log.txt:632:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at NativeStackView (address at 
+index.android.bundle:1:12749718)
+  tools\phantom_pid_log.txt:633:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at PreventRemoveProvider (address at 
+index.android.bundle:1:10852249)
+  tools\phantom_pid_log.txt:634:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at NavigationStateListenerProvider 
+(address at index.android.bundle:1:10880640)
+  tools\phantom_pid_log.txt:635:10-16 18:30:43.977 E/ReactNativeJS( 6543):     at NavigationContent (address at index.an
+  tools\phantom_pid_log.txt:636:10-16 18:30:43.983 W/ResourceType( 6543): For resource 0x7f140407, entry index(1031) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:637:10-16 18:30:43.983 W/ResourceType( 6543): For resource 0x7f1402d5, entry index(725) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:638:10-16 18:30:43.983 W/ResourceType( 6543): For resource 0x7f1402d7, entry index(727) is 
+beyond type entryCount(223)
+> tools\phantom_pid_log.txt:639:10-16 18:30:43.987 E/phantom-mobile( 6543): SendFungibleFlowError: fungible and 
+senderAddress are undefined, send flow is broken
+  tools\phantom_pid_log.txt:640:10-16 18:30:43.987 E/phantom-mobile( 6543): 
+  tools\phantom_pid_log.txt:641:10-16 18:30:43.987 E/phantom-mobile( 6543): This error is located at:
+  tools\phantom_pid_log.txt:642:10-16 18:30:43.987 E/phantom-mobile( 6543):     at UnsafeSendFungibleSummaryPage (address 
+at index.android.bundle:1:16707608)
+  tools\phantom_pid_log.txt:643:10-16 18:30:43.987 E/phantom-mobile( 6543):     at ErrorBoundary (address at 
+index.android.bundle:1:10487222)
+> tools\phantom_pid_log.txt:644:10-16 18:30:43.987 E/phantom-mobile( 6543):     at SendFungibleFlowErrorBoundary (address 
+at index.android.bundle:1:13595219)
+> tools\phantom_pid_log.txt:645:10-16 18:30:43.987 E/phantom-mobile( 6543):     at SendFungibleFlowErrorBoundary (address 
+at index.android.bundle:1:16698190)
+  tools\phantom_pid_log.txt:646:10-16 18:30:43.987 E/phantom-mobile( 6543):     at SendFungibleSummaryPage (<anonymous>)
+  tools\phantom_pid_log.txt:647:10-16 18:30:43.987 E/phantom-mobile( 6543):     at StaticContainer (address at 
+index.android.bundle:1:10879677)
+  tools\phantom_pid_log.txt:648:10-16 18:30:43.987 E/phantom-mobile( 6543):     at EnsureSingleNavigator (address at 
+index.android.bundle:1:10829916)
+  tools\phantom_pid_log.txt:649:10-16 18:30:43.987 E/phantom-mobile( 6543):     at SceneView (address at 
+index.android.bundle:1:10877829)
+  tools\phantom_pid_log.txt:650:10-16 18:30:43.987 E/phantom-mobile( 6543):     at RNSScreenContentWrapper (<anonymous>)
+  tools\phantom_pid_log.txt:651:10-16 18:30:43.987 E/phantom-mobile( 6543):     at ScreenContentWrapper (<anonymous>)
+  tools\phantom_pid_log.txt:652:10-16 18:30:43.987 E/phantom-mobile( 6543):     at DebugContainer (<anonymous>)
+  tools\phantom_pid_log.txt:653:10-16 18:30:43.987 E/phantom-mobile( 6543):     at RNSScreen (<anonymous>)
+  tools\phantom_pid_log.txt:654:10-16 18:30:43.987 E/phantom-mobile( 6543):     at anonymous (address at 
+index.android.bundle:1:1090784)
+  tools\phantom_pid_log.txt:655:10-16 18:30:43.987 E/phantom-mobile( 6543):     at Suspender (address at 
+index.android.bundle:1:10958796)
+  tools\phantom_pid_log.txt:656:10-16 18:30:43.987 E/phantom-mobile( 6543):     at Suspense (<anonymous>)
+  tools\phantom_pid_log.txt:657:10-16 18:30:43.987 E/phantom-mobile( 6543):     at Freeze (address at index.android.bun
+  tools\phantom_pid_log.txt:658:10-16 18:30:43.987 E/phantom-mobile( 6543): 
+  tools\phantom_pid_log.txt:659:10-16 18:30:44.013 I/Choreographer( 6543): Skipped 2 frames!  The application may be 
+doing too much work on its main thread.
+  tools\phantom_pid_log.txt:660:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f140407, entry index(1031) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:661:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f140531, entry index(1329) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:662:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f140531, entry index(1329) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:663:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f140429, entry index(1065) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:664:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f14042b, entry index(1067) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:665:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f14042a, entry index(1066) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:666:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f1403fe, entry index(1022) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:667:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f14046a, entry index(1130) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:668:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f14042d, entry index(1069) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:669:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f140532, entry index(1330) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:670:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f1403fe, entry index(1022) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:671:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f140586, entry index(1414) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:672:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f140430, entry index(1072) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:673:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f14040b, entry index(1035) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:674:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f140431, entry index(1073) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:675:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f140547, entry index(1351) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:676:10-16 18:30:44.031 I/chatty  ( 6543): uid=10147(app.phantom) identical 3 lines
+  tools\phantom_pid_log.txt:677:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f140547, entry index(1351) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:678:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f140438, entry index(1080) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:679:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f14055b, entry index(1371) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:680:10-16 18:30:44.031 W/ResourceType( 6543): For resource 0x7f1403b7, entry index(951) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:681:10-16 18:30:44.032 W/ResourceType( 6543): For resource 0x7f14045a, entry index(1114) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:682:10-16 18:30:44.032 W/ResourceType( 6543): For resource 0x7f14043f, entry index(1087) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:683:10-16 18:30:44.032 W/ResourceType( 6543): For resource 0x7f140440, entry index(1088) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:684:10-16 18:30:44.032 W/ResourceType( 6543): For resource 0x7f140457, entry index(1111) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:685:10-16 18:30:44.032 W/ResourceType( 6543): For resource 0x7f140585, entry index(1413) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1325:10-16 18:32:37.754 W/ResourceType( 6543): For resource 0x7f1402cf, entry index(719) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1326:10-16 18:32:37.754 W/ResourceType( 6543): For resource 0x7f1402e2, entry index(738) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1327:10-16 18:32:37.754 W/ResourceType( 6543): For resource 0x7f1402cb, entry index(715) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1328:10-16 18:32:37.754 W/ResourceType( 6543): For resource 0x7f1402cc, entry index(716) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1329:10-16 18:32:37.754 W/ResourceType( 6543): For resource 0x7f14032d, entry index(813) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1330:10-16 18:32:37.754 W/ResourceType( 6543): For resource 0x7f14046f, entry index(1135) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1331:10-16 18:32:37.754 W/ResourceType( 6543): For resource 0x7f1405a7, entry index(1447) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1332:10-16 18:32:37.754 W/ResourceType( 6543): For resource 0x7f080346, entry index(838) is 
+beyond type entryCount(597)
+  tools\phantom_pid_log.txt:1333:10-16 18:32:37.755 W/ResourceType( 6543): For resource 0x7f14032d, entry index(813) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1334:10-16 18:32:37.755 W/ResourceType( 6543): For resource 0x7f14032b, entry index(811) is 
+beyond type entryCount(223)
+> tools\phantom_pid_log.txt:1335:10-16 18:32:37.801 E/phantom-mobile( 6543): SendFungibleFlowError: fungible and 
+senderAddress are undefined, send flow is broken
+  tools\phantom_pid_log.txt:1336:10-16 18:32:37.801 E/phantom-mobile( 6543): 
+  tools\phantom_pid_log.txt:1337:10-16 18:32:37.801 E/phantom-mobile( 6543): This error is located at:
+  tools\phantom_pid_log.txt:1338:10-16 18:32:37.801 E/phantom-mobile( 6543):     at UnsafeSendFungibleSummaryPage 
+(address at index.android.bundle:1:16707608)
+  tools\phantom_pid_log.txt:1339:10-16 18:32:37.801 E/phantom-mobile( 6543):     at ErrorBoundary (address at 
+index.android.bundle:1:10487222)
+> tools\phantom_pid_log.txt:1340:10-16 18:32:37.801 E/phantom-mobile( 6543):     at SendFungibleFlowErrorBoundary 
+(address at index.android.bundle:1:13595219)
+> tools\phantom_pid_log.txt:1341:10-16 18:32:37.801 E/phantom-mobile( 6543):     at SendFungibleFlowErrorBoundary 
+(address at index.android.bundle:1:16698190)
+  tools\phantom_pid_log.txt:1342:10-16 18:32:37.801 E/phantom-mobile( 6543):     at SendFungibleSummaryPage (<anonymous>)
+  tools\phantom_pid_log.txt:1343:10-16 18:32:37.801 E/phantom-mobile( 6543):     at StaticContainer (address at 
+index.android.bundle:1:10879677)
+  tools\phantom_pid_log.txt:1344:10-16 18:32:37.801 E/phantom-mobile( 6543):     at EnsureSingleNavigator (address at 
+index.android.bundle:1:10829916)
+  tools\phantom_pid_log.txt:1345:10-16 18:32:37.801 E/phantom-mobile( 6543):     at SceneView (address at 
+index.android.bundle:1:10877829)
+  tools\phantom_pid_log.txt:1346:10-16 18:32:37.801 E/phantom-mobile( 6543):     at RNSScreenContentWrapper (<anonymous>)
+  tools\phantom_pid_log.txt:1347:10-16 18:32:37.801 E/phantom-mobile( 6543):     at ScreenContentWrapper (<anonymous>)
+  tools\phantom_pid_log.txt:1348:10-16 18:32:37.801 E/phantom-mobile( 6543):     at DebugContainer (<anonymous>)
+  tools\phantom_pid_log.txt:1349:10-16 18:32:37.801 E/phantom-mobile( 6543):     at RNSScreen (<anonymous>)
+  tools\phantom_pid_log.txt:1350:10-16 18:32:37.801 E/phantom-mobile( 6543):     at anonymous (address at 
+index.android.bundle:1:1090784)
+  tools\phantom_pid_log.txt:1351:10-16 18:32:37.801 E/phantom-mobile( 6543):     at Suspender (address at 
+index.android.bundle:1:10958796)
+  tools\phantom_pid_log.txt:1352:10-16 18:32:37.801 E/phantom-mobile( 6543):     at Suspense (<anonymous>)
+  tools\phantom_pid_log.txt:1353:10-16 18:32:37.801 E/phantom-mobile( 6543):     at Freeze (address at index.android.bun
+  tools\phantom_pid_log.txt:1354:10-16 18:32:37.801 E/phantom-mobile( 6543): 
+> tools\phantom_pid_log.txt:1355:10-16 18:32:37.808 E/unknown:ReactNative( 6543): SendFungibleFlowError: fungible and 
+senderAddress are undefined, send flow is broken
+  tools\phantom_pid_log.txt:1356:10-16 18:32:37.808 E/unknown:ReactNative( 6543): 
+  tools\phantom_pid_log.txt:1357:10-16 18:32:37.808 E/unknown:ReactNative( 6543): This error is located at:
+  tools\phantom_pid_log.txt:1358:10-16 18:32:37.808 E/unknown:ReactNative( 6543):     at UnsafeSendFungibleSummaryPage 
+(address at index.android.bundle:1:16707608)
+  tools\phantom_pid_log.txt:1359:10-16 18:32:37.808 E/unknown:ReactNative( 6543):     at ErrorBoundary (address at 
+index.android.bundle:1:10487222)
+> tools\phantom_pid_log.txt:1360:10-16 18:32:37.808 E/unknown:ReactNative( 6543):     at SendFungibleFlowErrorBoundary 
+(address at index.android.bundle:1:13595219)
+> tools\phantom_pid_log.txt:1361:10-16 18:32:37.808 E/unknown:ReactNative( 6543):     at SendFungibleFlowErrorBoundary 
+(address at index.android.bundle:1:16698190)
+  tools\phantom_pid_log.txt:1362:10-16 18:32:37.808 E/unknown:ReactNative( 6543):     at SendFungibleSummaryPage 
+(<anonymous>)
+  tools\phantom_pid_log.txt:1363:10-16 18:32:37.808 E/unknown:ReactNative( 6543):     at StaticContainer (address at 
+index.android.bundle:1:10879677)
+  tools\phantom_pid_log.txt:1364:10-16 18:32:37.808 E/unknown:ReactNative( 6543):     at EnsureSingleNavigator (address 
+at index.android.bundle:1:10829916)
+  tools\phantom_pid_log.txt:1365:10-16 18:32:37.808 E/unknown:ReactNative( 6543):     at SceneView (address at 
+index.android.bundle:1:10877829)
+  tools\phantom_pid_log.txt:1366:10-16 18:32:37.808 E/unknown:ReactNative( 6543):     at RNSScreenContentWrapper 
+(<anonymous>)
+  tools\phantom_pid_log.txt:1367:10-16 18:32:37.808 E/unknown:ReactNative( 6543):     at ScreenContentWrapper 
+(<anonymous>)
+  tools\phantom_pid_log.txt:1368:10-16 18:32:37.808 E/unknown:ReactNative( 6543):     at DebugContainer (<anonymous>)
+  tools\phantom_pid_log.txt:1369:10-16 18:32:37.808 E/unknown:ReactNative( 6543):     at RNSScreen (<anonymous>)
+  tools\phantom_pid_log.txt:1370:10-16 18:32:37.808 E/unknown:ReactNative( 6543):     at anonymous (address at 
+index.android.bundle:1:1090784)
+  tools\phantom_pid_log.txt:1371:10-16 18:32:37.808 E/unknown:ReactNative( 6543):     at Suspender (address at 
+index.android.bundle:1:10958796)
+  tools\phantom_pid_log.txt:1372:10-16 18:32:37.808 E/unknown:ReactNative( 6543):     at Suspense (<anonymous>)
+  tools\phantom_pid_log.txt:1373:10-16 18:32:37.808 E/unknown:ReactNative( 6543):     at Freeze (address at 
+index.android.bun
+  tools\phantom_pid_log.txt:1374:10-16 18:32:37.928 W/ResourceType( 6543): For resource 0x7f140407, entry index(1031) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1375:10-16 18:32:37.928 W/ResourceType( 6543): For resource 0x7f1402d5, entry index(725) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1376:10-16 18:32:37.928 W/ResourceType( 6543): For resource 0x7f1402d7, entry index(727) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1377:10-16 18:32:37.929 W/ResourceType( 6543): For resource 0x7f140407, entry index(1031) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1378:10-16 18:32:37.929 W/ResourceType( 6543): For resource 0x7f140531, entry index(1329) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1379:10-16 18:32:37.929 W/ResourceType( 6543): For resource 0x7f140531, entry index(1329) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1380:10-16 18:32:37.929 W/ResourceType( 6543): For resource 0x7f140429, entry index(1065) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1381:10-16 18:32:37.929 W/ResourceType( 6543): For resource 0x7f14042b, entry index(1067) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1382:10-16 18:32:37.929 W/ResourceType( 6543): For resource 0x7f14042a, entry index(1066) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1383:10-16 18:32:37.929 W/ResourceType( 6543): For resource 0x7f1403fe, entry index(1022) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1384:10-16 18:32:37.929 W/ResourceType( 6543): For resource 0x7f14046a, entry index(1130) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1385:10-16 18:32:37.929 W/ResourceType( 6543): For resource 0x7f14042d, entry index(1069) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1386:10-16 18:32:37.930 W/ResourceType( 6543): For resource 0x7f140532, entry index(1330) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1387:10-16 18:32:37.930 W/ResourceType( 6543): For resource 0x7f1403fe, entry index(1022) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1388:10-16 18:32:37.930 W/ResourceType( 6543): For resource 0x7f140586, entry index(1414) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1389:10-16 18:32:37.930 W/ResourceType( 6543): For resource 0x7f140430, entry index(1072) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1390:10-16 18:32:37.930 W/ResourceType( 6543): For resource 0x7f14040b, entry index(1035) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1391:10-16 18:32:37.930 W/ResourceType( 6543): For resource 0x7f140431, entry index(1073) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1392:10-16 18:32:37.930 W/ResourceType( 6543): For resource 0x7f140547, entry index(1351) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1393:10-16 18:32:37.930 I/chatty  ( 6543): uid=10147(app.phantom) identical 3 lines
+  tools\phantom_pid_log.txt:1394:10-16 18:32:37.930 W/ResourceType( 6543): For resource 0x7f140547, entry index(1351) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1395:10-16 18:32:37.930 W/ResourceType( 6543): For resource 0x7f140438, entry index(1080) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1396:10-16 18:32:37.930 W/ResourceType( 6543): For resource 0x7f14055b, entry index(1371) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1397:10-16 18:32:37.930 W/ResourceType( 6543): For resource 0x7f1403b7, entry index(951) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1398:10-16 18:32:37.930 W/ResourceType( 6543): For resource 0x7f14045a, entry index(1114) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1399:10-16 18:32:37.930 W/ResourceType( 6543): For resource 0x7f14043f, entry index(1087) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1400:10-16 18:32:37.930 W/ResourceType( 6543): For resource 0x7f140440, entry index(1088) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1401:10-16 18:32:37.930 W/ResourceType( 6543): For resource 0x7f140457, entry index(1111) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1503:10-16 18:32:37.972 W/ResourceType( 6543): For resource 0x7f1402cf, entry index(719) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1504:10-16 18:32:37.972 W/ResourceType( 6543): For resource 0x7f1402b8, entry index(696) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1505:10-16 18:32:37.972 W/ResourceType( 6543): For resource 0x7f1402cf, entry index(719) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1506:10-16 18:32:37.972 W/ResourceType( 6543): For resource 0x7f1402e2, entry index(738) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1507:10-16 18:32:37.972 W/ResourceType( 6543): For resource 0x7f1402cb, entry index(715) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1508:10-16 18:32:37.972 W/ResourceType( 6543): For resource 0x7f1402cc, entry index(716) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1509:10-16 18:32:37.972 W/ResourceType( 6543): For resource 0x7f14032d, entry index(813) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1510:10-16 18:32:37.972 W/ResourceType( 6543): For resource 0x7f14046f, entry index(1135) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1511:10-16 18:32:37.972 W/ResourceType( 6543): For resource 0x7f1405a7, entry index(1447) is 
+beyond type entryCount(223)
+  tools\phantom_pid_log.txt:1512:10-16 18:32:37.972 W/ResourceType( 6543): For resource 0x7f080346, entry index(838) is 
+beyond type entryCount(597)
+> tools\phantom_pid_log.txt:1513:10-16 18:32:37.979 E/ReactNativeJS( 6543): SendFungibleFlowError: fungible and 
+senderAddress are undefined, send flow is broken
+  tools\phantom_pid_log.txt:1514:10-16 18:32:37.979 E/ReactNativeJS( 6543): 
+  tools\phantom_pid_log.txt:1515:10-16 18:32:37.979 E/ReactNativeJS( 6543): This error is located at:
+  tools\phantom_pid_log.txt:1516:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at UnsafeSendFungibleSummaryPage (address 
+at index.android.bundle:1:16707608)
+  tools\phantom_pid_log.txt:1517:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at ErrorBoundary (address at 
+index.android.bundle:1:10487222)
+> tools\phantom_pid_log.txt:1518:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at SendFungibleFlowErrorBoundary (address 
+at index.android.bundle:1:13595219)
+> tools\phantom_pid_log.txt:1519:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at SendFungibleFlowErrorBoundary (address 
+at index.android.bundle:1:16698190)
+  tools\phantom_pid_log.txt:1520:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at SendFungibleSummaryPage (<anonymous>)
+  tools\phantom_pid_log.txt:1521:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at StaticContainer (address at 
+index.android.bundle:1:10879677)
+  tools\phantom_pid_log.txt:1522:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at EnsureSingleNavigator (address at 
+index.android.bundle:1:10829916)
+  tools\phantom_pid_log.txt:1523:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at SceneView (address at 
+index.android.bundle:1:10877829)
+  tools\phantom_pid_log.txt:1524:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at RNSScreenContentWrapper (<anonymous>)
+  tools\phantom_pid_log.txt:1525:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at ScreenContentWrapper (<anonymous>)
+  tools\phantom_pid_log.txt:1526:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at DebugContainer (<anonymous>)
+  tools\phantom_pid_log.txt:1527:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at RNSScreen (<anonymous>)
+  tools\phantom_pid_log.txt:1528:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at anonymous (address at 
+index.android.bundle:1:1090784)
+  tools\phantom_pid_log.txt:1529:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at Suspender (address at 
+index.android.bundle:1:10958796)
+  tools\phantom_pid_log.txt:1530:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at Suspense (<anonymous>)
+  tools\phantom_pid_log.txt:1531:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at Freeze (address at 
+index.android.bundle:1:10959020)
+  tools\phantom_pid_log.txt:1532:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at DelayedFreeze (address at 
+index.android.bundle:1:10958453)
+  tools\phantom_pid_log.txt:1533:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at InnerScreen (address at 
+index.android.bundle:1:10954673)
+  tools\phantom_pid_log.txt:1534:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at anonymous (address at 
+index.android.bundle:1:10956618)
+  tools\phantom_pid_log.txt:1535:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at ScreenStackItem (address at 
+index.android.bundle:1:10965137)
+  tools\phantom_pid_log.txt:1536:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at SceneView (address at 
+index.android.bundle:1:12751312)
+  tools\phantom_pid_log.txt:1537:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at RNSScreenStack (<anonymous>)
+  tools\phantom_pid_log.txt:1538:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at anonymous (address at 
+index.android.bundle:1:10964743)
+  tools\phantom_pid_log.txt:1539:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at ScreenStack (address at 
+index.android.bundle:1:10963930)
+  tools\phantom_pid_log.txt:1540:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at FrameSizeProvider (address at 
+index.android.bundle:1:10935959)
+  tools\phantom_pid_log.txt:1541:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at RCTView (<anonymous>)
+  tools\phantom_pid_log.txt:1542:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at anonymous (address at 
+index.android.bundle:1:839367)
+  tools\phantom_pid_log.txt:1543:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at SafeAreaProviderCompat (address at 
+index.android.bundle:1:10946913)
+  tools\phantom_pid_log.txt:1544:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at NativeStackView (address at 
+index.android.bundle:1:12749718)
+  tools\phantom_pid_log.txt:1545:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at PreventRemoveProvider (address at 
+index.android.bundle:1:10852249)
+  tools\phantom_pid_log.txt:1546:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at NavigationStateListenerProvider 
+(address at index.android.bundle:1:10880640)
+  tools\phantom_pid_log.txt:1547:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at NavigationContent (address at 
+index.android.bundle:1:10880358)
+  tools\phantom_pid_log.txt:1548:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at anonymous (address at 
+index.android.bundle:1:10880243)
+  tools\phantom_pid_log.txt:1549:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at NativeStackNavigator (address at 
+index.android.bundle:1:12748816)
+  tools\phantom_pid_log.txt:1550:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at RCTView (<anonymous>)
+  tools\phantom_pid_log.txt:1551:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at anonymous (address at 
+index.android.bundle:1:839367)
+  tools\phantom_pid_log.txt:1552:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at anonymous (address at 
+index.android.bundle:1:13332461)
+  tools\phantom_pid_log.txt:1553:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at SendFungibleStackNavigator (address at 
+index.android.bundle:1:16677825)
+  tools\phantom_pid_log.txt:1554:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at StaticContainer (address at 
+index.android.bundle:1:10879677)
+  tools\phantom_pid_log.txt:1555:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at EnsureSingleNavigator (address at 
+index.android.bundle:1:10829916)
+  tools\phantom_pid_log.txt:1556:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at SceneView (address at 
+index.android.bundle:1:10877829)
+  tools\phantom_pid_log.txt:1557:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at RNSScreenContentWrapper (<anonymous>)
+  tools\phantom_pid_log.txt:1558:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at ScreenContentWrapper (<anonymous>)
+  tools\phantom_pid_log.txt:1559:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at DebugContainer (<anonymous>)
+  tools\phantom_pid_log.txt:1572:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at ScreenStack (address at 
+index.android.bundle:1:10963930)
+  tools\phantom_pid_log.txt:1573:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at FrameSizeProviderInner (address at 
+index.android.bundle:1:10936070)
+  tools\phantom_pid_log.txt:1574:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at FrameSizeProvider (address at 
+index.android.bundle:1:10935959)
+  tools\phantom_pid_log.txt:1575:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at RCTView (<anonymous>)
+  tools\phantom_pid_log.txt:1576:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at anonymous (address at 
+index.android.bundle:1:839367)
+  tools\phantom_pid_log.txt:1577:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at SafeAreaProviderCompat (address at 
+index.android.bundle:1:10946913)
+  tools\phantom_pid_log.txt:1578:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at NativeStackView (address at 
+index.android.bundle:1:12749718)
+  tools\phantom_pid_log.txt:1579:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at PreventRemoveProvider (address at 
+index.android.bundle:1:10852249)
+  tools\phantom_pid_log.txt:1580:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at NavigationStateListenerProvider 
+(address at index.android.bundle:1:10880640)
+  tools\phantom_pid_log.txt:1581:10-16 18:32:37.979 E/ReactNativeJS( 6543):     at NavigationContent (address at index.an
+> tools\phantom_pid_log.txt:1582:10-16 18:32:38.009 E/phantom-mobile( 6543): SendFungibleFlowError: fungible and 
+senderAddress are undefined, send flow is broken
+  tools\phantom_pid_log.txt:1583:10-16 18:32:38.009 E/phantom-mobile( 6543): 
+  tools\phantom_pid_log.txt:1584:10-16 18:32:38.009 E/phantom-mobile( 6543): This error is located at:
+  tools\phantom_pid_log.txt:1585:10-16 18:32:38.009 E/phantom-mobile( 6543):     at UnsafeSendFungibleSummaryPage 
+(address at index.android.bundle:1:16707608)
+  tools\phantom_pid_log.txt:1586:10-16 18:32:38.009 E/phantom-mobile( 6543):     at ErrorBoundary (address at 
+index.android.bundle:1:10487222)
+> tools\phantom_pid_log.txt:1587:10-16 18:32:38.009 E/phantom-mobile( 6543):     at SendFungibleFlowErrorBoundary 
+(address at index.android.bundle:1:13595219)
+> tools\phantom_pid_log.txt:1588:10-16 18:32:38.009 E/phantom-mobile( 6543):     at SendFungibleFlowErrorBoundary 
+(address at index.android.bundle:1:16698190)
+  tools\phantom_pid_log.txt:1589:10-16 18:32:38.009 E/phantom-mobile( 6543):     at SendFungibleSummaryPage (<anonymous>)
+  tools\phantom_pid_log.txt:1590:10-16 18:32:38.009 E/phantom-mobile( 6543):     at StaticContainer (address at 
+index.android.bundle:1:10879677)
+  tools\phantom_pid_log.txt:1591:10-16 18:32:38.009 E/phantom-mobile( 6543):     at EnsureSingleNavigator (address at 
+index.android.bundle:1:10829916)
+  tools\phantom_pid_log.txt:1592:10-16 18:32:38.009 E/phantom-mobile( 6543):     at SceneView (address at 
+index.android.bundle:1:10877829)
+  tools\phantom_pid_log.txt:1593:10-16 18:32:38.009 E/phantom-mobile( 6543):     at RNSScreenContentWrapper (<anonymous>)
+  tools\phantom_pid_log.txt:1594:10-16 18:32:38.009 E/phantom-mobile( 6543):     at ScreenContentWrapper (<anonymous>)
+  tools\phantom_pid_log.txt:1595:10-16 18:32:38.009 E/phantom-mobile( 6543):     at DebugContainer (<anonymous>)
+  tools\phantom_pid_log.txt:1596:10-16 18:32:38.009 E/phantom-mobile( 6543):     at RNSScreen (<anonymous>)
+  tools\phantom_pid_log.txt:1597:10-16 18:32:38.009 E/phantom-mobile( 6543):     at anonymous (address at 
+index.android.bundle:1:1090784)
+  tools\phantom_pid_log.txt:1598:10-16 18:32:38.009 E/phantom-mobile( 6543):     at Suspender (address at 
+index.android.bundle:1:10958796)
+  tools\phantom_pid_log.txt:1599:10-16 18:32:38.009 E/phantom-mobile( 6543):     at Suspense (<anonymous>)
+  tools\phantom_pid_log.txt:1600:10-16 18:32:38.009 E/phantom-mobile( 6543):     at Freeze (address at index.android.bun
+  tools\phantom_pid_log.txt:1601:10-16 18:32:38.009 E/phantom-mobile( 6543): 
+  tools\phantom_pid_log.txt:1602:10-16 18:32:38.583 I/zygote64( 6543): Background concurrent copying GC freed 
+398046(19MB) AllocSpace objects, 99(5MB) LOS objects, 50% free, 25MB/51MB, paused 305us total 234.898ms
+
+

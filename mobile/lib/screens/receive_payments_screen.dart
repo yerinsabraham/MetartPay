@@ -141,12 +141,27 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: Colors.grey[300]!),
                               ),
-                              child: QrImageView(
-                                data: _qrPayload,
-                                version: QrVersions.auto,
-                                size: 220,
-                                backgroundColor: Colors.white,
-                                foregroundColor: Colors.black,
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                    QrImageView(
+                                      data: _qrPayload,
+                                      version: QrVersions.auto,
+                                      size: 220,
+                                      backgroundColor: Colors.white,
+                                      foregroundColor: Colors.black,
+                                      errorCorrectionLevel: QrErrorCorrectLevel.H,
+                                    ),
+                                    Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                    ),
+                                    Image.asset('assets/icons/app logo qr.png', width: 28, height: 28, fit: BoxFit.contain),
+                                ],
                               ),
                             ),
                           )
@@ -352,12 +367,27 @@ class _ReceivePaymentsScreenState extends State<ReceivePaymentsScreen> {
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.grey[300]!),
                             ),
-                            child: QrImageView(
-                              data: currentPaymentLink!,
-                              version: QrVersions.auto,
-                              size: 200,
-                              backgroundColor: Colors.white,
-                              foregroundColor: Colors.black,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                  QrImageView(
+                                    data: currentPaymentLink!,
+                                    version: QrVersions.auto,
+                                    size: 200,
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Colors.black,
+                                    errorCorrectionLevel: QrErrorCorrectLevel.H,
+                                  ),
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                  ),
+                                  Image.asset('assets/icons/app logo qr.png', width: 28, height: 28, fit: BoxFit.contain),
+                              ],
                             ),
                           ),
                           const SizedBox(height: 16),

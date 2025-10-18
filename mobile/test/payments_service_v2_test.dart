@@ -17,4 +17,18 @@ void main() {
     expect(payload.contains('?'), isFalse, reason: 'Address-only Solana payload must not contain query params');
     expect(payload, contains('DevSolTestWallet11111111111111111111111111111'));
   });
+
+  test('looksLikeBase58Pubkey rejects invalid strings', () {
+    expect(PaymentsServiceV2.looksLikeBase58Pubkey(null), isFalse);
+    expect(PaymentsServiceV2.looksLikeBase58Pubkey('not-base58!'), isFalse);
+    expect(PaymentsServiceV2.looksLikeBase58Pubkey('short'), isFalse);
+    // Too long should also be rejected
+    final long = '1' * 100;
+    expect(PaymentsServiceV2.looksLikeBase58Pubkey(long), isFalse);
+  });
+
+  test('looksLikeBase58Pubkey accepts a plausible pubkey', () {
+    final valid = '11111111111111111111111111111111';
+    expect(PaymentsServiceV2.looksLikeBase58Pubkey(valid), isTrue);
+  });
 }

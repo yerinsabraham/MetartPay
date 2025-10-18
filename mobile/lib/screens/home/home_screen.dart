@@ -71,10 +71,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 // Quick actions should appear immediately under the welcome header
                 _QuickActionsRow(
-                  onCreatePayment: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePaymentLinkScreen())),
-                  onWallets: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CryptoWalletsScreen())),
-                  onTransactions: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionHistoryScreen())),
-                ),
+                      onCreatePayment: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePaymentLinkScreen())),
+                      onWallets: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CryptoWalletsScreen())),
+                      onTransactions: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionHistoryScreen())),
+                    ),
 
                 // Snapshot / metrics
                 _SnapshotSection(merchantProvider: merchantProvider),
