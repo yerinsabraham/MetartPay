@@ -3,8 +3,8 @@
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory=$false, HelpMessage='Run ID to poll (int)')]
-    [int]$RunId = 0,
+    [Parameter(Mandatory=$false, HelpMessage='Run ID to poll (int64)')]
+    [long]$RunId = 0,
     [Parameter(Mandatory=$false, HelpMessage='If set, fetch the latest run id automatically')]
     [switch]$Latest
 )
