@@ -176,6 +176,8 @@ jobs:
         run: |
           echo "Using DEV_SIMULATE_KEY=$(printenv DEV_SIMULATE_KEY)";
           echo "Node version: $(node -v)";
+          echo "Verifying checked-in normalized manifest (fast preflight)";
+          node tools/verify_manifest.js || (echo "manifest verification failed" && exit 2);
           # Start a lightweight manifest server that serves normalized manifest at /__/functions.yaml
           if [ -f node_modules/.bin/node ]; then
             echo "Starting manifest proxy in background";
