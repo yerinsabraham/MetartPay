@@ -1,0 +1,69 @@
+﻿2025-10-19T01:04:11.7702056Z ##[group]Run actions/checkout@v4
+2025-10-19T01:04:11.7702903Z with:
+2025-10-19T01:04:11.7703309Z   repository: yerinsabraham/MetartPay
+2025-10-19T01:04:11.7704278Z   token: ***
+2025-10-19T01:04:11.7704687Z   ssh-strict: true
+2025-10-19T01:04:11.7705080Z   ssh-user: git
+2025-10-19T01:04:11.7705466Z   persist-credentials: true
+2025-10-19T01:04:11.7705903Z   clean: true
+2025-10-19T01:04:11.7706288Z   sparse-checkout-cone-mode: true
+2025-10-19T01:04:11.7706760Z   fetch-depth: 1
+2025-10-19T01:04:11.7707142Z   fetch-tags: false
+2025-10-19T01:04:11.7707530Z   show-progress: true
+2025-10-19T01:04:11.7707929Z   lfs: false
+2025-10-19T01:04:11.7708289Z   submodules: false
+2025-10-19T01:04:11.7708682Z   set-safe-directory: true
+2025-10-19T01:04:11.7709385Z ##[endgroup]
+2025-10-19T01:04:11.8832282Z Syncing repository: yerinsabraham/MetartPay
+2025-10-19T01:04:11.8835276Z ##[group]Getting Git version info
+2025-10-19T01:04:11.8836522Z Working directory is '/home/runner/work/MetartPay/MetartPay'
+2025-10-19T01:04:11.8838200Z [command]/usr/bin/git version
+2025-10-19T01:04:11.8892917Z git version 2.51.0
+2025-10-19T01:04:11.8920206Z ##[endgroup]
+2025-10-19T01:04:11.8944301Z Temporarily overriding HOME='/home/runner/work/_temp/3cdca5d8-5ca8-4745-bdee-2005e26c88d6' before making global git config changes
+2025-10-19T01:04:11.8946681Z Adding repository directory to the temporary git global config as a safe directory
+2025-10-19T01:04:11.8950651Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/MetartPay/MetartPay
+2025-10-19T01:04:11.8987710Z Deleting the contents of '/home/runner/work/MetartPay/MetartPay'
+2025-10-19T01:04:11.8991667Z ##[group]Initializing the repository
+2025-10-19T01:04:11.8996568Z [command]/usr/bin/git init /home/runner/work/MetartPay/MetartPay
+2025-10-19T01:04:11.9089301Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-10-19T01:04:11.9090812Z hint: is subject to change. To configure the initial branch name to use in all
+2025-10-19T01:04:11.9091689Z hint: of your new repositories, which will suppress this warning, call:
+2025-10-19T01:04:11.9092559Z hint:
+2025-10-19T01:04:11.9093384Z hint: 	git config --global init.defaultBranch <name>
+2025-10-19T01:04:11.9095026Z hint:
+2025-10-19T01:04:11.9095995Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-10-19T01:04:11.9097579Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-10-19T01:04:11.9098828Z hint:
+2025-10-19T01:04:11.9099508Z hint: 	git branch -m <name>
+2025-10-19T01:04:11.9100304Z hint:
+2025-10-19T01:04:11.9101339Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-10-19T01:04:11.9103037Z Initialized empty Git repository in /home/runner/work/MetartPay/MetartPay/.git/
+2025-10-19T01:04:11.9108461Z [command]/usr/bin/git remote add origin https://github.com/yerinsabraham/MetartPay
+2025-10-19T01:04:11.9147314Z ##[endgroup]
+2025-10-19T01:04:11.9148511Z ##[group]Disabling automatic garbage collection
+2025-10-19T01:04:11.9152313Z [command]/usr/bin/git config --local gc.auto 0
+2025-10-19T01:04:11.9182499Z ##[endgroup]
+2025-10-19T01:04:11.9183913Z ##[group]Setting up auth
+2025-10-19T01:04:11.9190505Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-10-19T01:04:11.9223052Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-10-19T01:04:11.9542216Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-10-19T01:04:11.9573887Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-10-19T01:04:11.9798756Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-10-19T01:04:11.9839738Z ##[endgroup]
+2025-10-19T01:04:11.9841019Z ##[group]Fetching the repository
+2025-10-19T01:04:11.9849916Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +e298af804df332f68dc1cf300dd61601007e5906:refs/remotes/origin/feature/simulate-integration-final
+2025-10-19T01:04:12.3064593Z From https://github.com/yerinsabraham/MetartPay
+2025-10-19T01:04:12.3065941Z  * [new ref]         e298af804df332f68dc1cf300dd61601007e5906 -> origin/feature/simulate-integration-final
+2025-10-19T01:04:12.3101771Z ##[endgroup]
+2025-10-19T01:04:12.3103874Z ##[group]Determining the checkout info
+2025-10-19T01:04:12.3105324Z ##[endgroup]
+2025-10-19T01:04:12.3110689Z [command]/usr/bin/git sparse-checkout disable
+2025-10-19T01:04:12.3155442Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-10-19T01:04:12.3186962Z ##[group]Checking out the ref
+2025-10-19T01:04:12.3192612Z [command]/usr/bin/git checkout --progress --force -B feature/simulate-integration-final refs/remotes/origin/feature/simulate-integration-final
+2025-10-19T01:04:12.3659803Z Switched to a new branch 'feature/simulate-integration-final'
+2025-10-19T01:04:12.3661815Z branch 'feature/simulate-integration-final' set up to track 'origin/feature/simulate-integration-final'.
+2025-10-19T01:04:12.3705681Z ##[endgroup]
+2025-10-19T01:04:12.3709371Z [command]/usr/bin/git log -1 --format=%H
+2025-10-19T01:04:12.3734905Z e298af804df332f68dc1cf300dd61601007e5906

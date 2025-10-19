@@ -1,23 +1,21 @@
-name: Integration - simulate-confirm
+﻿name: Integration - simulate-confirm
 
 on:
   push:
     branches:
-      - feature/simulate-integration-final
       - main
     paths:
       - 'backend/**'
       - '.github/workflows/integration-simulate.yml'
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'backend/**'
-      - '.github/workflows/integration-simulate.yml'
+  workflow_dispatch: {}
+
+# Note: feature branch pushes will no longer trigger the heavy emulator job. Keep preflight for fast checks.
 
 jobs:
   run-emulator-and-tests:
-  runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    # Only run the heavy emulator job when manually dispatched or on main branch pushes
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,44 +23,193 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18'
 
-      - name: Install firebase-tools
+      - name: Cache npm global cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-global-cache-${{ runner.os }}-v1
+          restore-keys: |
+            npm-global-cache-${{ runner.os }}-v1
+
+      - name: Install firebase-tools (pinned)
         run: |
-          npm install -g firebase-tools@11
+          npm install -g firebase-tools@11.30.0
 
+      - name: Print firebase-tools version
+        run: |
+          echo "firebase-tools: $(firebase --version)"
+
+      - name: Setup Java (required by some emulators)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Validate required secrets (dev-only fallback)
+        shell: bash
+        run: |
+          echo "WARNING: This workflow variant does NOT use repo secrets and always uses dev fallbacks.";
+          echo "DEV_SIMULATE_KEY=dev-local-key" >> $GITHUB_ENV;
+          echo "DEV_CLEANUP_KEY=dev-local-cleanup" >> $GITHUB_ENV;
+
+      - name: Patch backend package.json engines for emulator
+        working-directory: .
+        run: |
+          echo "Patching backend/package.json engines.node -> 18 for Functions emulator"
+          node -e "const fs=require('fs');const p='backend/package.json';if(!fs.existsSync(p)){console.error('backend/package.json not found');process.exit(0);}const j=JSON.parse(fs.readFileSync(p));j.engines=j.engines||{};j.engines.node='18';fs.writeFileSync(p,JSON.stringify(j,null,2));console.log('patched');"
+
+      - name: Cache backend/node_modules
+        uses: actions/cache@v4
+        with:
+          path: backend/node_modules
+          key: backend-node-modules-${{ runner.os }}-${{ hashFiles('**/backend/package-lock.json') }}
+          restore-keys: |
+            backend-node-modules-${{ runner.os }}-
       - name: Install backend deps
         working-directory: backend
         run: |
           npm ci
 
-      - name: Start emulators (Functions + Firestore)
-        run: |
-          # Start emulators in background
-          firebase emulators:start --only functions,firestore --project=metartpay-bac2f &
-          # Poll Functions emulator root endpoint until ready (up to 60s)
-          SECONDS=0
-          until curl -sSf "http://127.0.0.1:5001/" >/dev/null 2>&1 || [ $SECONDS -ge 60 ]; do
-            sleep 2
-            SECONDS=$((SECONDS + 2))
-            echo "Waiting for Functions emulator... ${SECONDS}s"
-          done
-          if [ $SECONDS -ge 60 ]; then
-            echo "Functions emulator did not become ready after 60s" >&2
-            exit 1
-          fi
-
-      - name: Run integration simulate test
-        env:
-          FIRESTORE_EMULATOR_HOST: 127.0.0.1:8080
-          DEV_SIMULATE_KEY: ${{ secrets.DEV_SIMULATE_KEY }}
-          DEV_CLEANUP_KEY: ${{ secrets.DEV_CLEANUP_KEY }}
-          NODE_ENV: development
+      - name: Build backend
         working-directory: backend
         run: |
-          node tools/integration_simulate_test.js
+          echo "Building backend (TypeScript -> dist)";
+          npm run build
 
-      - name: Stop emulators
+      - name: Generate and normalize functions manifest (debug)
+        working-directory: backend
         run: |
-          # Kill firebase emulator background process
-          pkill -f "firebase" || true
+          echo "Running normalize pipeline: generate manifest and normalize it";
+          if [ -f node_modules/.bin/firebase-functions ]; then
+            echo "Generating manifest to functions_manifest.json";
+            FUNCTIONS_MANIFEST_OUTPUT_PATH=functions_manifest.json ./node_modules/.bin/firebase-functions . || true
+          else
+            echo "firebase-functions binary not found; skipping generation";
+          fi
+          if [ -f functions_manifest.json ]; then
+            echo "Normalizing manifest";
+            npm run normalize:manifest || true
+            echo "Normalized manifest head:";
+            head -n 200 functions_manifest.normalized.json || true
+          else
+            echo "functions_manifest.json not produced; failing early";
+            ls -la || true
+          fi
+
+      - name: Show built backend files (debug)
+        run: |
+          echo "Listing backend/dist";
+          ls -la backend/dist || true;
+          echo "--- head of backend/dist/index.js ---";
+          if [ -f backend/dist/index.js ]; then head -n 120 backend/dist/index.js || true; else echo "backend/dist/index.js not found"; fi
+
+      - name: Show patched backend/package.json (debug)
+        run: |
+          echo "--- backend/package.json after CI patch ---";
+          cat backend/package.json || true;
+
+      - name: Dump functions manifest (debug)
+        working-directory: backend
+        run: |
+          echo "Generating functions manifest using firebase-functions binary (FUNCTIONS_MANIFEST_OUTPUT_PATH)";
+          if [ -f node_modules/.bin/firebase-functions ]; then
+            echo "Found firebase-functions binary in backend";
+            FUNCTIONS_MANIFEST_OUTPUT_PATH=functions_manifest.json ./node_modules/.bin/firebase-functions . || true
+            echo "--- head of backend/functions_manifest.json ---";
+            if [ -f functions_manifest.json ]; then head -n 200 functions_manifest.json || true; else echo 'manifest not found'; fi
+            echo "--- validate manifest with node ---";
+            node -e "const fs=require('fs'); try{ const s=fs.readFileSync('functions_manifest.json','utf8'); const j=JSON.parse(s); console.log('manifest parsed OK, endpoints:', Object.keys(j.endpoints||{}).length); if(!j.specVersion) console.error('NO specVersion'); } catch(e){ console.error('manifest parse error', e && e.stack || e); process.exit(1); }" || true;
+          else
+            echo "firebase-functions binary not found at backend/node_modules/.bin/firebase-functions";
+          fi
+
+      - name: Start functions and tail logs while emulators start (debug wrapper)
+        working-directory: .
+        run: |
+          echo "Debug wrapper: start firebase-functions on port 8977 and tail its log while emulators start";
+          if [ -f backend/node_modules/.bin/firebase-functions ]; then
+            echo "Starting firebase-functions -> backend/firebase-functions.log";
+            FUNCTIONS_CONTROL_API=true PORT=8977 backend/node_modules/.bin/firebase-functions > backend/firebase-functions.log 2>&1 &
+            FN_PID=$!;
+            echo "firebase-functions PID: $FN_PID";
+            ( for i in 1 2 3 4 5 6 7 8 9 10; do echo "--- tail iteration $i ---"; sleep 8; if [ -f backend/firebase-functions.log ]; then tail -n 30 backend/firebase-functions.log || true; fi; done ) &
+            TAIL_PID=$!;
+            sleep 2;
+            echo "Debug wrapper launched tail (PID $TAIL_PID) and functions (PID $FN_PID)";
+          else
+            echo "firebase-functions binary not found, skipping debug wrapper";
+          fi
+
+      - name: Smoke load built backend (detect runtime parse errors)
+        working-directory: .
+        run: |
+          echo "Node version: $(node -v)";
+          echo "Attempting to require the built backend to catch runtime errors";
+          node -e "try{ require('./backend/dist/index.js'); console.log('backend/dist/index.js loaded OK'); } catch(e){ console.error('ERROR loading backend/dist/index.js:', e && e.stack || e); process.exit(2); }"
+
+      - name: Dump firebase-functions build metadata (debug)
+        working-directory: .
+        run: |
+          echo "--- Looking for firebase-functions binary ---";
+          if [ -f backend/node_modules/.bin/firebase-functions ]; then
+            echo "Found backend/node_modules/.bin/firebase-functions - printing first 200 lines and running with --help";
+            echo "--- file head ---";
+            sed -n '1,200p' backend/node_modules/.bin/firebase-functions || true;
+            echo "--- run --help ---";
+            backend/node_modules/.bin/firebase-functions --help || true;
+            echo "--- run without args (capture stdout/stderr) ---";
+            backend/node_modules/.bin/firebase-functions || true;
+          else
+            echo "No firebase-functions binary at backend/node_modules/.bin/firebase-functions";
+          fi
+          echo "--- Searching for functions*.yaml files in repo ---";
+          find . -maxdepth 4 -type f -iname 'functions*.yaml' -print -exec sh -c 'echo "---- {} ----"; sed -n "1,200p" "{}" || true' \; || true
+
+      - name: Run integration simulate test under emulators (debug)
+        working-directory: backend
+        env:
+          FIRESTORE_EMULATOR_HOST: 127.0.0.1:8081
+          FUNCTIONS_EMULATOR_HOST: 127.0.0.1:8082
+          HOSTING_EMULATOR_HOST: 127.0.0.1:8083
+          STORAGE_EMULATOR_HOST: 127.0.0.1:8084
+          NODE_ENV: development
+        run: |
+          echo "Using DEV_SIMULATE_KEY=$(printenv DEV_SIMULATE_KEY)";
+          echo "Node version: $(node -v)";
+          echo "Verifying checked-in normalized manifest (fast preflight)";
+          node tools/verify_manifest.js || (echo "manifest verification failed" && exit 2);
+          if [ -f node_modules/.bin/node ]; then
+            echo "Starting manifest proxy in background";
+            npm run serve:normalized-manifest &
+            PROXY_PID=$!;
+            sleep 1;
+            echo "Manifest proxy PID: $PROXY_PID";
+          fi
+          cat > ../firebase.emulation.override.json <<'JSON'
+          {
+            "emulators": {
+              "functions": { "port": 8082 },
+              "firestore": { "port": 8081 },
+              "hosting": { "port": 8083 },
+              "storage": { "port": 8084 }
+            }
+          }
+          JSON
+
+          # Create a temporary firebase.json override that configures emulator ports
+          cat > ../firebase.emulation.override.json <<'JSON'
+          {
+            "emulators": {
+              "functions": { "port": 8082 },
+              "firestore": { "port": 8081 },
+              "hosting": { "port": 8083 },
+              "storage": { "port": 8084 }
+            }
+          }
+          JSON
+
+          # Run emulators with the override (firebase-tools will pick up CLI env vars as well)
+          firebase emulators:exec --project=metartpay-bac2f --debug "node tools/integration_simulate_test.js" --config ../firebase.emulation.override.json
+

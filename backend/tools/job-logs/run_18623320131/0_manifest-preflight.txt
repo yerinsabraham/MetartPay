@@ -1,0 +1,191 @@
+﻿2025-10-19T01:04:11.0242601Z Current runner version: '2.328.0'
+2025-10-19T01:04:11.0269981Z ##[group]Runner Image Provisioner
+2025-10-19T01:04:11.0270828Z Hosted Compute Agent
+2025-10-19T01:04:11.0271346Z Version: 20251013.424
+2025-10-19T01:04:11.0272164Z Commit: cfdd8bfed34d71a55b72df4d2e82343c3fc2bab3
+2025-10-19T01:04:11.0272822Z Build Date: 2025-10-13T20:22:23Z
+2025-10-19T01:04:11.0273635Z ##[endgroup]
+2025-10-19T01:04:11.0274316Z ##[group]Operating System
+2025-10-19T01:04:11.0274891Z Ubuntu
+2025-10-19T01:04:11.0275392Z 24.04.3
+2025-10-19T01:04:11.0275887Z LTS
+2025-10-19T01:04:11.0276338Z ##[endgroup]
+2025-10-19T01:04:11.0276786Z ##[group]Runner Image
+2025-10-19T01:04:11.0277373Z Image: ubuntu-24.04
+2025-10-19T01:04:11.0277832Z Version: 20251014.76.1
+2025-10-19T01:04:11.0278879Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20251014.76/images/ubuntu/Ubuntu2404-Readme.md
+2025-10-19T01:04:11.0280463Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20251014.76
+2025-10-19T01:04:11.0281437Z ##[endgroup]
+2025-10-19T01:04:11.0282529Z ##[group]GITHUB_TOKEN Permissions
+2025-10-19T01:04:11.0284870Z Contents: read
+2025-10-19T01:04:11.0285539Z Metadata: read
+2025-10-19T01:04:11.0286003Z Packages: read
+2025-10-19T01:04:11.0286497Z ##[endgroup]
+2025-10-19T01:04:11.0288971Z Secret source: Actions
+2025-10-19T01:04:11.0289679Z Prepare workflow directory
+2025-10-19T01:04:11.0612314Z Prepare all required actions
+2025-10-19T01:04:11.0651805Z Getting action download info
+2025-10-19T01:04:11.3443732Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-10-19T01:04:11.4887450Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2025-10-19T01:04:11.6994231Z Complete job name: manifest-preflight
+2025-10-19T01:04:11.7702086Z ##[group]Run actions/checkout@v4
+2025-10-19T01:04:11.7702913Z with:
+2025-10-19T01:04:11.7703313Z   repository: yerinsabraham/MetartPay
+2025-10-19T01:04:11.7704285Z   token: ***
+2025-10-19T01:04:11.7704691Z   ssh-strict: true
+2025-10-19T01:04:11.7705082Z   ssh-user: git
+2025-10-19T01:04:11.7705469Z   persist-credentials: true
+2025-10-19T01:04:11.7705906Z   clean: true
+2025-10-19T01:04:11.7706292Z   sparse-checkout-cone-mode: true
+2025-10-19T01:04:11.7706763Z   fetch-depth: 1
+2025-10-19T01:04:11.7707145Z   fetch-tags: false
+2025-10-19T01:04:11.7707533Z   show-progress: true
+2025-10-19T01:04:11.7707932Z   lfs: false
+2025-10-19T01:04:11.7708292Z   submodules: false
+2025-10-19T01:04:11.7708685Z   set-safe-directory: true
+2025-10-19T01:04:11.7709392Z ##[endgroup]
+2025-10-19T01:04:11.8832343Z Syncing repository: yerinsabraham/MetartPay
+2025-10-19T01:04:11.8835306Z ##[group]Getting Git version info
+2025-10-19T01:04:11.8836545Z Working directory is '/home/runner/work/MetartPay/MetartPay'
+2025-10-19T01:04:11.8838313Z [command]/usr/bin/git version
+2025-10-19T01:04:11.8892948Z git version 2.51.0
+2025-10-19T01:04:11.8920233Z ##[endgroup]
+2025-10-19T01:04:11.8944335Z Temporarily overriding HOME='/home/runner/work/_temp/3cdca5d8-5ca8-4745-bdee-2005e26c88d6' before making global git config changes
+2025-10-19T01:04:11.8946693Z Adding repository directory to the temporary git global config as a safe directory
+2025-10-19T01:04:11.8950679Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/MetartPay/MetartPay
+2025-10-19T01:04:11.8987738Z Deleting the contents of '/home/runner/work/MetartPay/MetartPay'
+2025-10-19T01:04:11.8991694Z ##[group]Initializing the repository
+2025-10-19T01:04:11.8996594Z [command]/usr/bin/git init /home/runner/work/MetartPay/MetartPay
+2025-10-19T01:04:11.9089345Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-10-19T01:04:11.9090825Z hint: is subject to change. To configure the initial branch name to use in all
+2025-10-19T01:04:11.9091726Z hint: of your new repositories, which will suppress this warning, call:
+2025-10-19T01:04:11.9092572Z hint:
+2025-10-19T01:04:11.9093602Z hint: 	git config --global init.defaultBranch <name>
+2025-10-19T01:04:11.9095039Z hint:
+2025-10-19T01:04:11.9096012Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-10-19T01:04:11.9097597Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-10-19T01:04:11.9098847Z hint:
+2025-10-19T01:04:11.9099522Z hint: 	git branch -m <name>
+2025-10-19T01:04:11.9100319Z hint:
+2025-10-19T01:04:11.9101357Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-10-19T01:04:11.9103047Z Initialized empty Git repository in /home/runner/work/MetartPay/MetartPay/.git/
+2025-10-19T01:04:11.9108487Z [command]/usr/bin/git remote add origin https://github.com/yerinsabraham/MetartPay
+2025-10-19T01:04:11.9147340Z ##[endgroup]
+2025-10-19T01:04:11.9148545Z ##[group]Disabling automatic garbage collection
+2025-10-19T01:04:11.9152341Z [command]/usr/bin/git config --local gc.auto 0
+2025-10-19T01:04:11.9182527Z ##[endgroup]
+2025-10-19T01:04:11.9183935Z ##[group]Setting up auth
+2025-10-19T01:04:11.9190533Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-10-19T01:04:11.9223083Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-10-19T01:04:11.9542298Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-10-19T01:04:11.9573944Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-10-19T01:04:11.9798830Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-10-19T01:04:11.9840159Z ##[endgroup]
+2025-10-19T01:04:11.9841024Z ##[group]Fetching the repository
+2025-10-19T01:04:11.9849935Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +e298af804df332f68dc1cf300dd61601007e5906:refs/remotes/origin/feature/simulate-integration-final
+2025-10-19T01:04:12.3064676Z From https://github.com/yerinsabraham/MetartPay
+2025-10-19T01:04:12.3065948Z  * [new ref]         e298af804df332f68dc1cf300dd61601007e5906 -> origin/feature/simulate-integration-final
+2025-10-19T01:04:12.3101802Z ##[endgroup]
+2025-10-19T01:04:12.3103908Z ##[group]Determining the checkout info
+2025-10-19T01:04:12.3105338Z ##[endgroup]
+2025-10-19T01:04:12.3110719Z [command]/usr/bin/git sparse-checkout disable
+2025-10-19T01:04:12.3155477Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-10-19T01:04:12.3186998Z ##[group]Checking out the ref
+2025-10-19T01:04:12.3192699Z [command]/usr/bin/git checkout --progress --force -B feature/simulate-integration-final refs/remotes/origin/feature/simulate-integration-final
+2025-10-19T01:04:12.3659924Z Switched to a new branch 'feature/simulate-integration-final'
+2025-10-19T01:04:12.3661834Z branch 'feature/simulate-integration-final' set up to track 'origin/feature/simulate-integration-final'.
+2025-10-19T01:04:12.3705740Z ##[endgroup]
+2025-10-19T01:04:12.3709407Z [command]/usr/bin/git log -1 --format=%H
+2025-10-19T01:04:12.3734959Z e298af804df332f68dc1cf300dd61601007e5906
+2025-10-19T01:04:12.4041605Z ##[group]Run actions/setup-node@v4
+2025-10-19T01:04:12.4042772Z with:
+2025-10-19T01:04:12.4043731Z   node-version: 18
+2025-10-19T01:04:12.4044664Z   always-auth: false
+2025-10-19T01:04:12.4045604Z   check-latest: false
+2025-10-19T01:04:12.4046796Z   token: ***
+2025-10-19T01:04:12.4047641Z ##[endgroup]
+2025-10-19T01:04:12.5894240Z Found in cache @ /opt/hostedtoolcache/node/18.20.8/x64
+2025-10-19T01:04:12.5902086Z ##[group]Environment details
+2025-10-19T01:04:15.2098698Z node: v18.20.8
+2025-10-19T01:04:15.2099607Z npm: 10.8.2
+2025-10-19T01:04:15.2100513Z yarn: 1.22.22
+2025-10-19T01:04:15.2102056Z ##[endgroup]
+2025-10-19T01:04:15.2217573Z ##[group]Run npm ci
+2025-10-19T01:04:15.2217909Z [36;1mnpm ci[0m
+2025-10-19T01:04:15.2259988Z shell: /usr/bin/bash -e {0}
+2025-10-19T01:04:15.2260322Z ##[endgroup]
+2025-10-19T01:04:18.7087203Z npm warn EBADENGINE Unsupported engine {
+2025-10-19T01:04:18.7088166Z npm warn EBADENGINE   package: '@solana/codecs-core@2.3.0',
+2025-10-19T01:04:18.7088979Z npm warn EBADENGINE   required: { node: '>=20.18.0' },
+2025-10-19T01:04:18.7089771Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2025-10-19T01:04:18.7090386Z npm warn EBADENGINE }
+2025-10-19T01:04:18.7090971Z npm warn EBADENGINE Unsupported engine {
+2025-10-19T01:04:18.7091574Z npm warn EBADENGINE   package: '@solana/codecs-numbers@2.3.0',
+2025-10-19T01:04:18.7092080Z npm warn EBADENGINE   required: { node: '>=20.18.0' },
+2025-10-19T01:04:18.7092549Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2025-10-19T01:04:18.7092910Z npm warn EBADENGINE }
+2025-10-19T01:04:18.7093242Z npm warn EBADENGINE Unsupported engine {
+2025-10-19T01:04:18.7094073Z npm warn EBADENGINE   package: '@solana/errors@2.3.0',
+2025-10-19T01:04:18.7094760Z npm warn EBADENGINE   required: { node: '>=20.18.0' },
+2025-10-19T01:04:18.7095483Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2025-10-19T01:04:18.7096051Z npm warn EBADENGINE }
+2025-10-19T01:04:18.7096525Z npm warn EBADENGINE Unsupported engine {
+2025-10-19T01:04:18.7097141Z npm warn EBADENGINE   package: 'commander@14.0.1',
+2025-10-19T01:04:18.7097749Z npm warn EBADENGINE   required: { node: '>=20' },
+2025-10-19T01:04:18.7098169Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2025-10-19T01:04:18.7098516Z npm warn EBADENGINE }
+2025-10-19T01:04:20.7937235Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-10-19T01:04:21.6127823Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-10-19T01:04:21.7625675Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-10-19T01:04:22.9257167Z npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+2025-10-19T01:04:22.9463091Z npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+2025-10-19T01:04:25.3191692Z npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+2025-10-19T01:04:29.8481138Z 
+2025-10-19T01:04:29.8481937Z added 771 packages, and audited 772 packages in 15s
+2025-10-19T01:04:29.8482406Z 
+2025-10-19T01:04:29.8482778Z 105 packages are looking for funding
+2025-10-19T01:04:29.8483276Z   run `npm fund` for details
+2025-10-19T01:04:29.8505934Z 
+2025-10-19T01:04:29.8506414Z 3 high severity vulnerabilities
+2025-10-19T01:04:29.8506945Z 
+2025-10-19T01:04:29.8507468Z To address all issues (including breaking changes), run:
+2025-10-19T01:04:29.8508096Z   npm audit fix --force
+2025-10-19T01:04:29.8508376Z 
+2025-10-19T01:04:29.8508696Z Run `npm audit` for details.
+2025-10-19T01:04:29.8838029Z ##[group]Run echo "Running normalize_manifest unit test";
+2025-10-19T01:04:29.8838432Z [36;1mecho "Running normalize_manifest unit test";[0m
+2025-10-19T01:04:29.8839043Z [36;1mnpx jest tools/__tests__/normalize_manifest.test.ts --runInBand --verbose --testTimeout=30000 || (echo "normalizer tests failed" && exit 2);[0m
+2025-10-19T01:04:29.8872340Z shell: /usr/bin/bash -e {0}
+2025-10-19T01:04:29.8872574Z ##[endgroup]
+2025-10-19T01:04:29.8929476Z Running normalize_manifest unit test
+2025-10-19T01:04:34.1654410Z PASS tools/__tests__/normalize_manifest.test.ts
+2025-10-19T01:04:34.1658903Z   ✓ happy path preserves specVersion and endpoints (3 ms)
+2025-10-19T01:04:34.1659605Z   ✓ converts BigInt and undefined to safe values (1 ms)
+2025-10-19T01:04:34.1662028Z   ✓ non-finite numbers are stringified
+2025-10-19T01:04:34.1662553Z 
+2025-10-19T01:04:34.1685212Z Test Suites: 1 passed, 1 total
+2025-10-19T01:04:34.1686318Z Tests:       3 passed, 3 total
+2025-10-19T01:04:34.1686857Z Snapshots:   0 total
+2025-10-19T01:04:34.1687368Z Time:        3.455 s
+2025-10-19T01:04:34.1688128Z Ran all test suites matching /tools\/__tests__\/normalize_manifest.test.ts/i.
+2025-10-19T01:04:34.2310312Z ##[group]Run echo "Verifying checked-in normalized manifest";
+2025-10-19T01:04:34.2310736Z [36;1mecho "Verifying checked-in normalized manifest";[0m
+2025-10-19T01:04:34.2311045Z [36;1mnode tools/verify_manifest.js[0m
+2025-10-19T01:04:34.2340095Z shell: /usr/bin/bash -e {0}
+2025-10-19T01:04:34.2340319Z ##[endgroup]
+2025-10-19T01:04:34.2462647Z Verifying checked-in normalized manifest
+2025-10-19T01:04:34.2742361Z Manifest verification OK: /home/runner/work/MetartPay/MetartPay/backend/functions_manifest.normalized.json
+2025-10-19T01:04:34.2836970Z Post job cleanup.
+2025-10-19T01:04:34.4540647Z Post job cleanup.
+2025-10-19T01:04:34.5497425Z [command]/usr/bin/git version
+2025-10-19T01:04:34.5534389Z git version 2.51.0
+2025-10-19T01:04:34.5577883Z Temporarily overriding HOME='/home/runner/work/_temp/81b422f3-0dad-4224-a2e1-86462d6a9a1a' before making global git config changes
+2025-10-19T01:04:34.5579292Z Adding repository directory to the temporary git global config as a safe directory
+2025-10-19T01:04:34.5590478Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/MetartPay/MetartPay
+2025-10-19T01:04:34.5624247Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-10-19T01:04:34.5657379Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-10-19T01:04:34.5885020Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-10-19T01:04:34.5905827Z http.https://github.com/.extraheader
+2025-10-19T01:04:34.5918858Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2025-10-19T01:04:34.5951286Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-10-19T01:04:34.6281461Z Cleaning up orphan processes

@@ -1,0 +1,35 @@
+name: Manifest preflight (fast)
+
+on:
+  push:
+    branches:
+      - feature/simulate-integration-final
+
+jobs:
+  manifest-preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install backend deps
+        working-directory: backend
+        run: |
+          npm ci
+
+      - name: Run normalizer unit test (fast)
+        working-directory: backend
+        run: |
+          echo "Running normalize_manifest unit test";
+          npx jest tools/__tests__/normalize_manifest.test.ts --runInBand --verbose --testTimeout=30000 || (echo "normalizer tests failed" && exit 2);
+
+      - name: Run manifest verifier (fast)
+        working-directory: backend
+        run: |
+          echo "Verifying checked-in normalized manifest";
+          node tools/verify_manifest.js

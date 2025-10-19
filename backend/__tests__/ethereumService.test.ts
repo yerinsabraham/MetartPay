@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-import { verifyEthTransfer } from '../src/services/ethereumService';
+import { verifyEvmTransfer } from '../src/services/ethereumService';
 
 // shared mutable map used by the mocked provider
 let mockTxs: Record<string, any> = {};
@@ -19,8 +19,31 @@ jest.mock('ethers', () => {
       return mockTxs[txHash] ? mockTxs[txHash].receipt : null;
     }
   }
+
+  // Minimal Interface shim with getEventTopic and parseLog compatible with ethers.Interface
+  class Interface {
+    fragments: any[];
+    constructor(fragments: any[]) {
+      this.fragments = fragments;
+    }
+    getEventTopic(name: string) {
+      // return a deterministic mock topic for Transfer
+      if (name === 'Transfer') return '0xtransfer_topic_mock';
+      return '0xtopic_' + name;
+    }
+    parseLog(log: { topics: string[]; data: string }) {
+      // Expect topics[1] and topics[2] contain addresses padded; data is hex uint256
+      const topics = log.topics || [];
+      const from = topics[1] ? '0x' + topics[1].slice(26).toLowerCase() : '0xfrom';
+      const to = topics[2] ? '0x' + topics[2].slice(26).toLowerCase() : '0xto';
+      const data = log.data || '0x0';
+      const value = BigInt(data);
+      return { args: [from, to, value] };
+    }
+  }
+
   const getDefaultProvider = (network?: string) => new JsonRpcProvider(`default-${network}`);
-  return { JsonRpcProvider, getDefaultProvider };
+  return { JsonRpcProvider, getDefaultProvider, Interface };
 });
 
 describe('verifyEthTransfer (mocked provider)', () => {
@@ -46,7 +69,7 @@ describe('verifyEthTransfer (mocked provider)', () => {
     // Force use of JsonRpcProvider by setting ETH_RPC_URL
     process.env.ETH_RPC_URL = 'http://mock';
 
-    const res = await verifyEthTransfer(txHash, '0xAbC', '1000', 'sepolia');
+  const res = await verifyEvmTransfer(txHash, '0xAbC', '1000', 'sepolia');
     expect(res.success).toBe(true);
     expect(res.txHash).toBe(txHash);
     expect(res.from).toBe('0xfrom');
@@ -56,7 +79,7 @@ describe('verifyEthTransfer (mocked provider)', () => {
   });
 
   it('returns not found when tx missing', async () => {
-    const res = await verifyEthTransfer('0xmissing', '0xabc', undefined, 'sepolia');
+  const res = await verifyEvmTransfer('0xmissing', '0xabc', undefined, 'sepolia');
     expect(res.success).toBe(false);
     expect(res.message).toMatch(/Transaction not found/);
   });
@@ -74,7 +97,7 @@ describe('verifyEthTransfer (mocked provider)', () => {
 
     process.env.ETH_RPC_URL = 'http://mock';
 
-    const res = await verifyEthTransfer(txHash, '0xabc', undefined, 'sepolia');
+  const res = await verifyEvmTransfer(txHash, '0xabc', undefined, 'sepolia');
     expect(res.success).toBe(false);
     expect(res.message).toMatch(/To address mismatch/);
   });

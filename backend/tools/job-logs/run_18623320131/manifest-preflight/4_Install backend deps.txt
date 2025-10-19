@@ -1,0 +1,42 @@
+﻿2025-10-19T01:04:15.2217554Z ##[group]Run npm ci
+2025-10-19T01:04:15.2217904Z [36;1mnpm ci[0m
+2025-10-19T01:04:15.2259972Z shell: /usr/bin/bash -e {0}
+2025-10-19T01:04:15.2260318Z ##[endgroup]
+2025-10-19T01:04:18.7087133Z npm warn EBADENGINE Unsupported engine {
+2025-10-19T01:04:18.7088159Z npm warn EBADENGINE   package: '@solana/codecs-core@2.3.0',
+2025-10-19T01:04:18.7088970Z npm warn EBADENGINE   required: { node: '>=20.18.0' },
+2025-10-19T01:04:18.7089763Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2025-10-19T01:04:18.7090380Z npm warn EBADENGINE }
+2025-10-19T01:04:18.7090963Z npm warn EBADENGINE Unsupported engine {
+2025-10-19T01:04:18.7091559Z npm warn EBADENGINE   package: '@solana/codecs-numbers@2.3.0',
+2025-10-19T01:04:18.7092074Z npm warn EBADENGINE   required: { node: '>=20.18.0' },
+2025-10-19T01:04:18.7092545Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2025-10-19T01:04:18.7092906Z npm warn EBADENGINE }
+2025-10-19T01:04:18.7093186Z npm warn EBADENGINE Unsupported engine {
+2025-10-19T01:04:18.7094064Z npm warn EBADENGINE   package: '@solana/errors@2.3.0',
+2025-10-19T01:04:18.7094753Z npm warn EBADENGINE   required: { node: '>=20.18.0' },
+2025-10-19T01:04:18.7095467Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2025-10-19T01:04:18.7096046Z npm warn EBADENGINE }
+2025-10-19T01:04:18.7096519Z npm warn EBADENGINE Unsupported engine {
+2025-10-19T01:04:18.7097135Z npm warn EBADENGINE   package: 'commander@14.0.1',
+2025-10-19T01:04:18.7097745Z npm warn EBADENGINE   required: { node: '>=20' },
+2025-10-19T01:04:18.7098165Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2025-10-19T01:04:18.7098512Z npm warn EBADENGINE }
+2025-10-19T01:04:20.7937191Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-10-19T01:04:21.6127748Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-10-19T01:04:21.7625648Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-10-19T01:04:22.9257126Z npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+2025-10-19T01:04:22.9463043Z npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+2025-10-19T01:04:25.3191648Z npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+2025-10-19T01:04:29.8481087Z 
+2025-10-19T01:04:29.8481928Z added 771 packages, and audited 772 packages in 15s
+2025-10-19T01:04:29.8482401Z 
+2025-10-19T01:04:29.8482771Z 105 packages are looking for funding
+2025-10-19T01:04:29.8483272Z   run `npm fund` for details
+2025-10-19T01:04:29.8505915Z 
+2025-10-19T01:04:29.8506401Z 3 high severity vulnerabilities
+2025-10-19T01:04:29.8506935Z 
+2025-10-19T01:04:29.8507418Z To address all issues (including breaking changes), run:
+2025-10-19T01:04:29.8508087Z   npm audit fix --force
+2025-10-19T01:04:29.8508370Z 
+2025-10-19T01:04:29.8508688Z Run `npm audit` for details.

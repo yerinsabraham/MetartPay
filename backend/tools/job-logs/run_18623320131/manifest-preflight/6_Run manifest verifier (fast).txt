@@ -1,0 +1,7 @@
+﻿2025-10-19T01:04:34.2310298Z ##[group]Run echo "Verifying checked-in normalized manifest";
+2025-10-19T01:04:34.2310733Z [36;1mecho "Verifying checked-in normalized manifest";[0m
+2025-10-19T01:04:34.2311042Z [36;1mnode tools/verify_manifest.js[0m
+2025-10-19T01:04:34.2340085Z shell: /usr/bin/bash -e {0}
+2025-10-19T01:04:34.2340316Z ##[endgroup]
+2025-10-19T01:04:34.2462628Z Verifying checked-in normalized manifest
+2025-10-19T01:04:34.2742336Z Manifest verification OK: /home/runner/work/MetartPay/MetartPay/backend/functions_manifest.normalized.json
