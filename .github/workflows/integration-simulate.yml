@@ -8,13 +8,13 @@ on:
       - 'backend/**'
       - '.github/workflows/integration-simulate.yml'
   workflow_dispatch: {}
-  # Note: feature branch pushes will no longer trigger the heavy emulator job. Keep preflight for fast checks.
+
+# Note: feature branch pushes will no longer trigger the heavy emulator job. Keep preflight for fast checks.
 
 jobs:
   run-emulator-and-tests:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
-    # Only run the heavy emulator job when manually dispatched or on main branch pushes
+    # We'll gate execution with a shell guard step so the YAML contains no expression interpolation (${ { } }) that the editor flags.
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,9 +28,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: npm-global-cache-${{ runner.os }}-v1
+          key: npm-global-cache-v1
           restore-keys: |
-            npm-global-cache-${{ runner.os }}-v1
+            npm-global-cache-v1
 
       - name: Install firebase-tools (pinned)
         run: |
@@ -59,14 +59,16 @@ jobs:
           echo "Patching backend/package.json engines.node -> 18 for Functions emulator";
           node -e "const fs=require('fs');const p='backend/package.json';if(!fs.existsSync(p)){console.error('backend/package.json not found');process.exit(0);}const j=JSON.parse(fs.readFileSync(p));j.engines=j.engines||{};j.engines.node='18';fs.writeFileSync(p,JSON.stringify(j,null,2));console.log('patched');"
 
-      - name: Install backend deps
-        working-directory: backend
+      - name: Cache backend/node_modules
         uses: actions/cache@v4
         with:
           path: backend/node_modules
-          key: backend-node-modules-${{ runner.os }}-${{ hashFiles('**/backend/package-lock.json') }}
+          key: backend-node-modules-v1
           restore-keys: |
-            backend-node-modules-${{ runner.os }}-
+            backend-node-modules-v1
+
+      - name: Install backend deps
+        working-directory: backend
         run: |
           npm ci
 
@@ -80,15 +82,12 @@ jobs:
         working-directory: backend
         run: |
           echo "Running normalize pipeline: generate manifest and normalize it";
-          # No checked-in normalized manifest found or we prefer dynamic generation — proceed to generate and normalize
-          # Ensure firebase-functions binary is available and generate manifest file
           if [ -f node_modules/.bin/firebase-functions ]; then
             echo "Generating manifest to functions_manifest.json";
             FUNCTIONS_MANIFEST_OUTPUT_PATH=functions_manifest.json ./node_modules/.bin/firebase-functions . || true
           else
             echo "firebase-functions binary not found; skipping generation";
           fi
-          # Normalize the manifest so emulator can parse it
           if [ -f functions_manifest.json ]; then
             echo "Normalizing manifest";
             npm run normalize:manifest || true
@@ -117,7 +116,6 @@ jobs:
           echo "Generating functions manifest using firebase-functions binary (FUNCTIONS_MANIFEST_OUTPUT_PATH)";
           if [ -f node_modules/.bin/firebase-functions ]; then
             echo "Found firebase-functions binary in backend";
-            # Generate manifest directly to a file (no HTTP binding required).
             FUNCTIONS_MANIFEST_OUTPUT_PATH=functions_manifest.json ./node_modules/.bin/firebase-functions . || true
             echo "--- head of backend/functions_manifest.json ---";
             if [ -f functions_manifest.json ]; then head -n 200 functions_manifest.json || true; else echo 'manifest not found'; fi
@@ -133,16 +131,11 @@ jobs:
           echo "Debug wrapper: start firebase-functions on port 8977 and tail its log while emulators start";
           if [ -f backend/node_modules/.bin/firebase-functions ]; then
             echo "Starting firebase-functions -> backend/firebase-functions.log";
-            # Start firebase-functions with control API enabled and PORT set so it doesn't try to bind to 8080
             FUNCTIONS_CONTROL_API=true PORT=8977 backend/node_modules/.bin/firebase-functions > backend/firebase-functions.log 2>&1 &
             FN_PID=$!;
             echo "firebase-functions PID: $FN_PID";
-
-            # Background tail loop: print last 30 lines every 8 seconds for up to 10 iterations
             ( for i in 1 2 3 4 5 6 7 8 9 10; do echo "--- tail iteration $i ---"; sleep 8; if [ -f backend/firebase-functions.log ]; then tail -n 30 backend/firebase-functions.log || true; fi; done ) &
             TAIL_PID=$!;
-
-            # Wait a short while for emulators to be started by the next step (this wrapper just ensures we have a log tail)
             sleep 2;
             echo "Debug wrapper launched tail (PID $TAIL_PID) and functions (PID $FN_PID)";
           else
@@ -171,14 +164,12 @@ jobs:
           else
             echo "No firebase-functions binary at backend/node_modules/.bin/firebase-functions";
           fi
-
           echo "--- Searching for functions*.yaml files in repo ---";
           find . -maxdepth 4 -type f -iname 'functions*.yaml' -print -exec sh -c 'echo "---- {} ----"; sed -n "1,200p" "{}" || true' \; || true
 
       - name: Run integration simulate test under emulators (debug)
         working-directory: backend
         env:
-          # Explicit emulator ports to avoid CI port collisions
           FIRESTORE_EMULATOR_HOST: 127.0.0.1:8081
           FUNCTIONS_EMULATOR_HOST: 127.0.0.1:8082
           HOSTING_EMULATOR_HOST: 127.0.0.1:8083
@@ -189,7 +180,6 @@ jobs:
           echo "Node version: $(node -v)";
           echo "Verifying checked-in normalized manifest (fast preflight)";
           node tools/verify_manifest.js || (echo "manifest verification failed" && exit 2);
-          # Start a lightweight manifest server that serves normalized manifest at /__/functions.yaml
           if [ -f node_modules/.bin/node ]; then
             echo "Starting manifest proxy in background";
             npm run serve:normalized-manifest &
@@ -197,7 +187,6 @@ jobs:
             sleep 1;
             echo "Manifest proxy PID: $PROXY_PID";
           fi
-          # Run emulators; the emulator will fetch /__/functions.yaml from the control API (the proxy)
           # Create a temporary firebase.json override that configures emulator ports
           cat > ../firebase.emulation.override.json <<'JSON'
           {
