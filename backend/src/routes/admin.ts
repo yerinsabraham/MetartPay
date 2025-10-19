@@ -3,6 +3,7 @@ import { asyncHandler } from '../middleware/errorHandler';
 import { authenticateToken, requireAdmin, AuthenticatedRequest } from '../middleware/auth';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
+import { verifyEvmTransfer } from '../services/ethereumService';
 
 const router = Router();
 
@@ -110,3 +111,34 @@ router.post('/set-admin', asyncHandler(async (req: Request, res: Response) => {
 }));
 
 export default router;
+
+// POST /api/admin/reverify/:txHash - trigger re-verification of an EVM tx
+router.post('/reverify/:txHash', asyncHandler(async (req: any, res: Response) => {
+  const { txHash } = req.params;
+  if (!txHash) return res.status(400).json({ error: 'txHash required' });
+
+  // Allow optional network/token/value via body or query
+  const network = (req.body?.network || req.query?.network || 'sepolia') as any;
+  const token = req.body?.tokenContractAddress || req.query?.tokenContractAddress;
+  const expectedValueWei = req.body?.expectedValueWei || req.query?.expectedValueWei;
+
+  try {
+    const result = await verifyEvmTransfer(txHash, req.body?.expectedToAddress || req.query?.expectedToAddress || '', expectedValueWei, network, token);
+
+    // Optionally update transaction record in Firestore if present
+    try {
+      const db = getFirestore();
+      const txs = await db.collection('transactions').where('txHash', '==', txHash).limit(1).get();
+      if (!txs.empty) {
+        const doc = txs.docs[0];
+        await doc.ref.set({ lastReverify: new Date(), lastReverifyResult: result }, { merge: true });
+      }
+    } catch (e) {
+      console.warn('Failed to update transaction record during reverify', e);
+    }
+
+    return res.json({ success: true, result });
+  } catch (err: any) {
+    return res.status(500).json({ error: err?.message || 'internal' });
+  }
+}));

@@ -15,6 +15,7 @@ import 'screens/transactions/transaction_history_screen.dart';
 import 'screens/setup/merchant_setup_wizard.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
+import 'screens/demo_simulate_page.dart';
 import 'providers/auth_provider.dart';
 import 'providers/merchant_provider.dart';
 import 'providers/wallet_provider.dart';
@@ -165,6 +166,11 @@ class MyApp extends StatelessWidget {
           '/setup': (context) => const MerchantSetupWizard(),
           '/profile': (context) => const ProfileScreen(),
           '/notifications': (context) => const NotificationsScreen(),
+          // Debug/demo route - only enabled in debug builds
+          if (!bool.fromEnvironment('dart.vm.product')) '/demo-simulate': (context) {
+            final baseUrl = const String.fromEnvironment('METARTPAY_BASE_URL', defaultValue: 'http://127.0.0.1:5001/metartpay-bac2f/us-central1/api');
+            return DemoSimulatePage(baseUrl: baseUrl);
+          },
         },
       ),
     );

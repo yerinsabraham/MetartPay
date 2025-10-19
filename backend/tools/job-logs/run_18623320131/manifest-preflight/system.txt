@@ -1,0 +1,5 @@
+2025-10-19T01:04:02.8410000Z Requested labels: ubuntu-latest
+2025-10-19T01:04:02.8410000Z Job defined at: yerinsabraham/MetartPay/.github/workflows/manifest-preflight.yml@refs/heads/feature/simulate-integration-final
+2025-10-19T01:04:02.8410000Z Waiting for a runner to pick up this job...
+2025-10-19T01:04:03.3540000Z Job is about to start running on the hosted runner: GitHub Actions 1000000041
+2025-10-19T01:04:03.3540000Z Job is waiting for a hosted runner to come online.

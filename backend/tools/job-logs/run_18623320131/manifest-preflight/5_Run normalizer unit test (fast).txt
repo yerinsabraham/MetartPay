@@ -1,0 +1,16 @@
+﻿2025-10-19T01:04:29.8838014Z ##[group]Run echo "Running normalize_manifest unit test";
+2025-10-19T01:04:29.8838429Z [36;1mecho "Running normalize_manifest unit test";[0m
+2025-10-19T01:04:29.8839040Z [36;1mnpx jest tools/__tests__/normalize_manifest.test.ts --runInBand --verbose --testTimeout=30000 || (echo "normalizer tests failed" && exit 2);[0m
+2025-10-19T01:04:29.8872332Z shell: /usr/bin/bash -e {0}
+2025-10-19T01:04:29.8872572Z ##[endgroup]
+2025-10-19T01:04:29.8929462Z Running normalize_manifest unit test
+2025-10-19T01:04:34.1654373Z PASS tools/__tests__/normalize_manifest.test.ts
+2025-10-19T01:04:34.1658892Z   ✓ happy path preserves specVersion and endpoints (3 ms)
+2025-10-19T01:04:34.1659598Z   ✓ converts BigInt and undefined to safe values (1 ms)
+2025-10-19T01:04:34.1662013Z   ✓ non-finite numbers are stringified
+2025-10-19T01:04:34.1662543Z 
+2025-10-19T01:04:34.1685195Z Test Suites: 1 passed, 1 total
+2025-10-19T01:04:34.1686304Z Tests:       3 passed, 3 total
+2025-10-19T01:04:34.1686777Z Snapshots:   0 total
+2025-10-19T01:04:34.1687363Z Time:        3.455 s
+2025-10-19T01:04:34.1688119Z Ran all test suites matching /tools\/__tests__\/normalize_manifest.test.ts/i.
