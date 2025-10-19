@@ -3,33 +3,46 @@
 on:
   push:
     branches:
-      - feature/simulate-integration-final
       - main
     paths:
       - 'backend/**'
       - '.github/workflows/integration-simulate.yml'
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'backend/**'
-      - '.github/workflows/integration-simulate.yml'
+  workflow_dispatch: {}
+  # Note: feature branch pushes will no longer trigger the heavy emulator job. Keep preflight for fast checks.
 
 jobs:
   run-emulator-and-tests:
     runs-on: ubuntu-latest
+    # Only run the heavy emulator job when manually dispatched or on main branch pushes
+  if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Guard only run on dispatch or main
+        run: |
+          echo "Event: $GITHUB_EVENT_NAME  Ref: $GITHUB_REF";
+          if [ "$GITHUB_EVENT_NAME" != "workflow_dispatch" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "Not a manual dispatch or main branch push — skipping heavy emulator job.";
+            exit 0;
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      - name: Install firebase-tools
+      - name: Cache npm global cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-global-cache-${{ runner.os }}-v1
+          restore-keys: |
+            npm-global-cache-${{ runner.os }}-v1
+
+      - name: Install firebase-tools (pinned)
         run: |
-          npm install -g firebase-tools@11
+          npm install -g firebase-tools@11.30.0
 
       - name: Print firebase-tools version
         run: |
@@ -56,6 +69,12 @@ jobs:
 
       - name: Install backend deps
         working-directory: backend
+        uses: actions/cache@v4
+        with:
+          path: backend/node_modules
+          key: backend-node-modules-${{ runner.os }}-${{ hashFiles('**/backend/package-lock.json') }}
+          restore-keys: |
+            backend-node-modules-${{ runner.os }}-
         run: |
           npm ci
 

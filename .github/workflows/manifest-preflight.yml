@@ -22,6 +22,12 @@ jobs:
         run: |
           npm ci
 
+      - name: Run normalizer unit test (fast)
+        working-directory: backend
+        run: |
+          echo "Running normalize_manifest unit test";
+          npx jest tools/__tests__/normalize_manifest.test.js --runInBand --verbose --testTimeout=30000 || (echo "normalizer tests failed" && exit 2);
+
       - name: Run manifest verifier (fast)
         working-directory: backend
         run: |

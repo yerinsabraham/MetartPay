@@ -80,5 +80,12 @@ function main() {
   fs.writeFileSync(outPath, JSON.stringify(normalized, null, 2));
   console.log('Wrote normalized manifest to', outPath);
 }
+// Export functions for unit testing
+module.exports = {
+  sanitizeValue,
+  sanitizeObject,
+  normalize,
+  main
+};
 
 if (require.main === module) main();
