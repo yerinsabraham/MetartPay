@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/payment_service.dart';
 import '../models/transaction_model.dart';
+import '../widgets/notification_banner.dart';
 
 /// PaymentStatusScreen
 ///
@@ -27,6 +28,9 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
   TransactionModel? _current;
   String _error = '';
   Timer? _pollTimer;
+  bool _showBanner = false;
+  String _bannerMessage = '';
+  NotificationType _bannerType = NotificationType.info;
 
   @override
   void initState() {
@@ -46,9 +50,19 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
         if (!snap.exists) return;
         final data = snap.data();
         if (data == null) return;
+        final newTx = TransactionModel.fromJson({ 'id': snap.id, ...data });
+        final oldStatus = _current?.status;
         setState(() {
-          _current = TransactionModel.fromJson({ 'id': snap.id, ...data });
+          _current = newTx;
         });
+        // If status changed, show a brief banner
+        if (oldStatus != null && oldStatus != newTx.status) {
+          _bannerMessage = 'Status changed: ${newTx.status}';
+          _bannerType = newTx.status.toLowerCase() == 'confirmed' || newTx.status.toLowerCase() == 'completed' ? NotificationType.success : NotificationType.warning;
+          setState(() => _showBanner = true);
+          // hide after 3s
+          Future.delayed(const Duration(seconds: 3), () { if (mounted) setState(() => _showBanner = false); });
+        }
       }, onError: (e) {
         setState(() => _error = 'Firestore listen error: $e');
       });
@@ -124,9 +138,15 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
             ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: _buildBody(),
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: _buildBody(),
+          ),
+          if (_showBanner)
+            Positioned(top: 0, left: 0, right: 0, child: NotificationBanner(message: _bannerMessage, type: _bannerType, onClose: () { setState(() => _showBanner = false); })),
+        ],
       ),
     );
   }
@@ -148,18 +168,18 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Status', style: Theme.of(context).textTheme.subtitle1),
+                Text('Status', style: Theme.of(context).textTheme.titleLarge),
             _buildStatusChip(tx.status),
           ],
         ),
         const SizedBox(height: 12),
-        Text('Transaction', style: Theme.of(context).textTheme.subtitle2),
+            Text('Transaction', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 6),
         SelectableText('txHash: ${tx.txHash}'),
         SelectableText('network: ${tx.network}'),
         SelectableText('amount: ${tx.amountCrypto} ${tx.cryptoCurrency}'),
         const SizedBox(height: 12),
-        Text('Details', style: Theme.of(context).textTheme.subtitle2),
+            Text('Details', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 6),
         Text('from: ${tx.fromAddress}'),
         Text('to: ${tx.toAddress}'),
@@ -182,7 +202,7 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
         if (kDebugMode)
           Padding(
             padding: const EdgeInsets.only(top: 8.0),
-            child: Text('Debug mode: Firestore listener + polling fallback enabled', style: Theme.of(context).textTheme.caption),
+                child: Text('Debug mode: Firestore listener + polling fallback enabled', style: Theme.of(context).textTheme.bodySmall),
           ),
       ],
     );

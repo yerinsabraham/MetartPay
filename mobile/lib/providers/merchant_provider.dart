@@ -207,6 +207,13 @@ class MerchantProvider extends ChangeNotifier {
       }
 
       // Check if setup is needed
+      // If no merchants were found, create a demo/sample merchant in debug
+      // builds so developers can exercise flows without a backend account.
+      if (_merchants.isEmpty && !bool.fromEnvironment('dart.vm.product')) {
+        AppLogger.d('DEBUG: No merchants found — creating sample merchant for demo');
+        _createSampleMerchant();
+      }
+
       _checkSetupStatus();
 
       notifyListeners();

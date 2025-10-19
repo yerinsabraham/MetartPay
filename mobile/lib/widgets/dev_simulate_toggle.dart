@@ -13,12 +13,12 @@ class DevSimulateToggle extends StatefulWidget {
 class _DevSimulateToggleState extends State<DevSimulateToggle> {
   bool _enabled = false;
   bool _busy = false;
-  final _paymentService = PaymentService(baseUrl: '');
+  late final PaymentService _paymentService;
 
   @override
   void initState() {
     super.initState();
-    _paymentService.baseUrl = widget.baseUrl; // minor mutation for convenience
+    _paymentService = PaymentService(baseUrl: widget.baseUrl);
   }
 
   Future<void> _simulate() async {

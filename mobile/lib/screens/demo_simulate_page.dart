@@ -13,13 +13,13 @@ class DemoSimulatePage extends StatefulWidget {
 }
 
 class _DemoSimulatePageState extends State<DemoSimulatePage> {
-  final _svc = PaymentService(baseUrl: '');
+  late final PaymentService _svc;
   bool _busy = false;
 
   @override
   void initState() {
     super.initState();
-    _svc.baseUrl = widget.baseUrl;
+    _svc = PaymentService(baseUrl: widget.baseUrl);
   }
 
   Future<void> _simulateAndOpen() async {

@@ -98,3 +98,29 @@ class HomePageNew extends StatelessWidget {
     );
   }
 }
+
+// Add a debug-only FloatingActionButton by extending Scaffold behavior.
+// We keep the main widget unchanged and provide a wrapper that inserts
+// the FAB only in non-production builds. This avoids changing layout for
+// release builds.
+class HomePageNewWrapper extends StatelessWidget {
+  const HomePageNewWrapper({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final child = const HomePageNew();
+    if (bool.fromEnvironment('dart.vm.product')) return child;
+
+    // Show FAB for debug/demo navigation
+    return Scaffold(
+      body: child,
+      floatingActionButton: FloatingActionButton.extended(
+        icon: const Icon(Icons.developer_mode),
+        label: const Text('Demo'),
+        onPressed: () {
+          Navigator.of(context).pushNamed('/demo-simulate');
+        },
+      ),
+    );
+  }
+}

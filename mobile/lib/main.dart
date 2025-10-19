@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
@@ -44,6 +45,43 @@ void main() async {
   } catch (e, s) {
     AppLogger.e('DEBUG: Firebase initialization failed: $e', error: e, stackTrace: s);
     // Continue app launch even if Firebase fails
+  }
+
+  // In debug builds, prefer connecting to the local Firestore emulator so
+  // we don't hit production rules. This is best-effort and will try both
+  // the convenience API and a Settings fallback for older plugin versions.
+  final baseUrl = const String.fromEnvironment('METARTPAY_BASE_URL', defaultValue: 'http://127.0.0.1:5001/metartpay-bac2f/us-central1/api');
+  final shouldUseEmulator = !bool.fromEnvironment('dart.vm.product') || baseUrl.contains('127.0.0.1') || baseUrl.contains('10.0.2.2') || const bool.fromEnvironment('FORCE_FIRESTORE_EMULATOR', defaultValue: false);
+  if (shouldUseEmulator) {
+    try {
+      FirebaseFirestore.instance.useFirestoreEmulator('127.0.0.1', 8080);
+      AppLogger.d('DEBUG: Firestore emulator configured via useFirestoreEmulator');
+      // Also explicitly set Settings host to 127.0.0.1:8080 on debug devices.
+      // Some plugin/platform combos remap to 10.0.2.2 internally which
+      // doesn't work for physical devices; enforcing Settings ensures
+      // the client targets localhost which `adb reverse` forwards.
+      try {
+        FirebaseFirestore.instance.settings = Settings(
+          host: '127.0.0.1:8080',
+          sslEnabled: false,
+          persistenceEnabled: false,
+        );
+        AppLogger.d('DEBUG: Firestore settings host explicitly set to 127.0.0.1:8080');
+      } catch (es) {
+        AppLogger.w('DEBUG: Failed to explicitly set Firestore settings after useFirestoreEmulator: $es');
+      }
+    } catch (e) {
+      try {
+        FirebaseFirestore.instance.settings = Settings(
+          host: '127.0.0.1:8080',
+          sslEnabled: false,
+          persistenceEnabled: false,
+        );
+        AppLogger.d('DEBUG: Firestore emulator configured via Settings fallback');
+      } catch (e2) {
+        AppLogger.e('DEBUG: Failed to configure Firestore emulator: $e / $e2');
+      }
+    }
   }
 
   AppLogger.d('DEBUG: Launching MetartPay...');
@@ -148,7 +186,8 @@ class MyApp extends StatelessWidget {
           ),
         ),
   // Set Home V2 (new simplified home) as the initial page per request.
-  home: const HomePageNew(),
+  // In debug builds use HomePageNewWrapper which adds a Demo FAB.
+  home: !bool.fromEnvironment('dart.vm.product') ? const HomePageNewWrapper() : const HomePageNew(),
         routes: {
           '/home': (context) => const HomePageNew(),
           '/home-v2': (context) => const HomePageNew(),
