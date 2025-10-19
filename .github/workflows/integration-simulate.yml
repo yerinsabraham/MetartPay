@@ -12,20 +12,12 @@ on:
 
 jobs:
   run-emulator-and-tests:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     # Only run the heavy emulator job when manually dispatched or on main branch pushes
-  if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Guard only run on dispatch or main
-        run: |
-          echo "Event: $GITHUB_EVENT_NAME  Ref: $GITHUB_REF";
-          if [ "$GITHUB_EVENT_NAME" != "workflow_dispatch" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
-            echo "Not a manual dispatch or main branch push — skipping heavy emulator job.";
-            exit 0;
-          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
