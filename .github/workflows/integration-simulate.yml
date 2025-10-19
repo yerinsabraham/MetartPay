@@ -13,8 +13,9 @@ on:
 
 jobs:
   run-emulator-and-tests:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
-    # We'll gate execution with a shell guard step so the YAML contains no expression interpolation (${ { } }) that the editor flags.
+    # Only run the heavy emulator job when manually dispatched or on main branch pushes
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,9 +29,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: npm-global-cache-v1
+          key: npm-global-cache-${{ runner.os }}-v1
           restore-keys: |
-            npm-global-cache-v1
+            npm-global-cache-${{ runner.os }}-v1
 
       - name: Install firebase-tools (pinned)
         run: |
@@ -56,17 +57,16 @@ jobs:
       - name: Patch backend package.json engines for emulator
         working-directory: .
         run: |
-          echo "Patching backend/package.json engines.node -> 18 for Functions emulator";
+          echo "Patching backend/package.json engines.node -> 18 for Functions emulator"
           node -e "const fs=require('fs');const p='backend/package.json';if(!fs.existsSync(p)){console.error('backend/package.json not found');process.exit(0);}const j=JSON.parse(fs.readFileSync(p));j.engines=j.engines||{};j.engines.node='18';fs.writeFileSync(p,JSON.stringify(j,null,2));console.log('patched');"
 
       - name: Cache backend/node_modules
         uses: actions/cache@v4
         with:
           path: backend/node_modules
-          key: backend-node-modules-v1
+          key: backend-node-modules-${{ runner.os }}-${{ hashFiles('**/backend/package-lock.json') }}
           restore-keys: |
-            backend-node-modules-v1
-
+            backend-node-modules-${{ runner.os }}-
       - name: Install backend deps
         working-directory: backend
         run: |
@@ -187,6 +187,17 @@ jobs:
             sleep 1;
             echo "Manifest proxy PID: $PROXY_PID";
           fi
+          cat > ../firebase.emulation.override.json <<'JSON'
+          {
+            "emulators": {
+              "functions": { "port": 8082 },
+              "firestore": { "port": 8081 },
+              "hosting": { "port": 8083 },
+              "storage": { "port": 8084 }
+            }
+          }
+          JSON
+
           # Create a temporary firebase.json override that configures emulator ports
           cat > ../firebase.emulation.override.json <<'JSON'
           {
@@ -201,3 +212,4 @@ jobs:
 
           # Run emulators with the override (firebase-tools will pick up CLI env vars as well)
           firebase emulators:exec --project=metartpay-bac2f --debug "node tools/integration_simulate_test.js" --config ../firebase.emulation.override.json
+
