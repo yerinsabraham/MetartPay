@@ -23,7 +23,21 @@ import { errorHandler, notFound } from './middleware/errorHandler';
 // Load environment variables
 dotenv.config();
 
-// Initialize Firebase Admin
+// If running as a local standalone server, prefer the emulator for Firestore
+// and Auth so the Admin SDK doesn't attempt to load Google Application
+// Default Credentials. This makes LOCAL_SERVER mode easy to run without
+// requiring a service account JSON file.
+if (process.env.LOCAL_SERVER === 'true' && process.env.NODE_ENV !== 'production') {
+    process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:8080';
+    // Optionally set the Auth emulator host if present locally
+    process.env.FIREBASE_AUTH_EMULATOR_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST || '127.0.0.1:9099';
+    console.log('LOCAL_SERVER mode detected; using emulator hosts:', {
+        FIRESTORE_EMULATOR_HOST: process.env.FIRESTORE_EMULATOR_HOST,
+        FIREBASE_AUTH_EMULATOR_HOST: process.env.FIREBASE_AUTH_EMULATOR_HOST,
+    });
+}
+
+// Initialize Firebase Admin AFTER we may have set emulator env vars
 initializeApp();
 export const db = getFirestore();
 
@@ -68,6 +82,34 @@ app.get('/health', (req, res) => {
 });
 
 // API routes
+// Dev helper: rewrite several common function/emulator wrapper prefixes so
+// local clients don't need to special-case paths. This middleware is active
+// in any non-production environment.
+if (process.env.NODE_ENV !== 'production') {
+    app.use((req, res, next) => {
+        try {
+            const original = (req as any).url || req.url || '';
+            let rewritten = original;
+
+            // /functions/... -> /...
+            if (/^\/functions/.test(rewritten)) {
+                rewritten = rewritten.replace(/^\/functions/, '') || '/';
+            }
+
+            // /<project>/(us-central1|europe-west1)/api/... -> /api/...
+            // Example: /metartpay-bac2f/us-central1/api/payments -> /api/payments
+            rewritten = rewritten.replace(/^\/[^\/]+\/(us-central1|europe-west1)\/api/, '/api');
+
+            if (rewritten !== original) {
+                (req as any).url = rewritten;
+                console.log('Rewrote request', original, '->', rewritten);
+            }
+        } catch (err) {
+            console.warn('Failed to rewrite function wrapper path', err);
+        }
+        next();
+    });
+}
 app.use('/api/auth', authRoutes);
 app.use('/api/merchants', merchantRoutes);
 app.use('/api/invoices', invoiceRoutes);
@@ -135,6 +177,47 @@ app.use('/api/transactions', transactionMonitorRoutes);
 if (process.env.ENABLE_DEV_DEBUG === 'true') {
     app.use('/api/debug', debugRoutes);
 }
+
+// Public endpoint: Get transaction by id (used by mobile polling fallback).
+// If ENABLE_DEV_IN_MEMORY=true, consult the in-memory store first.
+app.get('/transactions/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        if (!id) return res.status(400).json({ success: false, error: 'id required' });
+
+        if (process.env.ENABLE_DEV_IN_MEMORY === 'true') {
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                const inm = require('./dev/inMemoryStore').default;
+                // Primary: look up by the transaction document id
+                const docById = await inm.getTransactionById(id);
+                if (docById) return res.json({ success: true, transaction: docById.data });
+
+                // Fallback: sometimes callers provide a txHash instead of the internal id;
+                // try searching by txHash to be resilient during dev flows.
+                try {
+                    const found = await inm.findTransactionByTxHash(id);
+                    if (found) {
+                        console.log('GET /transactions: falling back to txHash lookup for', id, '->', found.id);
+                        return res.json({ success: true, transaction: found.data });
+                    }
+                } catch (inner) {
+                    console.warn('in-memory findTransactionByTxHash failed', inner);
+                }
+            } catch (e) {
+                console.warn('in-memory getTransaction failed', e);
+            }
+        }
+
+        // Fall back to Firestore
+        const snapshot = await db.collection('transactions').doc(id).get();
+        if (!snapshot.exists) return res.status(404).json({ success: false, error: 'not found' });
+        return res.json({ success: true, transaction: { id: snapshot.id, ...snapshot.data() } });
+    } catch (err) {
+        console.error('GET /transactions/:id failed', err);
+        return res.status(500).json({ success: false, error: 'internal' });
+    }
+});
 
 // Public payment page routes (no /api prefix)
 app.get('/pay/:linkId', async (req, res) => {
@@ -209,11 +292,18 @@ app.get('/pay', async (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
-// Export the Firebase Function
+// Export the Firebase Function (always exported for functions deployments)
 export const api = onRequest(app);
 
 // Export scheduled functions
 export * from './scheduledFunctions';
+
+// If running in 'LOCAL_SERVER' mode, also start the Express app directly so
+// developers can run the backend without the Firebase emulator.
+if (process.env.LOCAL_SERVER === 'true') {
+    const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 5001;
+    app.listen(port, () => console.log(`Local Express API listening on http://localhost:${port}`));
+}
 
 // Helper function to generate payment link page HTML
 function generatePaymentLinkPageHtml(paymentLink: any, merchant: any, selectedNetwork?: string, selectedToken?: string): string {

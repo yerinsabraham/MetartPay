@@ -31,6 +31,8 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
   bool _showBanner = false;
   String _bannerMessage = '';
   NotificationType _bannerType = NotificationType.info;
+  bool _usingLocalSimulation = false;
+  bool _reverifyInProgress = false;
 
   @override
   void initState() {
@@ -47,13 +49,23 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
           .doc(widget.transactionId)
           .snapshots()
           .listen((snap) async {
-        if (!snap.exists) return;
+        if (!snap.exists) {
+          // If the document isn't present yet, start polling fallback so
+          // we can pick up a later-created transaction. In debug builds
+          // also start a local simulation if polling/reporting can't find it.
+          _startPolling();
+          return;
+        }
         final data = snap.data();
         if (data == null) return;
         final newTx = TransactionModel.fromJson({ 'id': snap.id, ...data });
         final oldStatus = _current?.status;
+        // Received real data from Firestore — clear any previous errors
+        // and cancel polling/local simulation so we only show live state.
         setState(() {
+          _error = '';
           _current = newTx;
+          _usingLocalSimulation = false;
         });
         // If status changed, show a brief banner
         if (oldStatus != null && oldStatus != newTx.status) {
@@ -64,7 +76,14 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
           Future.delayed(const Duration(seconds: 3), () { if (mounted) setState(() => _showBanner = false); });
         }
       }, onError: (e) {
-        setState(() => _error = 'Firestore listen error: $e');
+        setState(() {
+          _error = 'Firestore listen error: $e';
+        });
+        // Listener errored — fall back to polling and in debug try local demo
+        _startPolling();
+        if (kDebugMode) {
+          _startLocalSimulation();
+        }
       });
     } catch (e) {
       // If Firestore isn't wired in this app, fallback to periodic polling
@@ -74,16 +93,128 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
   }
 
   void _startPolling() {
+    if (_usingLocalSimulation) return; // don't poll when using local simulated data
     _pollTimer?.cancel();
     _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
       try {
         final tx = await _paymentService.getTransaction(widget.transactionId);
+        // Got a response from backend — clear any error state and stop
+        // local simulation if one was running.
         setState(() {
+          _error = '';
           _current = tx;
+          _usingLocalSimulation = false;
         });
       } catch (err) {
-        setState(() => _error = err.toString());
+        // Only surface backend errors if we don't already have a displayed
+        // transaction. This prevents a transient 'Transaction not found'
+        // from overwriting a simulated or live transaction view.
+        if (_current == null) {
+          setState(() => _error = err.toString());
+        } else {
+          debugPrint('Polling error ignored because _current exists: $err');
+        }
+        // If transaction not found from backend and we're in debug, start a
+        // local simulated status progression so the demo still shows changes.
+        if (kDebugMode && _current == null && err.toString().toLowerCase().contains('transaction not found')) {
+          _startLocalSimulation();
+        }
       }
+    });
+  }
+
+  // Debug-only local simulation for demo: progress through statuses so the
+  // UI can show transitions even if emulator/backend are unreachable.
+  void _startLocalSimulation() {
+    if (!kDebugMode) return;
+    if (_current != null) return; // already have a value
+    _usingLocalSimulation = true;
+    // Cancel any existing polling so it doesn't race and repopulate _error
+    // while the local simulation is running.
+    _pollTimer?.cancel();
+    // Clear any stale error message so the UI doesn't show 'Transaction not found'
+    // while the local simulation runs.
+    setState(() {
+      _error = '';
+    });
+
+    final fake = TransactionModel(
+      id: widget.transactionId,
+      txHash: widget.transactionId,
+      fromAddress: 'simulated-sender',
+      toAddress: 'simulated-address-1',
+      amountCrypto: 0.1,
+      cryptoCurrency: 'ETH',
+      network: 'sepolia',
+      status: 'pending',
+      confirmedAt: null,
+      observedAt: null,
+      blockNumber: null,
+      confirmations: 0,
+      requiredConfirmations: 1,
+      metadata: null,
+    );
+
+    setState(() {
+      _current = fake;
+      _bannerMessage = 'Status changed: pending';
+      _bannerType = NotificationType.info;
+      _showBanner = true;
+    });
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      setState(() {
+        _current = TransactionModel(
+          id: fake.id,
+          txHash: fake.txHash,
+          fromAddress: fake.fromAddress,
+          toAddress: fake.toAddress,
+          amountCrypto: fake.amountCrypto,
+          cryptoCurrency: fake.cryptoCurrency,
+          network: fake.network,
+          status: 'confirmed',
+          confirmedAt: DateTime.now().toIso8601String(),
+          observedAt: fake.observedAt,
+          blockNumber: 123456,
+          confirmations: 1,
+          requiredConfirmations: fake.requiredConfirmations,
+          metadata: fake.metadata,
+        );
+        _bannerMessage = 'Status changed: confirmed';
+        _bannerType = NotificationType.success;
+        _showBanner = true;
+      });
+    });
+    Future.delayed(const Duration(seconds: 5), () {
+      if (!mounted) return;
+      setState(() {
+        _current = TransactionModel(
+          id: fake.id,
+          txHash: fake.txHash,
+          fromAddress: fake.fromAddress,
+          toAddress: fake.toAddress,
+          amountCrypto: fake.amountCrypto,
+          cryptoCurrency: fake.cryptoCurrency,
+          network: fake.network,
+          status: 'completed',
+          confirmedAt: DateTime.now().toIso8601String(),
+          observedAt: fake.observedAt,
+          blockNumber: 123456,
+          confirmations: 1,
+          requiredConfirmations: fake.requiredConfirmations,
+          metadata: fake.metadata,
+        );
+        _bannerMessage = 'Status changed: completed';
+        _bannerType = NotificationType.success;
+        _showBanner = true;
+        // Local simulation finished — stop suppressing polling so real backend
+        // checks can resume if available. Restart polling to pick up any
+        // real backend updates, but avoid overwriting current UI with a
+        // transient 'not found' error.
+        _usingLocalSimulation = false;
+        // start polling again to pick up backend state (if needed)
+        _startPolling();
+      });
     });
   }
 
@@ -125,13 +256,19 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
               padding: const EdgeInsets.only(right: 12.0),
               child: IconButton(
                 icon: const Icon(Icons.refresh),
-                onPressed: () async {
+                onPressed: _usingLocalSimulation ? null : () async {
                   try {
                     final tx = await _paymentService.getTransaction(widget.transactionId);
-                    setState(() => _current = tx);
+                    setState(() {
+                      _error = '';
+                      _current = tx;
+                    });
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Refreshed')));
                   } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Refresh failed: $e')));
+                    // If we're running a local simulation, prefer not to spam the
+                    // user with backend errors — show a gentle message instead.
+                    final msg = _usingLocalSimulation ? 'Refresh disabled during local simulation' : 'Refresh failed: $e';
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
                   }
                 },
               ),
@@ -189,12 +326,24 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
         ElevatedButton.icon(
           icon: const Icon(Icons.check),
           label: const Text('Force re-verify (admin)'),
-          onPressed: () async {
+          onPressed: _reverifyInProgress ? null : () async {
+            setState(() { _reverifyInProgress = true; });
+            final snack = ScaffoldMessenger.of(context);
+            snack.showSnackBar(const SnackBar(content: Text('Reverify requested...')));
             try {
               final res = await _paymentService.reverifyTransaction(tx.txHash, network: tx.network, tokenAddress: tx.metadata?['tokenAddress']);
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Reverify: ${res['message'] ?? 'ok'}')));
+              snack.hideCurrentSnackBar();
+              // Try to present a human-friendly result if available
+              String msg = 'Reverify succeeded';
+              if (res.containsKey('message')) msg = res['message'].toString();
+              else if (res.containsKey('result')) msg = res['result'].toString();
+              else if (res.containsKey('success') && res['success'] == true) msg = 'Reverify succeeded';
+              snack.showSnackBar(SnackBar(content: Text(msg)));
             } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Reverify failed: $e')));
+              snack.hideCurrentSnackBar();
+              snack.showSnackBar(SnackBar(content: Text('Reverify failed: $e')));
+            } finally {
+              if (mounted) setState(() { _reverifyInProgress = false; });
             }
           },
         ),

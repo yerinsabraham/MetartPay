@@ -7,6 +7,7 @@
  */
 
 import { Provider, getDefaultProvider, JsonRpcProvider, Interface } from 'ethers';
+import { getFirestore } from 'firebase-admin/firestore';
 
 export type EthNetwork = 'sepolia' | 'mainnet' | 'goerli' | string;
 
@@ -52,6 +53,75 @@ export async function verifyEvmTransfer(
   tokenContractAddress?: string // if provided, verify ERC20 transfer
 ): Promise<EvmVerifyResult> {
   try {
+    // Dev-only shortcut: when dev debug is enabled and the txHash looks
+    // like a simulated/test tx, return a successful verification without
+    // calling external RPCs. This lets local demos and CI run without
+    // external provider credentials.
+    if (process.env.ENABLE_DEV_DEBUG === 'true') {
+      try {
+          // First, if ENABLE_DEV_IN_MEMORY is true, check the in-memory store.
+          if (process.env.ENABLE_DEV_IN_MEMORY === 'true') {
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-var-requires
+              const inm = require('../dev/inMemoryStore').default;
+              const found = await inm.findTransactionByTxHash(txHash);
+              if (found) {
+                const data: any = found.data;
+                const isSynthetic = data?.metadata?.synthetic === true;
+                if (isSynthetic) {
+                  return {
+                    success: true,
+                    txHash,
+                    from: data.fromAddress || 'simulated-sender',
+                    to: (data.toAddress || expectedToAddress || '').toLowerCase(),
+                    valueWei: expectedValueWei || (data.amountCrypto ? String(data.amountCrypto) : '0'),
+                    blockNumber: data.blockNumber || 123456,
+                    message: 'dev-simulated-success-based-on-inmemory',
+                  };
+                }
+              }
+            } catch (inErr) {
+              console.warn('dev in-memory check failed', inErr);
+            }
+          }
+
+          // Next, check if the txHash corresponds to a synthetic transaction in Firestore
+          const db = getFirestore();
+          const txs = await db.collection('transactions').where('txHash', '==', txHash).limit(1).get();
+          if (!txs.empty) {
+            const doc = txs.docs[0];
+            const data: any = doc.data();
+            const isSynthetic = data?.metadata?.synthetic === true;
+            if (isSynthetic) {
+              return {
+                success: true,
+                txHash,
+                from: data.fromAddress || 'simulated-sender',
+                to: (data.toAddress || expectedToAddress || '').toLowerCase(),
+                valueWei: expectedValueWei || (data.amountCrypto ? String(data.amountCrypto) : '0'),
+                blockNumber: data.blockNumber || 123456,
+                message: 'dev-simulated-success-based-on-firestore',
+              };
+            }
+          }
+      } catch (fireErr) {
+        // ignore Firestore errors in dev shortcut and fall through to RPC-based verification
+        console.warn('dev shortcut firestore check failed', fireErr);
+      }
+      // Fallback heuristic: also accept explicit sim_ style txHash strings
+      const lowered = (txHash || '').toString().toLowerCase();
+      if (lowered.startsWith('sim_') || lowered.startsWith('simtest_') || lowered.includes('simulated') || lowered.includes('sim_')) {
+        return {
+          success: true,
+          txHash,
+          from: 'simulated-sender',
+          to: expectedToAddress.toLowerCase(),
+          valueWei: expectedValueWei || '0',
+          blockNumber: 123456,
+          message: 'dev-simulated-success',
+        };
+      }
+    }
     // Select RPC env var per network
     const rpcMap: Record<string, string | undefined> = {
       sepolia: process.env.ETH_RPC_URL,
@@ -63,8 +133,31 @@ export async function verifyEvmTransfer(
     };
 
     const key = (network || '').toLowerCase();
-    const rpcUrl = rpcMap[key] || process.env.ETH_RPC_URL || process.env.ALCHEMY_API_URL || process.env.INFURA_API_URL;
-    const provider: Provider = rpcUrl ? new JsonRpcProvider(rpcUrl) : getDefaultProvider(network as any);
+    let rpcUrl = rpcMap[key] || process.env.ETH_RPC_URL || process.env.ALCHEMY_API_URL || process.env.INFURA_API_URL;
+
+    // Sanitize common placeholder values to avoid JsonRpcProvider repeatedly
+    // trying to detect network (which prints "failed to detect network" loops).
+    if (rpcUrl && /YOUR_INFURA_KEY|REPLACE_ME|YOUR_ALCHEMY_KEY|YOUR_API_KEY/i.test(rpcUrl)) {
+      console.warn('ethereumService: RPC URL appears to be a placeholder; ignoring to avoid provider retry loops');
+      rpcUrl = undefined;
+    }
+
+    // Only construct a JsonRpcProvider when we actually have a real URL. If not
+    // configured, avoid creating a provider that will continuously retry
+    // detecting network. In dev mode we already handle simulated txs above.
+    let provider: Provider | null = null;
+    if (rpcUrl) {
+      try {
+        provider = new JsonRpcProvider(rpcUrl);
+      } catch (e) {
+        console.warn('ethereumService: failed to construct JsonRpcProvider, will not use RPC provider', e);
+        provider = null;
+      }
+    }
+
+    if (!provider) {
+      return { success: false, txHash, message: 'RPC provider not configured or failed to initialize; set ETH_RPC_URL/INFURA_API_URL or enable dev debug for simulated txs' };
+    }
 
     const tx = await provider.getTransaction(txHash);
     if (!tx) return { success: false, txHash, message: 'Transaction not found' };
