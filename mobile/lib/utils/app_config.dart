@@ -5,7 +5,7 @@ class AppConfig {
   // from build-time environment variables or a config file.
   // Default to the staging backend so local debug runs hit staging when no build
   // environment variable is provided. Change back before production builds.
-  static const String backendBaseUrl = String.fromEnvironment(
+  static const String? backendBaseUrl = String.fromEnvironment(
     'METARTPAY_BACKEND_BASE_URL',
     defaultValue: 'https://metartpay-api-456120304945.us-central1.run.app',
   );

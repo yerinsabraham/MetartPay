@@ -1,6 +1,6 @@
 class ApiConfig {
   // Backend API base URL - change this to your Firebase Functions URL or custom domain
-  static const String baseUrl = 'https://us-central1-metartpay-bac2f.cloudfunctions.net/api';
+  static const String baseUrl = 'https://metartpay-api-456120304945.us-central1.run.app';
   
   // Local development URL (when running emulator)
   static const String localUrl = 'http://localhost:5001/metartpay-bac2f/us-central1/api';
