@@ -9,7 +9,7 @@ import '../payments/create_payment_link_screen.dart';
 import '../transactions/transaction_history_screen.dart';
 
 class EnhancedHomeScreen extends StatefulWidget {
-  const EnhancedHomeScreen({Key? key}) : super(key: key);
+  const EnhancedHomeScreen({super.key});
 
   @override
   State<EnhancedHomeScreen> createState() => _EnhancedHomeScreenState();
@@ -20,7 +20,10 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+      final merchantProvider = Provider.of<MerchantProvider>(
+        context,
+        listen: false,
+      );
       if (merchantProvider.merchants.isEmpty && !merchantProvider.isLoading) {
         merchantProvider.loadUserMerchants();
       }
@@ -59,7 +62,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -93,13 +96,19 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: MetartPayColors.primary),
+            icon: const Icon(
+              Icons.notifications_outlined,
+              color: MetartPayColors.primary,
+            ),
             onPressed: () {
               // TODO: Implement notifications
             },
           ),
           IconButton(
-            icon: const Icon(Icons.person_outline, color: MetartPayColors.primary),
+            icon: const Icon(
+              Icons.person_outline,
+              color: MetartPayColors.primary,
+            ),
             onPressed: () {
               Navigator.pushNamed(context, '/profile');
             },
@@ -121,12 +130,17 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
             );
           }
 
-          if (merchantProvider.error != null || merchantProvider.merchants.isEmpty) {
+          if (merchantProvider.error != null ||
+              merchantProvider.merchants.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.refresh, size: 48, color: MetartPayColors.primary),
+                  const Icon(
+                    Icons.refresh,
+                    size: 48,
+                    color: MetartPayColors.primary,
+                  ),
                   const SizedBox(height: 16),
                   const Text('Unable to load dashboard'),
                   const SizedBox(height: 8),
@@ -152,7 +166,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                   // KYC Completion Banner
                   if (merchantProvider.currentMerchant?.kycStatus != 'verified')
                     _buildKYCBanner(context, merchantProvider),
-                  
+
                   _buildMerchantCard(context, merchantProvider),
                   const SizedBox(height: 20),
                   _buildStatsCards(merchantProvider),
@@ -172,7 +186,10 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
     );
   }
 
-  Widget _buildKYCBanner(BuildContext context, MerchantProvider merchantProvider) {
+  Widget _buildKYCBanner(
+    BuildContext context,
+    MerchantProvider merchantProvider,
+  ) {
     final merchant = merchantProvider.currentMerchant;
     if (merchant?.kycStatus == 'verified') return const SizedBox.shrink();
 
@@ -192,11 +209,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
               color: Colors.red.shade100,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(
-              Icons.warning,
-              color: Colors.red,
-              size: 24,
-            ),
+            child: const Icon(Icons.warning, color: Colors.red, size: 24),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -214,27 +227,23 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                 const SizedBox(height: 4),
                 Text(
                   'Verify your identity to access all features and start receiving payments.',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.red.shade700,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.red.shade700),
                 ),
               ],
             ),
           ),
-          Icon(
-            Icons.arrow_forward_ios,
-            color: Colors.red.shade400,
-            size: 16,
-          ),
+          Icon(Icons.arrow_forward_ios, color: Colors.red.shade400, size: 16),
         ],
       ),
     );
   }
 
-  Widget _buildMerchantCard(BuildContext context, MerchantProvider merchantProvider) {
+  Widget _buildMerchantCard(
+    BuildContext context,
+    MerchantProvider merchantProvider,
+  ) {
     final merchant = merchantProvider.currentMerchant;
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -282,7 +291,10 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withAlpha((0.2 * 255).round()),
                   borderRadius: BorderRadius.circular(20),
@@ -396,7 +408,12 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -431,10 +448,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
           ),
           Text(
             title,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             textAlign: TextAlign.center,
           ),
         ],
@@ -463,14 +477,19 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                 Icons.payment,
                 Colors.green,
                 () {
-                  final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+                  final merchantProvider = Provider.of<MerchantProvider>(
+                    context,
+                    listen: false,
+                  );
                   if (!_isKYCVerified(merchantProvider)) {
                     _showFeatureBlocked(context, 'Payment Creation');
                     return;
                   }
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const CreatePaymentLinkScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const CreatePaymentLinkScreen(),
+                    ),
                   );
                 },
               ),
@@ -482,14 +501,19 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                 Icons.account_balance_wallet,
                 Colors.blue,
                 () {
-                  final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+                  final merchantProvider = Provider.of<MerchantProvider>(
+                    context,
+                    listen: false,
+                  );
                   if (!_isKYCVerified(merchantProvider)) {
                     _showFeatureBlocked(context, 'Crypto Wallets');
                     return;
                   }
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const CryptoWalletsScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const CryptoWalletsScreen(),
+                    ),
                   );
                 },
               ),
@@ -505,14 +529,19 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                 Icons.history,
                 Colors.purple,
                 () {
-                  final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+                  final merchantProvider = Provider.of<MerchantProvider>(
+                    context,
+                    listen: false,
+                  );
                   if (!_isKYCVerified(merchantProvider)) {
                     _showFeatureBlocked(context, 'Transaction History');
                     return;
                   }
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const TransactionHistoryScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const TransactionHistoryScreen(),
+                    ),
                   );
                 },
               ),
@@ -524,7 +553,10 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                 Icons.analytics,
                 Colors.orange,
                 () {
-                  final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+                  final merchantProvider = Provider.of<MerchantProvider>(
+                    context,
+                    listen: false,
+                  );
                   if (!_isKYCVerified(merchantProvider)) {
                     _showFeatureBlocked(context, 'Analytics');
                     return;
@@ -539,7 +571,12 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
     );
   }
 
-  Widget _buildActionCard(String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionCard(
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -583,7 +620,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
 
   Widget _buildRecentInvoicesSection(MerchantProvider merchantProvider) {
     final recentInvoices = merchantProvider.invoices.take(3).toList();
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -602,7 +639,9 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const TransactionHistoryScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const TransactionHistoryScreen(),
+                  ),
                 );
               },
               child: const Text('View All'),
@@ -610,7 +649,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
           ],
         ),
         const SizedBox(height: 8),
-        ...recentInvoices.map((invoice) => _buildInvoiceCard(invoice)).toList(),
+        ...recentInvoices.map((invoice) => _buildInvoiceCard(invoice)),
       ],
     );
   }
@@ -635,7 +674,9 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: _getStatusColor(invoice.status).withAlpha((0.1 * 255).round()),
+              color: _getStatusColor(
+                invoice.status,
+              ).withAlpha((0.1 * 255).round()),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -658,10 +699,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                 ),
                 Text(
                   '₦${_formatMoney(invoice.amountNaira)}',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
                 ),
               ],
             ),
@@ -669,7 +707,9 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: _getStatusColor(invoice.status).withAlpha((0.1 * 255).round()),
+              color: _getStatusColor(
+                invoice.status,
+              ).withAlpha((0.1 * 255).round()),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -737,7 +777,12 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
     );
   }
 
-  Widget _buildInsightRow(String label, String value, IconData icon, Color color) {
+  Widget _buildInsightRow(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Row(
       children: [
         Container(
@@ -752,10 +797,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
         Expanded(
           child: Text(
             label,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
           ),
         ),
         Text(
@@ -785,10 +827,12 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
   }
 
   String _formatMoney(double amount) {
-    return amount.toStringAsFixed(2).replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    );
+    return amount
+        .toStringAsFixed(2)
+        .replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+        );
   }
 
   int _getPaidInvoicesCount(List<dynamic> invoices) {
@@ -837,14 +881,18 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
 
   double _calculateAverageAmount(List<dynamic> invoices) {
     if (invoices.isEmpty) return 0.0;
-    final total = invoices.fold<double>(0.0, (sum, invoice) => sum + invoice.amountNaira);
+    final total = invoices.fold<double>(
+      0.0,
+      (sum, invoice) => sum + invoice.amountNaira,
+    );
     return total / invoices.length;
   }
 
   int _getThisMonthCount(List<dynamic> invoices) {
     final now = DateTime.now();
     return invoices.where((invoice) {
-      return invoice.createdAt.year == now.year && invoice.createdAt.month == now.month;
+      return invoice.createdAt.year == now.year &&
+          invoice.createdAt.month == now.month;
     }).length;
   }
 }

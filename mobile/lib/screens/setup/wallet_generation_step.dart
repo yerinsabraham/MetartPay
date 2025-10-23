@@ -11,12 +11,12 @@ class WalletGenerationStep extends StatefulWidget {
   final VoidCallback onPrevious;
 
   const WalletGenerationStep({
-    Key? key,
+    super.key,
     required this.setupData,
     required this.onDataUpdate,
     required this.onNext,
     required this.onPrevious,
-  }) : super(key: key);
+  });
 
   @override
   State<WalletGenerationStep> createState() => _WalletGenerationStepState();
@@ -32,13 +32,16 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
   void initState() {
     super.initState();
     _walletAddresses = Map<String, String>.from(
-      widget.setupData['walletAddresses'] ?? {}
+      widget.setupData['walletAddresses'] ?? {},
     );
-    
+
     // Get crypto networks from provider
-    final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+    final merchantProvider = Provider.of<MerchantProvider>(
+      context,
+      listen: false,
+    );
     _cryptoNetworks = merchantProvider.getWalletNetworks();
-    
+
     // Auto-generate wallets if not already done
     if (_walletAddresses.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -56,7 +59,10 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
     await Future.delayed(const Duration(seconds: 3));
 
     // capture merchant provider and generate wallets
-    final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+    final merchantProvider = Provider.of<MerchantProvider>(
+      context,
+      listen: false,
+    );
     final generatedAddresses = merchantProvider.generateWalletAddresses();
 
     if (!mounted) return;
@@ -68,7 +74,7 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
     widget.onDataUpdate('walletAddresses', _walletAddresses);
 
     if (!mounted) return;
-    ScaffoldMessenger.of(this.context).showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Crypto wallets generated successfully!'),
         backgroundColor: Colors.green,
@@ -78,7 +84,7 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
 
   void _copyAddress(String address) {
     Clipboard.setData(ClipboardData(text: address));
-    ScaffoldMessenger.of(this.context).showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Address copied to clipboard'),
         duration: Duration(seconds: 2),
@@ -108,12 +114,12 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
           const SizedBox(height: 8),
           Text(
             'We\'ll generate secure wallet addresses for receiving crypto payments.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey[600],
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
           ),
           const SizedBox(height: 32),
-          
+
           Expanded(
             child: _isGenerating
                 ? _buildGeneratingState()
@@ -121,7 +127,7 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
           ),
 
           const SizedBox(height: 24),
-          
+
           // Action Buttons
           Row(
             children: [
@@ -181,7 +187,9 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
                 height: 80,
                 child: CircularProgressIndicator(
                   strokeWidth: 6,
-                  valueColor: AlwaysStoppedAnimation<Color>(MetartPayColors.primary),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    MetartPayColors.primary,
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -196,9 +204,9 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
               Text(
                 'Please wait while we create secure wallet addresses for your crypto payments.',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               ),
             ],
           ),
@@ -222,7 +230,11 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
             ),
             child: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.green.shade600, size: 32),
+                Icon(
+                  Icons.check_circle,
+                  color: Colors.green.shade600,
+                  size: 32,
+                ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -250,9 +262,9 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Wallet Networks with Tokens
           ..._cryptoNetworks.map((network) {
             return Container(
@@ -298,7 +310,7 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Tokens for this network
                   ...network['tokens'].map<Widget>((token) {
                     final address = _walletAddresses[token['key']] ?? '';
@@ -316,9 +328,14 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
                           Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: Color(network['color']).withAlpha((0.1 * 255).round()),
+                                  color: Color(
+                                    network['color'],
+                                  ).withAlpha((0.1 * 255).round()),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
@@ -369,7 +386,7 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
           }),
 
           const SizedBox(height: 16),
-          
+
           // Info Card
           Container(
             padding: const EdgeInsets.all(16),
@@ -385,10 +402,7 @@ class _WalletGenerationStepState extends State<WalletGenerationStep> {
                 Expanded(
                   child: Text(
                     'These wallet addresses are yours to keep. You can view and share them anytime from your dashboard.',
-                    style: TextStyle(
-                      color: Colors.blue.shade800,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.blue.shade800, fontSize: 14),
                   ),
                 ),
               ],

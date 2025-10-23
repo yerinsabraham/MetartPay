@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
-import 'screens/auth/auth_wrapper.dart';
 import 'screens/home/home_page_new.dart';
 import 'screens/receive_payments_screen.dart';
 import 'screens/payment_links/create_payment_link_screen.dart';
@@ -29,7 +28,7 @@ import 'utils/app_logger.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   try {
     AppLogger.d('DEBUG: Initializing Firebase...');
     await Firebase.initializeApp(
@@ -41,21 +40,36 @@ void main() async {
     // Initialize Firebase Messaging background handler
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     AppLogger.d('DEBUG: Firebase Messaging background handler registered');
-
   } catch (e, s) {
-    AppLogger.e('DEBUG: Firebase initialization failed: $e', error: e, stackTrace: s);
+    AppLogger.e(
+      'DEBUG: Firebase initialization failed: $e',
+      error: e,
+      stackTrace: s,
+    );
     // Continue app launch even if Firebase fails
   }
 
   // In debug builds, prefer connecting to the local Firestore emulator so
   // we don't hit production rules. This is best-effort and will try both
   // the convenience API and a Settings fallback for older plugin versions.
-  final baseUrl = const String.fromEnvironment('METARTPAY_BASE_URL', defaultValue: 'http://127.0.0.1:5001/metartpay-bac2f/us-central1/api');
-  final shouldUseEmulator = !bool.fromEnvironment('dart.vm.product') || baseUrl.contains('127.0.0.1') || baseUrl.contains('10.0.2.2') || const bool.fromEnvironment('FORCE_FIRESTORE_EMULATOR', defaultValue: false);
+  final baseUrl = const String.fromEnvironment(
+    'METARTPAY_BASE_URL',
+    defaultValue: 'http://127.0.0.1:5001/metartpay-bac2f/us-central1/api',
+  );
+  final shouldUseEmulator =
+      !bool.fromEnvironment('dart.vm.product') ||
+      baseUrl.contains('127.0.0.1') ||
+      baseUrl.contains('10.0.2.2') ||
+      const bool.fromEnvironment(
+        'FORCE_FIRESTORE_EMULATOR',
+        defaultValue: false,
+      );
   if (shouldUseEmulator) {
     try {
       FirebaseFirestore.instance.useFirestoreEmulator('127.0.0.1', 8080);
-      AppLogger.d('DEBUG: Firestore emulator configured via useFirestoreEmulator');
+      AppLogger.d(
+        'DEBUG: Firestore emulator configured via useFirestoreEmulator',
+      );
       // Also explicitly set Settings host to 127.0.0.1:8080 on debug devices.
       // Some plugin/platform combos remap to 10.0.2.2 internally which
       // doesn't work for physical devices; enforcing Settings ensures
@@ -66,9 +80,13 @@ void main() async {
           sslEnabled: false,
           persistenceEnabled: false,
         );
-        AppLogger.d('DEBUG: Firestore settings host explicitly set to 127.0.0.1:8080');
+        AppLogger.d(
+          'DEBUG: Firestore settings host explicitly set to 127.0.0.1:8080',
+        );
       } catch (es) {
-        AppLogger.w('DEBUG: Failed to explicitly set Firestore settings after useFirestoreEmulator: $es');
+        AppLogger.w(
+          'DEBUG: Failed to explicitly set Firestore settings after useFirestoreEmulator: $es',
+        );
       }
     } catch (e) {
       try {
@@ -77,7 +95,9 @@ void main() async {
           sslEnabled: false,
           persistenceEnabled: false,
         );
-        AppLogger.d('DEBUG: Firestore emulator configured via Settings fallback');
+        AppLogger.d(
+          'DEBUG: Firestore emulator configured via Settings fallback',
+        );
       } catch (e2) {
         AppLogger.e('DEBUG: Failed to configure Firestore emulator: $e / $e2');
       }
@@ -93,22 +113,28 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-  AppLogger.d('DEBUG: Building MetartPay App');
-    
+    AppLogger.d('DEBUG: Building MetartPay App');
+
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) {
-          AppLogger.d('DEBUG: Creating AuthProvider');
-          return AuthProvider();
-        }),
-        ChangeNotifierProvider(create: (_) {
-          AppLogger.d('DEBUG: Creating MerchantProvider');
-          return MerchantProvider();
-        }),
-        ChangeNotifierProvider(create: (_) {
-          AppLogger.d('DEBUG: Creating WalletProvider');
-          return WalletProvider();
-        }),
+        ChangeNotifierProvider(
+          create: (_) {
+            AppLogger.d('DEBUG: Creating AuthProvider');
+            return AuthProvider();
+          },
+        ),
+        ChangeNotifierProvider(
+          create: (_) {
+            AppLogger.d('DEBUG: Creating MerchantProvider');
+            return MerchantProvider();
+          },
+        ),
+        ChangeNotifierProvider(
+          create: (_) {
+            AppLogger.d('DEBUG: Creating WalletProvider');
+            return WalletProvider();
+          },
+        ),
         ChangeNotifierProxyProvider<MerchantProvider, PaymentLinkProvider>(
           create: (context) {
             AppLogger.d('DEBUG: Creating PaymentLinkProvider');
@@ -118,18 +144,24 @@ class MyApp extends StatelessWidget {
             return previous ?? PaymentLinkProvider(merchantProvider);
           },
         ),
-        ChangeNotifierProvider(create: (_) {
-          AppLogger.d('DEBUG: Creating NotificationProvider');
-          return NotificationProvider();
-        }),
-        ChangeNotifierProvider(create: (_) {
-          AppLogger.d('DEBUG: Creating SecurityProvider');
-          return SecurityProvider();
-        }),
-        ChangeNotifierProvider(create: (_) {
-          AppLogger.d('DEBUG: Creating CustomerProvider');
-          return CustomerProvider();
-        }),
+        ChangeNotifierProvider(
+          create: (_) {
+            AppLogger.d('DEBUG: Creating NotificationProvider');
+            return NotificationProvider();
+          },
+        ),
+        ChangeNotifierProvider(
+          create: (_) {
+            AppLogger.d('DEBUG: Creating SecurityProvider');
+            return SecurityProvider();
+          },
+        ),
+        ChangeNotifierProvider(
+          create: (_) {
+            AppLogger.d('DEBUG: Creating CustomerProvider');
+            return CustomerProvider();
+          },
+        ),
       ],
       child: MaterialApp(
         title: 'MetartPay',
@@ -166,10 +198,7 @@ class MyApp extends StatelessWidget {
             floatingLabelStyle: TextStyle(color: Color(0xFFC62B14)),
           ),
           useMaterial3: true,
-          appBarTheme: const AppBarTheme(
-            centerTitle: true,
-            elevation: 0,
-          ),
+          appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -185,15 +214,22 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-  // Set Home V2 (new simplified home) as the initial page per request.
-  // In debug builds use HomePageNewWrapper which adds a Demo FAB.
-  home: !bool.fromEnvironment('dart.vm.product') ? const HomePageNewWrapper() : const HomePageNew(),
+        // Set Home V2 (new simplified home) as the initial page per request.
+        // In debug builds use HomePageNewWrapper which adds a Demo FAB.
+        home: !bool.fromEnvironment('dart.vm.product')
+            ? const HomePageNewWrapper()
+            : const HomePageNew(),
         routes: {
           '/home': (context) => const HomePageNew(),
           '/home-v2': (context) => const HomePageNew(),
           // Lightweight alias routes for HomeController navigation
           '/receive': (context) {
-            final merchantId = Provider.of<MerchantProvider>(context, listen: false).currentMerchant?.id ?? '';
+            final merchantId =
+                Provider.of<MerchantProvider>(
+                  context,
+                  listen: false,
+                ).currentMerchant?.id ??
+                '';
             return ReceivePaymentsScreen(merchantId: merchantId);
           },
           '/create-payment-link': (context) => const CreatePaymentLinkScreen(),
@@ -206,10 +242,15 @@ class MyApp extends StatelessWidget {
           '/profile': (context) => const ProfileScreen(),
           '/notifications': (context) => const NotificationsScreen(),
           // Debug/demo route - only enabled in debug builds
-          if (!bool.fromEnvironment('dart.vm.product')) '/demo-simulate': (context) {
-            final baseUrl = const String.fromEnvironment('METARTPAY_BASE_URL', defaultValue: 'http://127.0.0.1:5001/metartpay-bac2f/us-central1/api');
-            return DemoSimulatePage(baseUrl: baseUrl);
-          },
+          if (!bool.fromEnvironment('dart.vm.product'))
+            '/demo-simulate': (context) {
+              final baseUrl = const String.fromEnvironment(
+                'METARTPAY_BASE_URL',
+                defaultValue:
+                    'http://127.0.0.1:5001/metartpay-bac2f/us-central1/api',
+              );
+              return DemoSimulatePage(baseUrl: baseUrl);
+            },
         },
       ),
     );

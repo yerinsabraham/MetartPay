@@ -73,22 +73,35 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Health check endpoint
+
+// Raw API status endpoint
+app.get('/api/status', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'API is healthy',
+        timestamp: new Date().toISOString(),
+        version: '1.0.0',
+    });
+});
+
+// Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0',
-  });
+    res.status(200).json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        version: '1.0.0',
+    });
 });
 
 // API routes
 // Dev helper: rewrite several common function/emulator wrapper prefixes so
 // local clients don't need to special-case paths. This middleware is active
 // in any non-production environment.
+import { Request, Response, NextFunction } from 'express';
 if (process.env.NODE_ENV !== 'production') {
-    app.use((req, res, next) => {
+    app.use((req: Request, res: Response, next: NextFunction) => {
         try {
-            const original = (req as any).url || req.url || '';
+            const original = req.url || '';
             let rewritten = original;
 
             // /functions/... -> /...
@@ -292,6 +305,8 @@ app.get('/pay', async (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
+// Export the Express app for local server usage
+export { app };
 // Export the Firebase Function (always exported for functions deployments)
 export const api = onRequest(app);
 

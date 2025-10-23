@@ -9,34 +9,51 @@ class HomeShortcuts extends StatelessWidget {
   final VoidCallback onViewTransactions;
 
   const HomeShortcuts({
-    Key? key,
+    super.key,
     required this.onCreate,
     required this.onViewTransactions,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     final spacing = 12.0;
-    return LayoutBuilder(builder: (context, constraints) {
-      final isWide = constraints.maxWidth > 480;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 480;
 
-      return GridView.count(
-        crossAxisCount: isWide ? 2 : 2,
-        mainAxisSpacing: spacing,
-        crossAxisSpacing: spacing,
-        // Make tiles square (width == height)
-        childAspectRatio: 1,
-        physics: const NeverScrollableScrollPhysics(),
-        shrinkWrap: true,
-        children: [
-          _actionCard(context, icon: Icons.qr_code_scanner, label: 'Create Payment', onTap: onCreate),
-          _actionCard(context, icon: Icons.receipt_long, label: 'View Transactions', onTap: onViewTransactions),
-        ],
-      );
-    });
+        return GridView.count(
+          crossAxisCount: isWide ? 2 : 2,
+          mainAxisSpacing: spacing,
+          crossAxisSpacing: spacing,
+          // Make tiles square (width == height)
+          childAspectRatio: 1,
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          children: [
+            _actionCard(
+              context,
+              icon: Icons.qr_code_scanner,
+              label: 'Create Payment',
+              onTap: onCreate,
+            ),
+            _actionCard(
+              context,
+              icon: Icons.receipt_long,
+              label: 'View Transactions',
+              onTap: onViewTransactions,
+            ),
+          ],
+        );
+      },
+    );
   }
 
-  Widget _actionCard(BuildContext context, {required IconData icon, required String label, required VoidCallback onTap}) {
+  Widget _actionCard(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
     final cs = Theme.of(context).colorScheme;
 
     // Square tile, no shadow. Use thin gray border instead of elevation.
@@ -65,7 +82,11 @@ class HomeShortcuts extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               label,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -81,7 +102,11 @@ class SimpleDashboard extends StatefulWidget {
   final dynamic merchant;
   final VoidCallback onCreatePressed;
 
-  const SimpleDashboard({Key? key, this.merchant, required this.onCreatePressed}) : super(key: key);
+  const SimpleDashboard({
+    super.key,
+    this.merchant,
+    required this.onCreatePressed,
+  });
 
   @override
   State<SimpleDashboard> createState() => _SimpleDashboardState();
@@ -113,15 +138,26 @@ class _SimpleDashboardState extends State<SimpleDashboard> {
       }
 
       final svc = FirebaseService();
-      final analytics = await svc.getMerchantAnalytics(merchantId, startDate: DateTime.now(), endDate: DateTime.now());
+      final analytics = await svc.getMerchantAnalytics(
+        merchantId,
+        startDate: DateTime.now(),
+        endDate: DateTime.now(),
+      );
 
       setState(() {
         _todaysSales = (analytics['totalRevenue'] as num?)?.toDouble() ?? 0.0;
-        _settledToday = (analytics['recentTransactions'] as List?)?.fold<double>(0.0, (sum, t) {
-          final map = t as Map<String, dynamic>;
-          return sum + ((map['amountNaira'] as num?)?.toDouble() ?? 0.0);
-        }) ?? 0.0;
-        _cryptoReceived = analytics['recentTransactions'] != null && (analytics['recentTransactions'] as List).isNotEmpty
+        _settledToday =
+            (analytics['recentTransactions'] as List?)?.fold<double>(0.0, (
+              sum,
+              t,
+            ) {
+              final map = t as Map<String, dynamic>;
+              return sum + ((map['amountNaira'] as num?)?.toDouble() ?? 0.0);
+            }) ??
+            0.0;
+        _cryptoReceived =
+            analytics['recentTransactions'] != null &&
+                (analytics['recentTransactions'] as List).isNotEmpty
             ? '${((analytics['recentTransactions'] as List).first['amountCrypto'] ?? 0.0).toString()} ${((analytics['recentTransactions'] as List).first['cryptoSymbol'] ?? '')}'
             : '0.0';
       });
@@ -148,19 +184,49 @@ class _SimpleDashboardState extends State<SimpleDashboard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Today's Sale should be white on the gradient
-          Text("Today's Sales", style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white)),
+          Text(
+            "Today's Sales",
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.white),
+          ),
           const SizedBox(height: 8),
           _loading
-              ? const SizedBox(height: 36, child: Center(child: CircularProgressIndicator()))
-              : Text('₦${_todaysSales.toStringAsFixed(0)}', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.white)),
+              ? const SizedBox(
+                  height: 36,
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              : Text(
+                  '₦${_todaysSales.toStringAsFixed(0)}',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
           const SizedBox(height: 8),
           // Use a lighter contrasting color for the secondary pieces of text
-          Text('Settled: ₦${_settledToday.toStringAsFixed(0)}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70, fontWeight: FontWeight.w600)),
+          Text(
+            'Settled: ₦${_settledToday.toStringAsFixed(0)}',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Colors.white70,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 6),
           if ((_todaysSales - _settledToday) > 0)
-            Text('Pending Conversion: ₦${(_todaysSales - _settledToday).toStringAsFixed(0)}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white70)),
+            Text(
+              'Pending Conversion: ₦${(_todaysSales - _settledToday).toStringAsFixed(0)}',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.white70),
+            ),
           const SizedBox(height: 8),
-          Text('Crypto Received: $_cryptoReceived | Auto Converted: ₦${_settledToday.toStringAsFixed(0)}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white70)),
+          Text(
+            'Crypto Received: $_cryptoReceived | Auto Converted: ₦${_settledToday.toStringAsFixed(0)}',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.white70),
+          ),
         ],
       ),
     );

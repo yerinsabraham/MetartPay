@@ -19,14 +19,14 @@ class SecurityService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
-  
+
   static const String _currentSessionKey = 'current_session';
   static const String _deviceIdKey = 'device_id';
   static const String _sessionTokenKey = 'session_token';
 
   String? _currentSessionId;
   String? _deviceId;
-  
+
   // Initialize security service
   Future<void> initialize() async {
     _deviceId = await _getOrCreateDeviceId();
@@ -41,7 +41,7 @@ class SecurityService {
     final sessionId = _generateSessionId();
     final deviceInfo = await _getDeviceInfo();
     final packageInfo = await PackageInfo.fromPlatform();
-    
+
     final session = UserSession(
       id: sessionId,
       userId: userId,
@@ -71,7 +71,7 @@ class SecurityService {
 
     // Store current session locally
     await _storeCurrentSession(session);
-    
+
     // Log security event
     await logSecurityEvent(
       userId: userId,
@@ -93,9 +93,7 @@ class SecurityService {
       await _firestore
           .collection('user_sessions')
           .doc(_currentSessionId!)
-          .update({
-        'lastActivity': DateTime.now().toIso8601String(),
-      });
+          .update({'lastActivity': DateTime.now().toIso8601String()});
     } catch (e) {
       AppLogger.e('Error updating session activity', error: e);
     }
@@ -110,10 +108,10 @@ class SecurityService {
           .collection('user_sessions')
           .doc(_currentSessionId!)
           .update({
-        'isActive': false,
-        'logoutTime': DateTime.now().toIso8601String(),
-        'metadata.logoutReason': reason ?? 'user_logout',
-      });
+            'isActive': false,
+            'logoutTime': DateTime.now().toIso8601String(),
+            'metadata.logoutReason': reason ?? 'user_logout',
+          });
 
       // Log security event
       if (_auth.currentUser != null) {
@@ -157,10 +155,7 @@ class SecurityService {
   // End specific session
   Future<void> endSpecificSession(String sessionId, {String? reason}) async {
     try {
-      await _firestore
-          .collection('user_sessions')
-          .doc(sessionId)
-          .update({
+      await _firestore.collection('user_sessions').doc(sessionId).update({
         'isActive': false,
         'logoutTime': DateTime.now().toIso8601String(),
         'metadata.logoutReason': reason ?? 'terminated_by_user',
@@ -180,10 +175,13 @@ class SecurityService {
   Future<void> endAllOtherSessions(String userId) async {
     try {
       final activeSessions = await getActiveSessions(userId);
-      
+
       for (final session in activeSessions) {
         if (session.id != _currentSessionId) {
-          await endSpecificSession(session.id, reason: 'terminated_by_user_all_sessions');
+          await endSpecificSession(
+            session.id,
+            reason: 'terminated_by_user_all_sessions',
+          );
         }
       }
 
@@ -211,7 +209,7 @@ class SecurityService {
   }) async {
     try {
       final deviceInfo = await _getDeviceInfo();
-      
+
       final securityLog = SecurityLog(
         id: _generateLogId(),
         userId: userId,
@@ -254,17 +252,25 @@ class SecurityService {
       }
 
       if (startDate != null) {
-        query = query.where('timestamp', isGreaterThanOrEqualTo: startDate.toIso8601String());
+        query = query.where(
+          'timestamp',
+          isGreaterThanOrEqualTo: startDate.toIso8601String(),
+        );
       }
 
       if (endDate != null) {
-        query = query.where('timestamp', isLessThanOrEqualTo: endDate.toIso8601String());
+        query = query.where(
+          'timestamp',
+          isLessThanOrEqualTo: endDate.toIso8601String(),
+        );
       }
 
       final querySnapshot = await query.limit(limit).get();
 
       return querySnapshot.docs
-          .map((doc) => SecurityLog.fromJson(doc.data() as Map<String, dynamic>))
+          .map(
+            (doc) => SecurityLog.fromJson(doc.data() as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       AppLogger.e('Error getting security logs', error: e);
@@ -275,39 +281,38 @@ class SecurityService {
   // Detect suspicious activity
   Future<List<SecurityAlert>> detectSuspiciousActivity(String userId) async {
     final List<SecurityAlert> alerts = [];
-    
+
     try {
       // Check for multiple failed login attempts
       await _checkFailedLoginAttempts(userId, alerts);
-      
+
       // Check for logins from new devices
       await _checkNewDeviceLogins(userId, alerts);
-      
+
       // Check for unusual transaction patterns
       await _checkUnusualTransactionActivity(userId, alerts);
-      
+
       // Check for concurrent sessions from different locations
       await _checkConcurrentSessions(userId, alerts);
-      
     } catch (e) {
       AppLogger.e('Error detecting suspicious activity', error: e);
     }
-    
+
     return alerts;
   }
 
   // Validate current session
   Future<bool> validateCurrentSession() async {
     if (_currentSessionId == null) return false;
-    
+
     try {
       final doc = await _firestore
           .collection('user_sessions')
           .doc(_currentSessionId!)
           .get();
-      
+
       if (!doc.exists) return false;
-      
+
       final session = UserSession.fromJson(doc.data()!);
       return session.isActive && !session.isExpired();
     } catch (e) {
@@ -319,10 +324,10 @@ class SecurityService {
   // Force session refresh
   Future<bool> refreshSession() async {
     if (_auth.currentUser == null) return false;
-    
+
     // End current session if exists
     await endSession(reason: 'session_refresh');
-    
+
     // Create new session
     final newSession = await createSession(userId: _auth.currentUser!.uid);
     return newSession.isActive;
@@ -331,19 +336,20 @@ class SecurityService {
   // Private helper methods
   Future<String> _getOrCreateDeviceId() async {
     String? deviceId = await _secureStorage.read(key: _deviceIdKey);
-    
+
     if (deviceId == null) {
       final deviceInfo = await _getDeviceInfo();
       final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-      final input = '${deviceInfo['deviceModel']}_${deviceInfo['deviceName']}_$timestamp';
-      
+      final input =
+          '${deviceInfo['deviceModel']}_${deviceInfo['deviceName']}_$timestamp';
+
       final bytes = utf8.encode(input);
       final digest = sha256.convert(bytes);
       deviceId = digest.toString().substring(0, 16);
-      
+
       await _secureStorage.write(key: _deviceIdKey, value: deviceId);
     }
-    
+
     return deviceId;
   }
 
@@ -355,7 +361,8 @@ class SecurityService {
           'deviceName': androidInfo.model,
           'deviceModel': '${androidInfo.brand} ${androidInfo.model}',
           'operatingSystem': 'Android ${androidInfo.version.release}',
-          'userAgent': 'Android/${androidInfo.version.release} ${androidInfo.brand}/${androidInfo.model}',
+          'userAgent':
+              'Android/${androidInfo.version.release} ${androidInfo.brand}/${androidInfo.model}',
         };
       } else if (Platform.isIOS) {
         final iosInfo = await _deviceInfo.iosInfo;
@@ -363,7 +370,8 @@ class SecurityService {
           'deviceName': iosInfo.name,
           'deviceModel': '${iosInfo.model} ${iosInfo.systemName}',
           'operatingSystem': '${iosInfo.systemName} ${iosInfo.systemVersion}',
-          'userAgent': '${iosInfo.systemName}/${iosInfo.systemVersion} ${iosInfo.model}',
+          'userAgent':
+              '${iosInfo.systemName}/${iosInfo.systemVersion} ${iosInfo.model}',
         };
       } else {
         return {
@@ -401,14 +409,14 @@ class SecurityService {
   String _generateSessionToken() {
     final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
     final random = timestamp.hashCode.toString();
-    final bytes = utf8.encode('$timestamp:$random:${_deviceId}');
+    final bytes = utf8.encode('$timestamp:$random:$_deviceId');
     final digest = sha256.convert(bytes);
     return digest.toString();
   }
 
   String _generateLogId() {
     final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-    final bytes = utf8.encode('$timestamp:${_deviceId}');
+    final bytes = utf8.encode('$timestamp:$_deviceId');
     final digest = sha256.convert(bytes);
     return digest.toString().substring(0, 24);
   }
@@ -416,7 +424,10 @@ class SecurityService {
   Future<void> _storeCurrentSession(UserSession session) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_currentSessionKey, session.id);
-    await _secureStorage.write(key: _sessionTokenKey, value: session.sessionToken);
+    await _secureStorage.write(
+      key: _sessionTokenKey,
+      value: session.sessionToken,
+    );
   }
 
   Future<void> _loadCurrentSession() async {
@@ -431,65 +442,86 @@ class SecurityService {
   }
 
   // Suspicious activity detection methods
-  Future<void> _checkFailedLoginAttempts(String userId, List<SecurityAlert> alerts) async {
+  Future<void> _checkFailedLoginAttempts(
+    String userId,
+    List<SecurityAlert> alerts,
+  ) async {
     final oneDayAgo = DateTime.now().subtract(const Duration(days: 1));
-    
-    final logs = await getSecurityLogs(
-      userId,
-      startDate: oneDayAgo,
-    );
-    
-    final failedAttempts = logs.where((log) => 
-      log.eventType == 'failed_login' || 
-      log.eventDescription.toLowerCase().contains('failed')
-    ).length;
-    
+
+    final logs = await getSecurityLogs(userId, startDate: oneDayAgo);
+
+    final failedAttempts = logs
+        .where(
+          (log) =>
+              log.eventType == 'failed_login' ||
+              log.eventDescription.toLowerCase().contains('failed'),
+        )
+        .length;
+
     if (failedAttempts >= 5) {
-      alerts.add(SecurityAlert(
-        type: 'multiple_failed_attempts',
-        severity: 'high',
-        message: 'Multiple failed login attempts detected ($failedAttempts in the last 24 hours)',
-        timestamp: DateTime.now(),
-      ));
+      alerts.add(
+        SecurityAlert(
+          type: 'multiple_failed_attempts',
+          severity: 'high',
+          message:
+              'Multiple failed login attempts detected ($failedAttempts in the last 24 hours)',
+          timestamp: DateTime.now(),
+        ),
+      );
     }
   }
 
-  Future<void> _checkNewDeviceLogins(String userId, List<SecurityAlert> alerts) async {
+  Future<void> _checkNewDeviceLogins(
+    String userId,
+    List<SecurityAlert> alerts,
+  ) async {
     // This is simplified - in production, you'd track known devices
     final sessions = await getActiveSessions(userId);
     final uniqueDevices = sessions.map((s) => s.deviceId).toSet();
-    
+
     if (uniqueDevices.length > 3) {
-      alerts.add(SecurityAlert(
-        type: 'multiple_devices',
-        severity: 'medium',
-        message: 'Account accessed from ${uniqueDevices.length} different devices',
-        timestamp: DateTime.now(),
-      ));
+      alerts.add(
+        SecurityAlert(
+          type: 'multiple_devices',
+          severity: 'medium',
+          message:
+              'Account accessed from ${uniqueDevices.length} different devices',
+          timestamp: DateTime.now(),
+        ),
+      );
     }
   }
 
-  Future<void> _checkUnusualTransactionActivity(String userId, List<SecurityAlert> alerts) async {
+  Future<void> _checkUnusualTransactionActivity(
+    String userId,
+    List<SecurityAlert> alerts,
+  ) async {
     // This would integrate with transaction data
     // For now, it's a placeholder
   }
 
-  Future<void> _checkConcurrentSessions(String userId, List<SecurityAlert> alerts) async {
+  Future<void> _checkConcurrentSessions(
+    String userId,
+    List<SecurityAlert> alerts,
+  ) async {
     final sessions = await getActiveSessions(userId);
-    
+
     if (sessions.length > 2) {
-      alerts.add(SecurityAlert(
-        type: 'concurrent_sessions',
-        severity: 'medium',
-        message: 'Multiple active sessions detected (${sessions.length} sessions)',
-        timestamp: DateTime.now(),
-      ));
+      alerts.add(
+        SecurityAlert(
+          type: 'concurrent_sessions',
+          severity: 'medium',
+          message:
+              'Multiple active sessions detected (${sessions.length} sessions)',
+          timestamp: DateTime.now(),
+        ),
+      );
     }
   }
 
   // Get current session ID
   String? get currentSessionId => _currentSessionId;
-  
+
   // Get device ID
   String? get deviceId => _deviceId;
 }

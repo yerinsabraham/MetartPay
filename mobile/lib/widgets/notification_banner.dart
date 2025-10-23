@@ -7,7 +7,12 @@ class NotificationBanner extends StatelessWidget {
   final NotificationType type;
   final VoidCallback? onClose;
 
-  const NotificationBanner({Key? key, required this.message, this.type = NotificationType.info, this.onClose}) : super(key: key);
+  const NotificationBanner({
+    super.key,
+    required this.message,
+    this.type = NotificationType.info,
+    this.onClose,
+  });
 
   Color _bgColor(BuildContext context) {
     switch (type) {
@@ -51,7 +56,15 @@ class NotificationBanner extends StatelessWidget {
             children: [
               Icon(_icon(), color: Colors.white),
               const SizedBox(width: 12),
-              Expanded(child: Text(message, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600))),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
               if (onClose != null)
                 IconButton(
                   icon: const Icon(Icons.close, color: Colors.white),

@@ -11,7 +11,7 @@ import '../../services/payments_service_v2.dart';
 
 class CountdownTimer extends StatefulWidget {
   final DateTime expiresAt;
-  const CountdownTimer({Key? key, required this.expiresAt}) : super(key: key);
+  const CountdownTimer({super.key, required this.expiresAt});
 
   @override
   State<CountdownTimer> createState() => _CountdownTimerState();
@@ -25,13 +25,18 @@ class _CountdownTimerState extends State<CountdownTimer> {
   void initState() {
     super.initState();
     _updateRemaining();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateRemaining());
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _updateRemaining(),
+    );
   }
 
   void _updateRemaining() {
     final now = DateTime.now();
     setState(() {
-      _remaining = widget.expiresAt.difference(now).isNegative ? Duration.zero : widget.expiresAt.difference(now);
+      _remaining = widget.expiresAt.difference(now).isNegative
+          ? Duration.zero
+          : widget.expiresAt.difference(now);
     });
   }
 
@@ -43,20 +48,30 @@ class _CountdownTimerState extends State<CountdownTimer> {
 
   @override
   Widget build(BuildContext context) {
-    final minutes = _remaining.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final seconds = _remaining.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return Text('Expires in $minutes:$seconds', style: Theme.of(context).textTheme.bodySmall);
+    final minutes = _remaining.inMinutes
+        .remainder(60)
+        .toString()
+        .padLeft(2, '0');
+    final seconds = _remaining.inSeconds
+        .remainder(60)
+        .toString()
+        .padLeft(2, '0');
+    return Text(
+      'Expires in $minutes:$seconds',
+      style: Theme.of(context).textTheme.bodySmall,
+    );
   }
 }
 
 class QRViewV2 extends StatefulWidget {
-  const QRViewV2({Key? key}) : super(key: key);
+  const QRViewV2({super.key});
 
   @override
   State<QRViewV2> createState() => _QRViewV2State();
 }
 
-class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin {
+class _QRViewV2State extends State<QRViewV2>
+    with SingleTickerProviderStateMixin {
   String _payload = '';
   // UI enforces address-only Solana QR payloads to maximize compatibility.
   double _crypto = 0.0;
@@ -76,8 +91,14 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _initFromArgs());
-    _pulseController = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
-    _pulseAnim = Tween<double>(begin: 1.0, end: 1.06).chain(CurveTween(curve: Curves.easeInOut)).animate(_pulseController);
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _pulseAnim = Tween<double>(
+      begin: 1.0,
+      end: 1.06,
+    ).chain(CurveTween(curve: Curves.easeInOut)).animate(_pulseController);
     _pulseController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         _pulseController.reverse();
@@ -89,11 +110,13 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
   }
 
   void _initFromArgs() {
-    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>? ?? {};
+    final args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>? ??
+        {};
     setState(() {
       _payload = args['payload'] ?? '';
       _crypto = (args['crypto'] as num?)?.toDouble() ?? 0.0;
-  _token = args['token'] ?? '';
+      _token = args['token'] ?? '';
       _merchantId = args['merchantId'];
       _paymentId = args['paymentId'];
       _address = args['address'];
@@ -110,7 +133,7 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
     // Normalize Solana payloads: always display address-only (strip query params)
     // so the in-app QR exactly matches the safe simple payload shown in tools/.
     try {
-      if (_payload != null && _payload.startsWith('solana:')) {
+      if (_payload.startsWith('solana:')) {
         final parts = _payload.split(':');
         if (parts.length > 1) {
           // Preserve original casing from backend/terminal. Only strip query params and trim.
@@ -119,7 +142,9 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
           _payload = 'solana:$addr';
           // Trim to remove any accidental whitespace/newlines that could break scanners
           _payload = _payload.trim();
-          AppLogger.d('Normalized Solana payload to address-only (preserved case): $_payload');
+          AppLogger.d(
+            'Normalized Solana payload to address-only (preserved case): $_payload',
+          );
         }
       }
     } catch (e) {
@@ -127,7 +152,10 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
     }
 
     // If payload empty but we have address/token/network, synthesize a proper network payload
-    if ((_payload == null || _payload.isEmpty) && _address != null && _token.isNotEmpty && _paymentId != null) {
+    if ((_payload.isEmpty) &&
+        _address != null &&
+        _token.isNotEmpty &&
+        _paymentId != null) {
       try {
         final double cryptoAmount = _crypto;
         // Default synthesize to address-only for safety; UI allows toggling to prefill
@@ -150,31 +178,41 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
 
     // Subscribe to transactions if merchantId provided
     if (_merchantId != null && !AppConfig.devMockCreate) {
-      _txSub = _svc.watchMerchantTransactions(_merchantId!).listen((txs) {
-        for (final t in txs) {
-          try {
-            // match by paymentId if provided, else match by payload address if possible
-            if (_paymentId != null && t.invoiceId == _paymentId && t.status == 'paid') {
-              _onConfirmed(t);
-              return;
-            }
+      _txSub = _svc
+          .watchMerchantTransactions(_merchantId!)
+          .listen(
+            (txs) {
+              for (final t in txs) {
+                try {
+                  // match by paymentId if provided, else match by payload address if possible
+                  if (_paymentId != null &&
+                      t.invoiceId == _paymentId &&
+                      t.status == 'paid') {
+                    _onConfirmed(t);
+                    return;
+                  }
 
-            // If payload is an address-like payload: try to extract address
-            if (_payload.startsWith('pay:')) {
-              final address = _payload.split(':')[1].split('?').first;
-              if (t.toAddress == address && t.status == 'paid') {
-                _onConfirmed(t);
-                return;
+                  // If payload is an address-like payload: try to extract address
+                  if (_payload.startsWith('pay:')) {
+                    final address = _payload.split(':')[1].split('?').first;
+                    if (t.toAddress == address && t.status == 'paid') {
+                      _onConfirmed(t);
+                      return;
+                    }
+                  }
+                } catch (err) {
+                  AppLogger.w('Error processing transaction stream item: $err');
+                }
               }
-            }
-          } catch (err) {
-            AppLogger.w('Error processing transaction stream item: $err');
-          }
-        }
-      }, onError: (err) {
-        // Log and swallow Firestore permission errors so the UI doesn't crash.
-        AppLogger.e('Merchant transactions stream error: $err', error: err);
-      });
+            },
+            onError: (err) {
+              // Log and swallow Firestore permission errors so the UI doesn't crash.
+              AppLogger.e(
+                'Merchant transactions stream error: $err',
+                error: err,
+              );
+            },
+          );
     }
   }
 
@@ -183,7 +221,9 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
       setState(() => _confirmed = true);
       // Haptic feedback
       HapticFeedback.vibrate();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Payment received: ₦${t.amountNaira}')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Payment received: ₦${t.amountNaira}')),
+      );
 
       // Try to mark invoice as paid (idempotent on backend)
       _maybeMarkInvoicePaid(t);
@@ -205,7 +245,10 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
         AppLogger.d('Marked invoice ${t.invoiceId} as paid (from QRViewV2)');
       }
     } catch (e) {
-      AppLogger.e('Failed to update invoice status from QRViewV2: $e', error: e);
+      AppLogger.e(
+        'Failed to update invoice status from QRViewV2: $e',
+        error: e,
+      );
     }
   }
 
@@ -220,12 +263,13 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
       receipt.writeln('Chain: ${t.chain}');
       receipt.writeln('TxHash: ${t.txHash ?? '-'}');
       receipt.writeln('Date: ${t.createdAt.toIso8601String()}');
-  await SharePlus.instance.share(ShareParams(text: receipt.toString(), subject: 'Payment Receipt'));
+      await SharePlus.instance.share(
+        ShareParams(text: receipt.toString(), subject: 'Payment Receipt'),
+      );
     } catch (e) {
       AppLogger.e('Failed to share receipt: $e', error: e);
     }
   }
-
 
   Future<void> _saveReceiptRecord(models.Transaction t) async {
     try {
@@ -274,20 +318,28 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
                 children: [
                   Card(
                     elevation: 6,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(20),
                       child: Column(
                         children: [
-                          Text(_paymentId != null ? 'Invoice QR' : 'Quick Receive', style: theme.textTheme.titleLarge),
+                          Text(
+                            _paymentId != null ? 'Invoice QR' : 'Quick Receive',
+                            style: theme.textTheme.titleLarge,
+                          ),
                           const SizedBox(height: 12),
                           AnimatedBuilder(
                             animation: _pulseAnim,
-                            builder: (context, child) => Transform.scale(scale: _confirmed ? 1.0 : _pulseAnim.value, child: child),
+                            builder: (context, child) => Transform.scale(
+                              scale: _confirmed ? 1.0 : _pulseAnim.value,
+                              child: child,
+                            ),
                             child: Stack(
                               alignment: Alignment.center,
-                                children: [
-                                  QrImageView(
+                              children: [
+                                QrImageView(
                                   data: _payload,
                                   size: qrSize,
                                   errorCorrectionLevel: QrErrorCorrectLevel.H,
@@ -316,42 +368,74 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
                           if (_crypto > 0)
                             Column(
                               children: [
-                                Text('${_crypto.toStringAsFixed(6)} $_token', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-                                if (_nairaAmount != null) const SizedBox(height: 6),
+                                Text(
+                                  '${_crypto.toStringAsFixed(6)} $_token',
+                                  style: theme.textTheme.headlineSmall
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
                                 if (_nairaAmount != null)
-                                  Text('₦${_nairaAmount!.toStringAsFixed(2)}', style: theme.textTheme.bodyLarge),
+                                  const SizedBox(height: 6),
+                                if (_nairaAmount != null)
+                                  Text(
+                                    '₦${_nairaAmount!.toStringAsFixed(2)}',
+                                    style: theme.textTheme.bodyLarge,
+                                  ),
                               ],
                             ),
                           const SizedBox(height: 8),
                           // For Solana we show a static 'Address Only' chip and keep the UI minimal.
-                          if ((_payload.startsWith('solana:') || (_address != null && _token == 'SOL')))
+                          if ((_payload.startsWith('solana:') ||
+                              (_address != null && _token == 'SOL')))
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0,
+                              ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: const [
-                                  Chip(label: Text('Address Only'), backgroundColor: Colors.grey),
+                                  Chip(
+                                    label: Text('Address Only'),
+                                    backgroundColor: Colors.grey,
+                                  ),
                                 ],
                               ),
                             ),
-                          if (_address != null) Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                            child: SelectableText(_address!, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Monospace')),
-                          ),
+                          if (_address != null)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0,
+                              ),
+                              child: SelectableText(
+                                _address!,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontFamily: 'Monospace'),
+                              ),
+                            ),
                           const SizedBox(height: 12),
-                          if (_expiresAt != null) CountdownTimer(expiresAt: _expiresAt!),
+                          if (_expiresAt != null)
+                            CountdownTimer(expiresAt: _expiresAt!),
                           const SizedBox(height: 8),
                           Row(
                             children: [
                               Expanded(
                                 child: ElevatedButton.icon(
                                   onPressed: () async {
-                                    await Clipboard.setData(ClipboardData(text: _address ?? _payload));
-                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Address copied')));
+                                    await Clipboard.setData(
+                                      ClipboardData(text: _address ?? _payload),
+                                    );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Address copied'),
+                                      ),
+                                    );
                                   },
                                   icon: const Icon(Icons.copy),
                                   label: const Text('Copy'),
-                                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -359,14 +443,23 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
                                 child: ElevatedButton.icon(
                                   onPressed: () async {
                                     try {
-                                      await SharePlus.instance.share(ShareParams(text: _payload, subject: 'Payment Request'));
+                                      await SharePlus.instance.share(
+                                        ShareParams(
+                                          text: _payload,
+                                          subject: 'Payment Request',
+                                        ),
+                                      );
                                     } catch (e) {
                                       AppLogger.e('Share failed: $e', error: e);
                                     }
                                   },
                                   icon: const Icon(Icons.share),
                                   label: const Text('Share'),
-                                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
@@ -387,19 +480,35 @@ class _QRViewV2State extends State<QRViewV2> with SingleTickerProviderStateMixin
                 child: Center(
                   child: Card(
                     color: Colors.green[700],
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(24.0),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.check_circle_outline, size: 64, color: Colors.white),
+                          Icon(
+                            Icons.check_circle_outline,
+                            size: 64,
+                            color: Colors.white,
+                          ),
                           const SizedBox(height: 12),
-                          const Text('Payment Confirmed', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                          const Text(
+                            'Payment Confirmed',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           const SizedBox(height: 8),
                           ElevatedButton(
                             onPressed: () => Navigator.pop(context),
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.green[900]),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.green[900],
+                            ),
                             child: const Text('Done'),
                           ),
                         ],

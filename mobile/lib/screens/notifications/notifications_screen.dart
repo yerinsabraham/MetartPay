@@ -8,13 +8,14 @@ import '../../widgets/metartpay_branding.dart';
 import 'notification_settings_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
-  const NotificationsScreen({Key? key}) : super(key: key);
+  const NotificationsScreen({super.key});
 
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
-class _NotificationsScreenState extends State<NotificationsScreen> with SingleTickerProviderStateMixin {
+class _NotificationsScreenState extends State<NotificationsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final DateFormat _dateFormat = DateFormat('MMM d, yyyy h:mm a');
 
@@ -22,11 +23,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final notificationProvider = context.read<NotificationProvider>();
       final merchantProvider = context.read<MerchantProvider>();
-      
+
       if (merchantProvider.currentMerchant != null) {
         notificationProvider.initialize(merchantProvider.currentMerchant!.id);
       }
@@ -47,7 +48,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: MetartPayColors.primary),
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: MetartPayColors.primary,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -61,7 +65,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
           Consumer<NotificationProvider>(
             builder: (context, notificationProvider, _) {
               return PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, color: MetartPayColors.primary),
+                icon: const Icon(
+                  Icons.more_vert,
+                  color: MetartPayColors.primary,
+                ),
                 onSelected: (value) {
                   switch (value) {
                     case 'mark_all_read':
@@ -126,7 +133,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
                     if (provider.unreadCount > 0) ...[
                       const SizedBox(width: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: MetartPayColors.primary,
                           borderRadius: BorderRadius.circular(10),
@@ -157,7 +167,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
           }
 
           if (notificationProvider.error != null) {
-            return _buildErrorState(notificationProvider.error!, notificationProvider);
+            return _buildErrorState(
+              notificationProvider.error!,
+              notificationProvider,
+            );
           }
 
           return TabBarView(
@@ -199,11 +212,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.notifications_none,
-            size: 64,
-            color: Colors.grey,
-          ),
+          Icon(Icons.notifications_none, size: 64, color: Colors.grey),
           SizedBox(height: 16),
           Text(
             'No notifications yet',
@@ -216,10 +225,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
           SizedBox(height: 8),
           Text(
             'We\'ll notify you about important updates',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey),
           ),
         ],
       ),
@@ -231,11 +237,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Colors.red,
-          ),
+          const Icon(Icons.error_outline, size: 64, color: Colors.red),
           const SizedBox(height: 16),
           const Text(
             'Failed to load notifications',
@@ -248,10 +250,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
           const SizedBox(height: 8),
           Text(
             error,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
-            ),
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -274,7 +273,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
         color: notification.isRead ? Colors.white : Colors.blue.shade50,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: notification.isRead ? Colors.grey.shade200 : Colors.blue.shade200,
+          color: notification.isRead
+              ? Colors.grey.shade200
+              : Colors.blue.shade200,
         ),
         boxShadow: [
           BoxShadow(
@@ -294,15 +295,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
             color: Colors.red,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: const Icon(
-            Icons.delete,
-            color: Colors.white,
-          ),
+          child: const Icon(Icons.delete, color: Colors.white),
         ),
         onDismissed: (direction) {
           final notificationProvider = context.read<NotificationProvider>();
           notificationProvider.deleteNotification(notification.id);
-          
+
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Notification deleted'),
@@ -315,7 +313,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
           leading: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: _getNotificationColor(notification.type).withAlpha((0.1 * 255).round()),
+              color: _getNotificationColor(
+                notification.type,
+              ).withAlpha((0.1 * 255).round()),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -330,14 +330,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
                 child: Text(
                   notification.title,
                   style: TextStyle(
-                    fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
+                    fontWeight: notification.isRead
+                        ? FontWeight.normal
+                        : FontWeight.bold,
                     fontSize: 14,
                   ),
                 ),
               ),
               if (notification.isCritical)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.red,
                     borderRadius: BorderRadius.circular(4),
@@ -368,10 +373,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
                 children: [
                   Text(
                     _dateFormat.format(notification.createdAt),
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey[500],
-                    ),
+                    style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                   ),
                   const Spacer(),
                   Text(
@@ -391,7 +393,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
                     _handleNotificationAction(notification);
                   },
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     minimumSize: Size.zero,
                   ),
                   child: Text(
@@ -425,12 +430,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
 
   void _handleNotificationTap(AppNotification notification) {
     final notificationProvider = context.read<NotificationProvider>();
-    
+
     // Mark as read if not already
     if (!notification.isRead) {
       notificationProvider.markAsRead(notification.id);
     }
-    
+
     // Handle specific notification types
     switch (notification.type) {
       case 'kyc_update':
@@ -483,7 +488,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: _getNotificationColor(notification.type).withAlpha((0.1 * 255).round()),
+                      color: _getNotificationColor(
+                        notification.type,
+                      ).withAlpha((0.1 * 255).round()),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -581,7 +588,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
       title: 'Test Notification',
       body: 'This is a test notification sent at ${DateTime.now().toString()}',
     );
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Test notification sent!'),
@@ -590,12 +597,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
     );
   }
 
-  void _showMarkAllReadDialog(BuildContext context, NotificationProvider provider) {
+  void _showMarkAllReadDialog(
+    BuildContext context,
+    NotificationProvider provider,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Mark All as Read'),
-        content: const Text('Are you sure you want to mark all notifications as read?'),
+        content: const Text(
+          'Are you sure you want to mark all notifications as read?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -605,7 +617,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
             onPressed: () async {
               Navigator.pop(context);
               await provider.markAllAsRead();
-              
+
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(

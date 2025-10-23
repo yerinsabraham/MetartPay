@@ -10,7 +10,7 @@ import 'wallet_generation_step.dart';
 import 'setup_confirmation_step.dart';
 
 class MerchantSetupWizard extends StatefulWidget {
-  const MerchantSetupWizard({Key? key}) : super(key: key);
+  const MerchantSetupWizard({super.key});
 
   @override
   State<MerchantSetupWizard> createState() => _MerchantSetupWizardState();
@@ -56,9 +56,12 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
   }
 
   void _loadExistingData() {
-    final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+    final merchantProvider = Provider.of<MerchantProvider>(
+      context,
+      listen: false,
+    );
     final currentMerchant = merchantProvider.currentMerchant;
-    
+
     if (currentMerchant != null) {
       setState(() {
         _setupData['businessName'] = currentMerchant.businessName;
@@ -72,7 +75,9 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
         _setupData['bankAccountNumber'] = currentMerchant.bankAccountNumber;
         _setupData['bankName'] = currentMerchant.bankName;
         _setupData['bankAccountName'] = currentMerchant.bankAccountName;
-        _setupData['walletAddresses'] = Map<String, String>.from(currentMerchant.walletAddresses);
+        _setupData['walletAddresses'] = Map<String, String>.from(
+          currentMerchant.walletAddresses,
+        );
       });
     }
   }
@@ -81,14 +86,24 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
 
   void _nextStep() async {
     if (_isStepLoading) return;
-    if (mounted) setState(() { _isStepLoading = true; });
+    if (mounted)
+      setState(() {
+        _isStepLoading = true;
+      });
 
-    final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+    final merchantProvider = Provider.of<MerchantProvider>(
+      context,
+      listen: false,
+    );
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-  debugPrint('DEBUG: Auth status - isAuthenticated: ${authProvider.isAuthenticated}');
-  debugPrint('DEBUG: Auth status - currentUser: ${authProvider.currentUser?.uid}');
-  debugPrint('DEBUG: Setup data to save: $_setupData');
+    debugPrint(
+      'DEBUG: Auth status - isAuthenticated: ${authProvider.isAuthenticated}',
+    );
+    debugPrint(
+      'DEBUG: Auth status - currentUser: ${authProvider.currentUser?.uid}',
+    );
+    debugPrint('DEBUG: Setup data to save: $_setupData');
 
     // Show loading indicator while saving
     if (mounted) {
@@ -103,8 +118,10 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
     final success = await merchantProvider.savePartialSetupData(_setupData);
 
     if (!success && mounted) {
-  final errorMessage = merchantProvider.error ?? 'Failed to save progress. Please try again.';
-  debugPrint('DEBUG: Setup save failed with error: $errorMessage');
+      final errorMessage =
+          merchantProvider.error ??
+          'Failed to save progress. Please try again.';
+      debugPrint('DEBUG: Setup save failed with error: $errorMessage');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMessage),
@@ -112,7 +129,10 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
           duration: const Duration(seconds: 5),
         ),
       );
-      if (mounted) setState(() { _isStepLoading = false; });
+      if (mounted)
+        setState(() {
+          _isStepLoading = false;
+        });
       return;
     }
 
@@ -132,7 +152,10 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
         });
       }
     } else {
-      if (mounted) setState(() { _isStepLoading = false; });
+      if (mounted)
+        setState(() {
+          _isStepLoading = false;
+        });
     }
   }
 
@@ -149,8 +172,11 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
   }
 
   Future<void> _completeSetup() async {
-    final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
-    
+    final merchantProvider = Provider.of<MerchantProvider>(
+      context,
+      listen: false,
+    );
+
     // Show loading dialog
     if (mounted) {
       showDialog(
@@ -168,7 +194,7 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
         ),
       );
     }
-    
+
     final success = await merchantProvider.createMerchantWithSetup(
       businessName: _setupData['businessName'],
       industry: _setupData['industry'],
@@ -186,7 +212,7 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
 
     if (mounted) {
       Navigator.of(context).pop(); // Close loading dialog
-      
+
       if (success) {
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
@@ -195,14 +221,18 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
             backgroundColor: Colors.green,
           ),
         );
-        
+
         // Navigate to home screen
-        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil('/home', (route) => false);
       } else {
         // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Setup failed: ${merchantProvider.error ?? "Unknown error"}'),
+            content: Text(
+              'Setup failed: ${merchantProvider.error ?? "Unknown error"}',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -227,7 +257,10 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
             elevation: 0,
             leading: _currentStep > 0
                 ? IconButton(
-                    icon: const Icon(Icons.arrow_back_ios, color: MetartPayColors.primary),
+                    icon: const Icon(
+                      Icons.arrow_back_ios,
+                      color: MetartPayColors.primary,
+                    ),
                     onPressed: _previousStep,
                   )
                 : null,
@@ -243,9 +276,9 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
                 ),
                 Text(
                   'Step ${_currentStep + 1} of ${_stepTitles.length}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                 ),
               ],
             ),
@@ -259,7 +292,9 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
                   child: LinearProgressIndicator(
                     value: (_currentStep + 1) / _stepTitles.length,
                     backgroundColor: Colors.grey[300],
-                    valueColor: const AlwaysStoppedAnimation<Color>(MetartPayColors.primary),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      MetartPayColors.primary,
+                    ),
                   ),
                 ),
               ),
@@ -303,9 +338,7 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
         if (_isStepLoading)
           Container(
             color: Colors.black.withAlpha((0.2 * 255).round()),
-            child: const Center(
-              child: CircularProgressIndicator(),
-            ),
+            child: const Center(child: CircularProgressIndicator()),
           ),
       ],
     );

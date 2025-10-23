@@ -4,7 +4,7 @@ import '../../providers/merchant_provider.dart';
 import '../../widgets/metartpay_branding.dart';
 
 class KYCVerificationScreen extends StatefulWidget {
-  const KYCVerificationScreen({Key? key}) : super(key: key);
+  const KYCVerificationScreen({super.key});
 
   @override
   State<KYCVerificationScreen> createState() => _KYCVerificationScreenState();
@@ -16,7 +16,7 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
   final _idNumberController = TextEditingController();
   final _bvnController = TextEditingController();
   final _addressController = TextEditingController();
-  
+
   String? _selectedIdType;
   final List<String> _idTypes = [
     'National ID (NIN)',
@@ -28,9 +28,12 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
   @override
   void initState() {
     super.initState();
-    final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+    final merchantProvider = Provider.of<MerchantProvider>(
+      context,
+      listen: false,
+    );
     final merchant = merchantProvider.currentMerchant;
-    
+
     // Pre-fill with existing data if available
     _fullNameController.text = merchant?.fullName ?? '';
     _idNumberController.text = merchant?.idNumber ?? '';
@@ -49,8 +52,11 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
 
   Future<void> _submitKYC() async {
     if (_formKey.currentState!.validate()) {
-      final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
-      
+      final merchantProvider = Provider.of<MerchantProvider>(
+        context,
+        listen: false,
+      );
+
       // Show loading dialog
       showDialog(
         context: context,
@@ -121,7 +127,9 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Error'),
-            content: const Text('Failed to submit KYC verification. Please try again.'),
+            content: const Text(
+              'Failed to submit KYC verification. Please try again.',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -142,7 +150,10 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: MetartPayColors.primary),
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: MetartPayColors.primary,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -180,7 +191,9 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: MetartPayColors.primary.withAlpha((0.1 * 255).round()),
+                        color: MetartPayColors.primary.withAlpha(
+                          (0.1 * 255).round(),
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
@@ -202,18 +215,15 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'Verify your identity to unlock all features and start receiving payments securely.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       textAlign: TextAlign.center,
                     ),
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Form Fields
               Container(
                 padding: const EdgeInsets.all(20),
@@ -240,11 +250,11 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Full Name
                     TextFormField(
                       controller: _fullNameController,
-                        decoration: InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Full Name *',
                         hintText: 'Enter your full legal name',
                         border: OutlineInputBorder(
@@ -266,12 +276,12 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                         return null;
                       },
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // ID Type Dropdown
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedIdType,
+                    DropdownButtonFormField<String>(
+                      initialValue: _selectedIdType,
                       decoration: InputDecoration(
                         labelText: 'ID Type *',
                         border: OutlineInputBorder(
@@ -284,10 +294,7 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                         prefixIcon: const Icon(Icons.credit_card),
                       ),
                       items: _idTypes.map((type) {
-                        return DropdownMenuItem(
-                          value: type,
-                          child: Text(type),
-                        );
+                        return DropdownMenuItem(value: type, child: Text(type));
                       }).toList(),
                       onChanged: (value) {
                         setState(() {
@@ -301,13 +308,13 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                         return null;
                       },
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // ID Number
                     TextFormField(
                       controller: _idNumberController,
-                        decoration: InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'ID Number *',
                         hintText: 'Enter your ID number',
                         border: OutlineInputBorder(
@@ -329,13 +336,13 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                         return null;
                       },
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // BVN
                     TextFormField(
                       controller: _bvnController,
-                        decoration: InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'BVN (Bank Verification Number)',
                         hintText: 'Enter your 11-digit BVN',
                         border: OutlineInputBorder(
@@ -361,13 +368,13 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                         return null;
                       },
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Address
                     TextFormField(
                       controller: _addressController,
-                        decoration: InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Residential Address *',
                         hintText: 'Enter your full address',
                         border: OutlineInputBorder(
@@ -393,9 +400,9 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Info Card
               Container(
                 padding: const EdgeInsets.all(16),
@@ -433,9 +440,9 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Submit Button
               SizedBox(
                 width: double.infinity,
@@ -451,23 +458,17 @@ class _KYCVerificationScreenState extends State<KYCVerificationScreen> {
                   ),
                   child: const Text(
                     'Submit KYC Verification',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Security Notice
               Text(
                 'Your personal information is encrypted and secure. We comply with all data protection regulations.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
             ],

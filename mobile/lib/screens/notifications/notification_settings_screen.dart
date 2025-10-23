@@ -5,13 +5,15 @@ import '../../models/models.dart';
 import '../../widgets/metartpay_branding.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
-  const NotificationSettingsScreen({Key? key}) : super(key: key);
+  const NotificationSettingsScreen({super.key});
 
   @override
-  State<NotificationSettingsScreen> createState() => _NotificationSettingsScreenState();
+  State<NotificationSettingsScreen> createState() =>
+      _NotificationSettingsScreenState();
 }
 
-class _NotificationSettingsScreenState extends State<NotificationSettingsScreen> {
+class _NotificationSettingsScreenState
+    extends State<NotificationSettingsScreen> {
   MerchantNotificationSettings? _settings;
   bool _isLoading = true;
   bool _hasChanges = false;
@@ -37,7 +39,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     if (_settings == null || !_hasChanges) return;
 
     final notificationProvider = context.read<NotificationProvider>();
-    
+
     try {
       await notificationProvider.updateNotificationSettings(_settings!);
       if (!mounted) return;
@@ -63,9 +65,11 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     }
   }
 
-  void _updateSetting(MerchantNotificationSettings Function(MerchantNotificationSettings) update) {
+  void _updateSetting(
+    MerchantNotificationSettings Function(MerchantNotificationSettings) update,
+  ) {
     if (_settings == null) return;
-    
+
     setState(() {
       _settings = update(_settings!);
       _hasChanges = true;
@@ -80,7 +84,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: MetartPayColors.primary),
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: MetartPayColors.primary,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -107,8 +114,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _settings == null
-              ? _buildErrorState()
-              : _buildSettingsContent(),
+          ? _buildErrorState()
+          : _buildSettingsContent(),
     );
   }
 
@@ -117,11 +124,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Colors.red,
-          ),
+          Icon(Icons.error_outline, size: 64, color: Colors.red),
           SizedBox(height: 16),
           Text(
             'Failed to load settings',
@@ -143,140 +146,147 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // General Settings
-          _buildSection(
-            'General Settings',
-            [
-              _buildSwitchTile(
-                'Push Notifications',
-                'Receive notifications on this device',
-                _settings!.enablePushNotifications,
-                (value) => _updateSetting((s) => s.copyWith(enablePushNotifications: value)),
-                icon: Icons.notifications,
+          _buildSection('General Settings', [
+            _buildSwitchTile(
+              'Push Notifications',
+              'Receive notifications on this device',
+              _settings!.enablePushNotifications,
+              (value) => _updateSetting(
+                (s) => s.copyWith(enablePushNotifications: value),
               ),
-              _buildSwitchTile(
-                'Email Notifications',
-                'Receive notifications via email',
-                _settings!.enableEmailNotifications,
-                (value) => _updateSetting((s) => s.copyWith(enableEmailNotifications: value)),
-                icon: Icons.email,
+              icon: Icons.notifications,
+            ),
+            _buildSwitchTile(
+              'Email Notifications',
+              'Receive notifications via email',
+              _settings!.enableEmailNotifications,
+              (value) => _updateSetting(
+                (s) => s.copyWith(enableEmailNotifications: value),
               ),
-              _buildSwitchTile(
-                'SMS Notifications',
-                'Receive notifications via SMS',
-                _settings!.enableSMSNotifications,
-                (value) => _updateSetting((s) => s.copyWith(enableSMSNotifications: value)),
-                icon: Icons.sms,
+              icon: Icons.email,
+            ),
+            _buildSwitchTile(
+              'SMS Notifications',
+              'Receive notifications via SMS',
+              _settings!.enableSMSNotifications,
+              (value) => _updateSetting(
+                (s) => s.copyWith(enableSMSNotifications: value),
               ),
-            ],
-          ),
+              icon: Icons.sms,
+            ),
+          ]),
 
           const SizedBox(height: 24),
 
           // Notification Types
-          _buildSection(
-            'Notification Types',
-            [
-              _buildSwitchTile(
-                'Payment Received',
-                'When a payment is received',
-                _settings!.notifyOnPaymentReceived,
-                (value) => _updateSetting((s) => s.copyWith(notifyOnPaymentReceived: value)),
-                icon: Icons.payment,
-                enabled: _settings!.enablePushNotifications,
+          _buildSection('Notification Types', [
+            _buildSwitchTile(
+              'Payment Received',
+              'When a payment is received',
+              _settings!.notifyOnPaymentReceived,
+              (value) => _updateSetting(
+                (s) => s.copyWith(notifyOnPaymentReceived: value),
               ),
-              _buildSwitchTile(
-                'Payment Confirmed',
-                'When a payment is confirmed on blockchain',
-                _settings!.notifyOnPaymentConfirmed,
-                (value) => _updateSetting((s) => s.copyWith(notifyOnPaymentConfirmed: value)),
-                icon: Icons.check_circle,
-                enabled: _settings!.enablePushNotifications,
+              icon: Icons.payment,
+              enabled: _settings!.enablePushNotifications,
+            ),
+            _buildSwitchTile(
+              'Payment Confirmed',
+              'When a payment is confirmed on blockchain',
+              _settings!.notifyOnPaymentConfirmed,
+              (value) => _updateSetting(
+                (s) => s.copyWith(notifyOnPaymentConfirmed: value),
               ),
-              _buildSwitchTile(
-                'KYC Updates',
-                'Updates on your verification status',
-                _settings!.notifyOnKYCUpdate,
-                (value) => _updateSetting((s) => s.copyWith(notifyOnKYCUpdate: value)),
-                icon: Icons.verified_user,
-                enabled: _settings!.enablePushNotifications,
+              icon: Icons.check_circle,
+              enabled: _settings!.enablePushNotifications,
+            ),
+            _buildSwitchTile(
+              'KYC Updates',
+              'Updates on your verification status',
+              _settings!.notifyOnKYCUpdate,
+              (value) =>
+                  _updateSetting((s) => s.copyWith(notifyOnKYCUpdate: value)),
+              icon: Icons.verified_user,
+              enabled: _settings!.enablePushNotifications,
+            ),
+            _buildSwitchTile(
+              'Security Events',
+              'Important security alerts',
+              _settings!.notifyOnSecurityEvents,
+              (value) => _updateSetting(
+                (s) => s.copyWith(notifyOnSecurityEvents: value),
               ),
-              _buildSwitchTile(
-                'Security Events',
-                'Important security alerts',
-                _settings!.notifyOnSecurityEvents,
-                (value) => _updateSetting((s) => s.copyWith(notifyOnSecurityEvents: value)),
-                icon: Icons.security,
-                enabled: _settings!.enablePushNotifications,
+              icon: Icons.security,
+              enabled: _settings!.enablePushNotifications,
+            ),
+            _buildSwitchTile(
+              'System Updates',
+              'App updates and maintenance',
+              _settings!.notifyOnSystemUpdates,
+              (value) => _updateSetting(
+                (s) => s.copyWith(notifyOnSystemUpdates: value),
               ),
-              _buildSwitchTile(
-                'System Updates',
-                'App updates and maintenance',
-                _settings!.notifyOnSystemUpdates,
-                (value) => _updateSetting((s) => s.copyWith(notifyOnSystemUpdates: value)),
-                icon: Icons.system_update,
-                enabled: _settings!.enablePushNotifications,
-              ),
-              _buildSwitchTile(
-                'Low Balance Alerts',
-                'When your balance is running low',
-                _settings!.notifyOnLowBalance,
-                (value) => _updateSetting((s) => s.copyWith(notifyOnLowBalance: value)),
-                icon: Icons.account_balance_wallet,
-                enabled: _settings!.enablePushNotifications,
-              ),
-            ],
-          ),
+              icon: Icons.system_update,
+              enabled: _settings!.enablePushNotifications,
+            ),
+            _buildSwitchTile(
+              'Low Balance Alerts',
+              'When your balance is running low',
+              _settings!.notifyOnLowBalance,
+              (value) =>
+                  _updateSetting((s) => s.copyWith(notifyOnLowBalance: value)),
+              icon: Icons.account_balance_wallet,
+              enabled: _settings!.enablePushNotifications,
+            ),
+          ]),
 
           const SizedBox(height: 24),
 
           // Quiet Hours
-          _buildSection(
-            'Quiet Hours',
-            [
-              _buildSwitchTile(
-                'Enable Quiet Hours',
-                'Disable notifications during specified hours',
-                _settings!.enableQuietHours,
-                (value) => _updateSetting((s) => s.copyWith(enableQuietHours: value)),
-                icon: Icons.bedtime,
+          _buildSection('Quiet Hours', [
+            _buildSwitchTile(
+              'Enable Quiet Hours',
+              'Disable notifications during specified hours',
+              _settings!.enableQuietHours,
+              (value) =>
+                  _updateSetting((s) => s.copyWith(enableQuietHours: value)),
+              icon: Icons.bedtime,
+            ),
+            if (_settings!.enableQuietHours) ...[
+              _buildTimeTile(
+                'Start Time',
+                _settings!.quietHoursStart,
+                (time) =>
+                    _updateSetting((s) => s.copyWith(quietHoursStart: time)),
               ),
-              if (_settings!.enableQuietHours) ...[
-                _buildTimeTile(
-                  'Start Time',
-                  _settings!.quietHoursStart,
-                  (time) => _updateSetting((s) => s.copyWith(quietHoursStart: time)),
-                ),
-                _buildTimeTile(
-                  'End Time',
-                  _settings!.quietHoursEnd,
-                  (time) => _updateSetting((s) => s.copyWith(quietHoursEnd: time)),
-                ),
-              ],
+              _buildTimeTile(
+                'End Time',
+                _settings!.quietHoursEnd,
+                (time) =>
+                    _updateSetting((s) => s.copyWith(quietHoursEnd: time)),
+              ),
             ],
-          ),
+          ]),
 
           const SizedBox(height: 24),
 
           // Test Section
-          _buildSection(
-            'Test',
-            [
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withAlpha((0.1 * 255).round()),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.send, color: Colors.blue),
+          _buildSection('Test', [
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withAlpha((0.1 * 255).round()),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                title: const Text('Send Test Notification'),
-                subtitle: const Text('Test your notification settings'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: _sendTestNotification,
+                child: const Icon(Icons.send, color: Colors.blue),
               ),
-            ],
-          ),
+              title: const Text('Send Test Notification'),
+              subtitle: const Text('Test your notification settings'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: _sendTestNotification,
+            ),
+          ]),
 
           const SizedBox(height: 24),
 
@@ -307,10 +317,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                   const SizedBox(height: 12),
                   const Text(
                     'Some notification settings may be controlled by your device. If notifications aren\'t working as expected, check your device notification settings.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                   const SizedBox(height: 16),
                   SizedBox(
@@ -376,12 +383,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
               ),
             )
           : null,
-      title: Text(
-        title,
-        style: TextStyle(
-          color: enabled ? null : Colors.grey,
-        ),
-      ),
+      title: Text(title, style: TextStyle(color: enabled ? null : Colors.grey)),
       subtitle: Text(
         subtitle,
         style: TextStyle(
@@ -419,10 +421,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
         children: [
           Text(
             time,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
           ),
           const SizedBox(width: 8),
           const Icon(Icons.arrow_forward_ios, size: 16),
@@ -432,7 +431,11 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     );
   }
 
-  Future<void> _selectTime(String title, String currentTime, Function(String) onChanged) async {
+  Future<void> _selectTime(
+    String title,
+    String currentTime,
+    Function(String) onChanged,
+  ) async {
     final parts = currentTime.split(':');
     final initialTime = TimeOfDay(
       hour: int.parse(parts[0]),
@@ -445,7 +448,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     );
 
     if (picked != null) {
-      final formattedTime = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+      final formattedTime =
+          '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
       onChanged(formattedTime);
     }
   }
@@ -454,7 +458,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     final notificationProvider = context.read<NotificationProvider>();
     notificationProvider.sendTestNotification(
       title: 'Test Notification',
-      body: 'This is a test notification to verify your settings are working correctly.',
+      body:
+          'This is a test notification to verify your settings are working correctly.',
     );
 
     ScaffoldMessenger.of(context).showSnackBar(

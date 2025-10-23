@@ -10,12 +10,12 @@ class BankAccountStep extends StatefulWidget {
   final VoidCallback onPrevious;
 
   const BankAccountStep({
-    Key? key,
+    super.key,
     required this.setupData,
     required this.onDataUpdate,
     required this.onNext,
     required this.onPrevious,
-  }) : super(key: key);
+  });
 
   @override
   State<BankAccountStep> createState() => _BankAccountStepState();
@@ -36,17 +36,17 @@ class _BankAccountStepState extends State<BankAccountStep> {
   void initState() {
     super.initState();
     _loadBanks();
-    
+
     // Initialize controllers with existing data
     _accountNumberController.text = widget.setupData['bankAccountNumber'] ?? '';
     _accountNameController.text = widget.setupData['bankAccountName'] ?? '';
-    
+
     // Initialize selected bank if available
     final savedBankName = widget.setupData['bankName'];
     if (savedBankName != null && savedBankName.isNotEmpty) {
       // Will be set after banks are loaded
     }
-    
+
     // Listen for account number changes to trigger verification
     _accountNumberController.addListener(_onAccountNumberChanged);
   }
@@ -57,7 +57,7 @@ class _BankAccountStepState extends State<BankAccountStep> {
       setState(() {
         _nigeriaBanks = banks;
         _isLoadingBanks = false;
-        
+
         // Set selected bank if we have saved data
         final savedBankName = widget.setupData['bankName'];
         if (savedBankName != null && savedBankName.isNotEmpty) {
@@ -112,11 +112,11 @@ class _BankAccountStepState extends State<BankAccountStep> {
 
       setState(() {
         _isVerifying = false;
-        
+
         if (result.success && result.accountName != null) {
           _accountNameController.text = result.accountName!;
           _verificationError = null;
-          
+
           // Show success message
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -161,22 +161,24 @@ class _BankAccountStepState extends State<BankAccountStep> {
         );
         return;
       }
-      
+
       if (_verificationError != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Please resolve account verification error: $_verificationError'),
+            content: Text(
+              'Please resolve account verification error: $_verificationError',
+            ),
             backgroundColor: Colors.red,
           ),
         );
         return;
       }
-      
+
       // Update setup data
       widget.onDataUpdate('bankAccountNumber', _accountNumberController.text);
       widget.onDataUpdate('bankName', _selectedBank!['name']);
       widget.onDataUpdate('bankAccountName', _accountNameController.text);
-      
+
       widget.onNext();
     }
   }
@@ -201,12 +203,12 @@ class _BankAccountStepState extends State<BankAccountStep> {
             const SizedBox(height: 8),
             Text(
               'Add your bank account to receive payments in Naira.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 32),
-            
+
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -226,7 +228,9 @@ class _BankAccountStepState extends State<BankAccountStep> {
                                   SizedBox(
                                     width: 20,
                                     height: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
                                   ),
                                   SizedBox(width: 12),
                                   Text('Loading banks...'),
@@ -282,7 +286,7 @@ class _BankAccountStepState extends State<BankAccountStep> {
                         FilteringTextInputFormatter.digitsOnly,
                         LengthLimitingTextInputFormatter(10),
                       ],
-                        decoration: InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Account Number *',
                         hintText: 'Enter 10-digit account number',
                         border: OutlineInputBorder(
@@ -299,12 +303,18 @@ class _BankAccountStepState extends State<BankAccountStep> {
                                 child: SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 ),
                               )
-                            : _accountNumberController.text.length == 10 && _selectedBank != null
-                                ? const Icon(Icons.check_circle, color: Colors.green)
-                                : null,
+                            : _accountNumberController.text.length == 10 &&
+                                  _selectedBank != null
+                            ? const Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                              )
+                            : null,
                       ),
                       onChanged: (value) {
                         if (value.length == 10 && _selectedBank != null) {
@@ -331,7 +341,7 @@ class _BankAccountStepState extends State<BankAccountStep> {
                     TextFormField(
                       controller: _accountNameController,
                       readOnly: true,
-                        decoration: InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Account Name',
                         hintText: 'Will be filled after verification',
                         border: OutlineInputBorder(
@@ -354,7 +364,7 @@ class _BankAccountStepState extends State<BankAccountStep> {
                     ),
 
                     const SizedBox(height: 24),
-                    
+
                     // Security Info
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -398,7 +408,7 @@ class _BankAccountStepState extends State<BankAccountStep> {
             ),
 
             const SizedBox(height: 24),
-            
+
             // Action Buttons
             Row(
               children: [

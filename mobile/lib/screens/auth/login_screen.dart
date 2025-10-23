@@ -71,11 +71,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 60),
-                    
+
                     // Logo and Title
                     Column(
                       children: [
-                        Container(
+                        SizedBox(
                           width: 80,
                           height: 80,
                           child: const MetartPayLogo(
@@ -86,23 +86,23 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 16),
                         Text(
                           'MetartPay',
-                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                          style: Theme.of(context).textTheme.headlineLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Crypto payments made simple',
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(color: Colors.grey[600]),
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 60),
-                    
+
                     // Email Field
                     TextFormField(
                       controller: _emailController,
@@ -129,9 +129,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         return null;
                       },
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Password Field
                     TextFormField(
                       controller: _passwordController,
@@ -167,9 +167,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         return null;
                       },
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Login Button
                     ElevatedButton(
                       onPressed: authProvider.isLoading ? null : _login,
@@ -184,7 +184,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : const Text(
@@ -195,9 +197,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // OR Divider
                     Row(
                       children: [
@@ -212,12 +214,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         const Expanded(child: Divider()),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Google Sign-in Button
                     OutlinedButton.icon(
-                      onPressed: authProvider.isLoading ? null : () => _loginWithGoogle(),
+                      onPressed: authProvider.isLoading
+                          ? null
+                          : () => _loginWithGoogle(),
                       icon: SizedBox(
                         width: 20,
                         height: 20,
@@ -251,9 +255,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         side: BorderSide(color: Colors.grey[300]!),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Register Link
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -274,19 +278,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 40),
-                    
+
                     // Footer
                     Text(
                       'Secure crypto payment processing',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.grey[500],
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
                     ),
-                    
+
                     const SizedBox(height: 20),
                   ],
                 ),

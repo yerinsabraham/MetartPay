@@ -19,9 +19,15 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
   }
 
   void _loadSegments() {
-    final customerProvider = Provider.of<CustomerProvider>(context, listen: false);
-    final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
-    
+    final customerProvider = Provider.of<CustomerProvider>(
+      context,
+      listen: false,
+    );
+    final merchantProvider = Provider.of<MerchantProvider>(
+      context,
+      listen: false,
+    );
+
     if (merchantProvider.currentMerchant != null) {
       final merchantId = merchantProvider.currentMerchant!.id;
       customerProvider.loadCustomerSegments(merchantId);
@@ -36,10 +42,7 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadSegments,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadSegments),
         ],
       ),
       body: Consumer2<CustomerProvider, MerchantProvider>(
@@ -64,7 +67,7 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
             children: [
               // Segment Statistics
               _buildSegmentStats(customerProvider),
-              
+
               // Segments List
               Expanded(
                 child: ListView.builder(
@@ -93,11 +96,7 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.segment,
-            size: 64,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.segment, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             'No Customer Segments',
@@ -111,9 +110,7 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
           Text(
             'Create segments to group your customers\nbased on behavior and characteristics',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.grey[500],
-            ),
+            style: TextStyle(color: Colors.grey[500]),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
@@ -138,7 +135,7 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-  color: Colors.white,
+        color: Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withAlpha((0.1 * 255).round()),
@@ -180,13 +177,18 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
     );
   }
 
-  Widget _buildStatCard(String label, String value, Color color, IconData icon) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    Color color,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-  color: color.withAlpha((0.1 * 255).round()),
+        color: color.withAlpha((0.1 * 255).round()),
         borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withAlpha((0.3 * 255).round())),
+        border: Border.all(color: color.withAlpha((0.3 * 255).round())),
       ),
       child: Column(
         children: [
@@ -200,19 +202,16 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
               color: color,
             ),
           ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
-          ),
+          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         ],
       ),
     );
   }
 
-  Widget _buildSegmentCard(CustomerSegment segment, CustomerProvider customerProvider) {
+  Widget _buildSegmentCard(
+    CustomerSegment segment,
+    CustomerProvider customerProvider,
+  ) {
     final customerCount = customerProvider.customers
         .where((customer) => _customerMatchesSegment(customer, segment))
         .length;
@@ -243,11 +242,10 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
                       children: [
                         Text(
                           segment.name,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
-                        if (segment.description != null) ...[
+                        ...[
                           const SizedBox(height: 4),
                           Text(
                             segment.description!,
@@ -269,7 +267,9 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: _getSegmentTypeColor(segment.type).withAlpha((0.1 * 255).round()),
+                          color: _getSegmentTypeColor(
+                            segment.type,
+                          ).withAlpha((0.1 * 255).round()),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: _getSegmentTypeColor(segment.type),
@@ -297,9 +297,9 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Segment Criteria (for dynamic segments)
               if (segment.type == 'dynamic' && segment.criteria.isNotEmpty) ...[
                 Container(
@@ -321,18 +321,20 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      ...segment.criteria.entries.take(3).map(
-                        (entry) => Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            '• ${entry.key}: ${entry.value}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey[600],
+                      ...segment.criteria.entries
+                          .take(3)
+                          .map(
+                            (entry) => Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                '• ${entry.key}: ${entry.value}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
                       if (segment.criteria.length > 3)
                         Padding(
                           padding: const EdgeInsets.only(top: 2),
@@ -349,15 +351,16 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
                   ),
                 ),
               ],
-              
+
               const SizedBox(height: 12),
-              
+
               // Action Buttons
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => _viewSegmentCustomers(segment, customerProvider),
+                      onPressed: () =>
+                          _viewSegmentCustomers(segment, customerProvider),
                       icon: const Icon(Icons.people, size: 16),
                       label: const Text('View Customers'),
                       style: OutlinedButton.styleFrom(
@@ -406,7 +409,7 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
     if (segment.type == 'static') {
       return segment.customerIds.contains(customer.id);
     }
-    
+
     // For dynamic segments, check criteria
     for (final entry in segment.criteria.entries) {
       switch (entry.key) {
@@ -420,14 +423,15 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
           if (customer.isVIP.toString() != entry.value) return false;
           break;
         case 'minTotalSpent':
-          if (customer.totalSpentNaira < double.parse(entry.value)) return false;
+          if (customer.totalSpentNaira < double.parse(entry.value))
+            return false;
           break;
         case 'minTransactions':
           if (customer.totalTransactions < int.parse(entry.value)) return false;
           break;
       }
     }
-    
+
     return true;
   }
 
@@ -442,7 +446,10 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
     });
   }
 
-  void _showSegmentDetails(CustomerSegment segment, CustomerProvider customerProvider) {
+  void _showSegmentDetails(
+    CustomerSegment segment,
+    CustomerProvider customerProvider,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -460,7 +467,10 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
     );
   }
 
-  void _viewSegmentCustomers(CustomerSegment segment, CustomerProvider customerProvider) {
+  void _viewSegmentCustomers(
+    CustomerSegment segment,
+    CustomerProvider customerProvider,
+  ) {
     final customers = customerProvider.customers
         .where((customer) => _customerMatchesSegment(customer, segment))
         .toList();
@@ -493,7 +503,10 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    Icon(Icons.people, color: Theme.of(context).colorScheme.primary),
+                    Icon(
+                      Icons.people,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -510,9 +523,7 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
               const Divider(height: 1),
               Expanded(
                 child: customers.isEmpty
-                    ? const Center(
-                        child: Text('No customers in this segment'),
-                      )
+                    ? const Center(child: Text('No customers in this segment'))
                     : ListView.builder(
                         controller: scrollController,
                         padding: const EdgeInsets.all(16),
@@ -523,7 +534,9 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
                             margin: const EdgeInsets.only(bottom: 8),
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: Theme.of(context).colorScheme.primary,
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
                                 child: Text(
                                   customer.displayName.isNotEmpty
                                       ? customer.displayName[0].toUpperCase()
@@ -535,7 +548,9 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
                               subtitle: Text(customer.email),
                               trailing: Text(
                                 '₦${customer.totalSpentNaira.toStringAsFixed(0)}',
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           );
@@ -575,8 +590,14 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
               // close dialog first
               Navigator.of(dialogContext).pop();
 
-              final customerProvider = Provider.of<CustomerProvider>(this.context, listen: false);
-              final merchantProvider = Provider.of<MerchantProvider>(this.context, listen: false);
+              final customerProvider = Provider.of<CustomerProvider>(
+                context,
+                listen: false,
+              );
+              final merchantProvider = Provider.of<MerchantProvider>(
+                context,
+                listen: false,
+              );
               try {
                 final merchantId = merchantProvider.currentMerchant?.id;
                 if (merchantId == null) return;
@@ -585,7 +606,7 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
                   segment.id,
                 );
                 if (!mounted) return;
-                ScaffoldMessenger.of(this.context).showSnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Segment "${segment.name}" deleted'),
                     backgroundColor: Colors.green,
@@ -593,7 +614,7 @@ class _CustomerSegmentsScreenState extends State<CustomerSegmentsScreen> {
                 );
               } catch (e) {
                 if (!mounted) return;
-                ScaffoldMessenger.of(this.context).showSnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Error deleting segment: $e'),
                     backgroundColor: Colors.red,
@@ -648,9 +669,9 @@ class _CreateSegmentDialogState extends State<CreateSegmentDialog> {
                 border: OutlineInputBorder(),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _descriptionController,
               decoration: const InputDecoration(
@@ -659,9 +680,9 @@ class _CreateSegmentDialogState extends State<CreateSegmentDialog> {
               ),
               maxLines: 2,
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             DropdownButtonFormField<String>(
               initialValue: _selectedType,
               decoration: const InputDecoration(
@@ -718,8 +739,14 @@ class _CreateSegmentDialogState extends State<CreateSegmentDialog> {
     });
 
     try {
-      final customerProvider = Provider.of<CustomerProvider>(context, listen: false);
-      final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+      final customerProvider = Provider.of<CustomerProvider>(
+        context,
+        listen: false,
+      );
+      final merchantProvider = Provider.of<MerchantProvider>(
+        context,
+        listen: false,
+      );
 
       final segment = CustomerSegment(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -808,7 +835,10 @@ class SegmentDetailsSheet extends StatelessWidget {
                 // Header
                 Row(
                   children: [
-                    Icon(Icons.segment, color: Theme.of(context).colorScheme.primary),
+                    Icon(
+                      Icons.segment,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -820,9 +850,14 @@ class SegmentDetailsSheet extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: segment.isActive ? Colors.green[50] : Colors.grey[50],
+                        color: segment.isActive
+                            ? Colors.green[50]
+                            : Colors.grey[50],
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: segment.isActive ? Colors.green : Colors.grey,
@@ -831,7 +866,9 @@ class SegmentDetailsSheet extends StatelessWidget {
                       child: Text(
                         segment.isActive ? 'ACTIVE' : 'INACTIVE',
                         style: TextStyle(
-                          color: segment.isActive ? Colors.green[700] : Colors.grey[700],
+                          color: segment.isActive
+                              ? Colors.green[700]
+                              : Colors.grey[700],
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                         ),
@@ -839,17 +876,17 @@ class SegmentDetailsSheet extends StatelessWidget {
                     ),
                   ],
                 ),
-                
-                if (segment.description != null) ...[
+
+                ...[
                   const SizedBox(height: 8),
                   Text(
                     segment.description!,
                     style: TextStyle(color: Colors.grey[600]),
                   ),
                 ],
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Segment Info
                 Card(
                   child: Padding(
@@ -863,14 +900,21 @@ class SegmentDetailsSheet extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         _buildInfoRow('Type', segment.type.toUpperCase()),
-                        _buildInfoRow('Created', _formatDate(segment.createdAt)),
-                        _buildInfoRow('Last Updated', _formatDate(segment.updatedAt)),
+                        _buildInfoRow(
+                          'Created',
+                          _formatDate(segment.createdAt),
+                        ),
+                        _buildInfoRow(
+                          'Last Updated',
+                          _formatDate(segment.updatedAt),
+                        ),
                       ],
                     ),
                   ),
                 ),
-                
-                if (segment.type == 'dynamic' && segment.criteria.isNotEmpty) ...[
+
+                if (segment.type == 'dynamic' &&
+                    segment.criteria.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   Card(
                     child: Padding(
@@ -885,10 +929,13 @@ class SegmentDetailsSheet extends StatelessWidget {
                           const SizedBox(height: 12),
                           ...segment.criteria.entries.map(
                             (entry) => _buildInfoRow(
-                              entry.key.replaceAllMapped(
-                                RegExp(r'([A-Z])'),
-                                (match) => ' ${match.group(0)!.toLowerCase()}',
-                              ).trim(),
+                              entry.key
+                                  .replaceAllMapped(
+                                    RegExp(r'([A-Z])'),
+                                    (match) =>
+                                        ' ${match.group(0)!.toLowerCase()}',
+                                  )
+                                  .trim(),
                               entry.value,
                             ),
                           ),
@@ -915,19 +962,13 @@ class SegmentDetailsSheet extends StatelessWidget {
             width: 100,
             child: Text(
               '$label:',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
             ),
           ),
         ],

@@ -54,7 +54,7 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
   void _loadMerchantData() {
     final merchantProvider = context.read<MerchantProvider>();
     final merchant = merchantProvider.currentMerchant;
-    
+
     if (merchant != null) {
       _businessNameController.text = merchant.businessName;
       _bankAccountController.text = merchant.bankAccountNumber;
@@ -68,7 +68,7 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
     setState(() {
       _isEditing = false;
     });
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Business information updated successfully!'),
@@ -92,7 +92,7 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
     final theme = Theme.of(context);
     final authProvider = context.watch<AuthProvider>();
     final merchantProvider = context.watch<MerchantProvider>();
-    
+
     return Scaffold(
       appBar: GradientAppBar(
         title: 'Merchant Profile',
@@ -107,7 +107,10 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                   }
                 });
               },
-              icon: Icon(_isEditing ? Icons.close : Icons.edit, color: Colors.white),
+              icon: Icon(
+                _isEditing ? Icons.close : Icons.edit,
+                color: Colors.white,
+              ),
             ),
         ],
         bottom: TabBar(
@@ -171,13 +174,17 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: _getKycStatusColor(merchant?.kycStatus ?? 'pending').withAlpha((0.1 * 255).round()),
+                      color: _getKycStatusColor(
+                        merchant?.kycStatus ?? 'pending',
+                      ).withAlpha((0.1 * 255).round()),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
                       _getKycStatusText(merchant?.kycStatus ?? 'pending'),
                       style: theme.textTheme.labelMedium?.copyWith(
-                        color: _getKycStatusColor(merchant?.kycStatus ?? 'pending'),
+                        color: _getKycStatusColor(
+                          merchant?.kycStatus ?? 'pending',
+                        ),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -221,7 +228,10 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                             const SizedBox(width: 8),
                             MetartPayButton(
                               onPressed: _saveBusinessInfo,
-                              child: const Text('Save', style: TextStyle(color: Colors.white)),
+                              child: const Text(
+                                'Save',
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ),
                           ],
                         ),
@@ -293,7 +303,8 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                       Expanded(
                         child: _StatItem(
                           title: 'Total Revenue',
-                          value: '₦${merchantProvider.totalRevenue.toStringAsFixed(2)}',
+                          value:
+                              '₦${merchantProvider.totalRevenue.toStringAsFixed(2)}',
                           icon: Icons.trending_up,
                           color: Colors.green,
                         ),
@@ -315,7 +326,8 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                       Expanded(
                         child: _StatItem(
                           title: 'Pending',
-                          value: '₦${merchantProvider.totalPendingAmount.toStringAsFixed(2)}',
+                          value:
+                              '₦${merchantProvider.totalPendingAmount.toStringAsFixed(2)}',
                           icon: Icons.schedule,
                           color: Colors.orange,
                         ),
@@ -324,7 +336,8 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                       Expanded(
                         child: _StatItem(
                           title: 'Success Rate',
-                          value: '${((merchantProvider.paidInvoices.length / (merchantProvider.invoices.length == 0 ? 1 : merchantProvider.invoices.length)) * 100).toStringAsFixed(1)}%',
+                          value:
+                              '${((merchantProvider.paidInvoices.length / (merchantProvider.invoices.isEmpty ? 1 : merchantProvider.invoices.length)) * 100).toStringAsFixed(1)}%',
                           icon: Icons.check_circle,
                           color: Colors.green,
                         ),
@@ -342,7 +355,7 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
 
   Widget _buildWalletsTab() {
     final theme = Theme.of(context);
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -370,7 +383,9 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                   Text(
                     'Configure your wallet addresses for different blockchain networks',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()),
+                      color: theme.colorScheme.onSurface.withAlpha(
+                        (0.7 * 255).round(),
+                      ),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -452,7 +467,7 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
   Widget _buildSettingsTab(AuthProvider authProvider) {
     final theme = Theme.of(context);
     final user = authProvider.user;
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -470,7 +485,8 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                         : null,
                     child: user?.photoURL == null
                         ? Text(
-                            user?.displayName?.substring(0, 1).toUpperCase() ?? 'U',
+                            user?.displayName?.substring(0, 1).toUpperCase() ??
+                                'U',
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -488,7 +504,9 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                   Text(
                     user?.email ?? 'No email',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()),
+                      color: theme.colorScheme.onSurface.withAlpha(
+                        (0.7 * 255).round(),
+                      ),
                     ),
                   ),
                 ],
@@ -508,7 +526,9 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                   subtitle: 'Manage payment alerts',
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Notifications settings - Coming Soon')),
+                      const SnackBar(
+                        content: Text('Notifications settings - Coming Soon'),
+                      ),
                     );
                   },
                 ),
@@ -519,7 +539,9 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                   subtitle: '2FA, password settings',
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Security settings - Coming Soon')),
+                      const SnackBar(
+                        content: Text('Security settings - Coming Soon'),
+                      ),
                     );
                   },
                 ),
@@ -530,7 +552,9 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                   subtitle: 'Webhooks, API keys',
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('API settings - Coming Soon')),
+                      const SnackBar(
+                        content: Text('API settings - Coming Soon'),
+                      ),
                     );
                   },
                 ),
@@ -541,7 +565,9 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                   subtitle: 'Contact support, documentation',
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Help & Support - Coming Soon')),
+                      const SnackBar(
+                        content: Text('Help & Support - Coming Soon'),
+                      ),
                     );
                   },
                 ),
@@ -569,7 +595,10 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                       ),
                       MetartPayButton(
                         onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Logout', style: TextStyle(color: Colors.white)),
+                        child: const Text(
+                          'Logout',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ],
                   ),
@@ -579,10 +608,9 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                   await authProvider.signOut();
                   // Navigate back to login screen after logout
                   if (mounted) {
-                    Navigator.of(context).pushNamedAndRemoveUntil(
-                      '/',
-                      (route) => false,
-                    );
+                    Navigator.of(
+                      context,
+                    ).pushNamedAndRemoveUntil('/', (route) => false);
                   }
                 }
               },
@@ -649,7 +677,7 @@ class _InfoField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -674,7 +702,11 @@ class _InfoField extends StatelessWidget {
               ),
             ),
             filled: !isEditing,
-            fillColor: isEditing ? null : theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).round()),
+            fillColor: isEditing
+                ? null
+                : theme.colorScheme.surfaceContainerHighest.withAlpha(
+                    (0.3 * 255).round(),
+                  ),
           ),
         ),
       ],
@@ -702,7 +734,7 @@ class _WalletAddressCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -717,10 +749,7 @@ class _WalletAddressCard extends StatelessWidget {
                     color: color.withAlpha((0.1 * 255).round()),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    icon,
-                    style: const TextStyle(fontSize: 20),
-                  ),
+                  child: Text(icon, style: const TextStyle(fontSize: 20)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -736,7 +765,9 @@ class _WalletAddressCard extends StatelessWidget {
                       Text(
                         subtitle,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()),
+                          color: theme.colorScheme.onSurface.withAlpha(
+                            (0.7 * 255).round(),
+                          ),
                         ),
                       ),
                     ],
@@ -748,24 +779,24 @@ class _WalletAddressCard extends StatelessWidget {
             TextFormField(
               controller: controller,
               decoration: InputDecoration(
-                  hintText: placeholder,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
-                      width: 1,
-                    ),
-                  ),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.qr_code_scanner),
-                    onPressed: () {
-                      // TODO: Implement QR code scanner
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('QR Scanner - Coming Soon')),
-                      );
-                    },
+                hintText: placeholder,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.primary,
+                    width: 1,
                   ),
                 ),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.qr_code_scanner),
+                  onPressed: () {
+                    // TODO: Implement QR code scanner
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('QR Scanner - Coming Soon')),
+                    );
+                  },
+                ),
+              ),
             ),
           ],
         ),
@@ -790,7 +821,7 @@ class _StatItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -799,11 +830,7 @@ class _StatItem extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(
-            icon,
-            color: color,
-            size: 24,
-          ),
+          Icon(icon, color: color, size: 24),
           const SizedBox(height: 8),
           Text(
             value,

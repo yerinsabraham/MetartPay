@@ -14,10 +14,16 @@ class PaymentsServiceV2 {
   Future<bool> ensureWallets(String merchantId) async {
     try {
       final merchant = await _firebase.getMerchant(merchantId);
-      if (merchant == null || (merchant.walletAddresses?.isEmpty ?? true)) {
-        AppLogger.d('DEBUG: ensureWallets - generating wallets for $merchantId');
-        final generated = await _firebase.generateAndSaveMerchantWallets(merchantId);
-        AppLogger.d('DEBUG: ensureWallets - generated: ${generated.keys.toList()}');
+      if (merchant == null || (merchant.walletAddresses.isEmpty ?? true)) {
+        AppLogger.d(
+          'DEBUG: ensureWallets - generating wallets for $merchantId',
+        );
+        final generated = await _firebase.generateAndSaveMerchantWallets(
+          merchantId,
+        );
+        AppLogger.d(
+          'DEBUG: ensureWallets - generated: ${generated.keys.toList()}',
+        );
         return generated.isNotEmpty;
       }
       return true;
@@ -42,7 +48,10 @@ class PaymentsServiceV2 {
       if (AppConfig.devMockCreate) {
         AppLogger.d('DEV: Using mock createPayment path');
         final priceService = CryptoPriceService();
-        final computed = await priceService.convertNairaToCrypto(amountNgn, token);
+        final computed = await priceService.convertNairaToCrypto(
+          amountNgn,
+          token,
+        );
         final double cryptoAmt = computed ?? cryptoAmount;
 
         // Try to get merchant wallet address (reads are typically allowed)
@@ -65,7 +74,8 @@ class PaymentsServiceV2 {
           'TRC20': 'TNdevFallbackAddress11111111111111111',
         };
 
-        receiveAddress ??= fallback[network] ?? '0x0000000000000000000000000000000000000000';
+        receiveAddress ??=
+            fallback[network] ?? '0x0000000000000000000000000000000000000000';
 
         final paymentId = 'local-${DateTime.now().millisecondsSinceEpoch}';
         final qrPayload = PaymentsServiceV2.buildQrPayload(
@@ -85,7 +95,9 @@ class PaymentsServiceV2 {
           'address': receiveAddress,
           'token': token,
           'network': network,
-          'expiresAt': DateTime.now().add(const Duration(minutes: 15)).toIso8601String(),
+          'expiresAt': DateTime.now()
+              .add(const Duration(minutes: 15))
+              .toIso8601String(),
         };
       }
 
@@ -113,14 +125,20 @@ class PaymentsServiceV2 {
       final resp = await http.post(url, headers: headers, body: body);
       AppLogger.d('Backend create response: ${resp.statusCode} ${resp.body}');
       if (resp.statusCode != 201 && resp.statusCode != 200) {
-        AppLogger.e('Backend payment create failed: ${resp.statusCode} ${resp.body}');
+        AppLogger.e(
+          'Backend payment create failed: ${resp.statusCode} ${resp.body}',
+        );
         // Include response body to help surface validation errors (400s) to the UI
-        throw Exception('Failed to create payment: ${resp.statusCode} ${resp.body}');
+        throw Exception(
+          'Failed to create payment: ${resp.statusCode} ${resp.body}',
+        );
       }
 
       final data = json.decode(resp.body) as Map<String, dynamic>;
       if (!(data['success'] == true)) {
-        throw Exception('Backend error creating payment: ${data['error'] ?? data}');
+        throw Exception(
+          'Backend error creating payment: ${data['error'] ?? data}',
+        );
       }
 
       // Prefer server-provided structured qr payloads. Response shape now may
@@ -132,7 +150,8 @@ class PaymentsServiceV2 {
       // payload for Solana payments. We intentionally choose addressOnly first
       // to avoid token-prefill compatibility issues (Phantom variations, token
       // lists, etc.). Fallback to tokenPrefill only when addressOnly is absent.
-      if (result['qrPayloads'] != null && result['qrPayloads'] is Map<String, dynamic>) {
+      if (result['qrPayloads'] != null &&
+          result['qrPayloads'] is Map<String, dynamic>) {
         final qrMap = Map<String, dynamic>.from(result['qrPayloads']);
 
         // Prefer addressOnly always when present (safe, simple payload)
@@ -167,9 +186,12 @@ class PaymentsServiceV2 {
       }
 
       return result;
-
     } catch (e, st) {
-      AppLogger.e('Failed to create payment via backend: $e', error: e, stackTrace: st);
+      AppLogger.e(
+        'Failed to create payment via backend: $e',
+        error: e,
+        stackTrace: st,
+      );
       rethrow;
     }
   }
@@ -198,12 +220,13 @@ class PaymentsServiceV2 {
     // Known token contract/mint mappings (DevNet / placeholders). Add real addresses as needed.
     const solanaMints = {
       'USDC': 'Es9vMFrzaCERa...replace_with_real_devnet_mint',
-      'USDT': 'BQ...replace_usdt_devnet'
+      'USDT': 'BQ...replace_usdt_devnet',
     };
 
     const ethereumContracts = {
-      'USDT': '0x0000000000000000000000000000000000000000', // replace with real contract if available
-      'USDC': '0x0000000000000000000000000000000000000000'
+      'USDT':
+          '0x0000000000000000000000000000000000000000', // replace with real contract if available
+      'USDC': '0x0000000000000000000000000000000000000000',
     };
 
     // SOL / Solana (supports native SOL and SPL tokens)
@@ -213,50 +236,53 @@ class PaymentsServiceV2 {
       try {
         final forceGlobal = AppConfig.SOLANA_ADDRESS_ONLY_QR;
         if (forceAddressOnlyForSolana || forceGlobal) {
-          return 'solana:${address}';
+          return 'solana:$address';
         }
       } catch (_) {
         // If any issue reading AppConfig, fall back to safe simple payload
-        return 'solana:${address}';
+        return 'solana:$address';
       }
       if (t == 'SOL' || t == 'SOLANA') {
-        return 'solana:${address}?amount=${amt(cryptoAmount)}';
+        return 'solana:$address?amount=${amt(cryptoAmount)}';
       }
       // Do NOT generate SPL token-prefill URIs on the client. The server is
       // authoritative for token-prefill payloads and will return them under
       // qrPayloads.tokenPrefill when allowed. Always prefer address-only
       // payloads client-side to maximize compatibility with wallets.
-      return 'solana:${address}';
+      return 'solana:$address';
     }
 
     // Ethereum / EVM networks (ETH, BSC treated similarly for native coin)
-    if (net == 'ETH' || net == 'ETHEREUM' || net == 'BSC' || net == 'BSC_MAINNET') {
+    if (net == 'ETH' ||
+        net == 'ETHEREUM' ||
+        net == 'BSC' ||
+        net == 'BSC_MAINNET') {
       if (t == 'ETH' || net == 'ETH' || net == 'ETHEREUM') {
         // value in wei
         final wei = (cryptoAmount * 1e18).round();
-        return 'ethereum:${address}?value=${wei.toString()}';
+        return 'ethereum:$address?value=${wei.toString()}';
       }
       // ERC20 token - include contract if known
       final contract = ethereumContracts[t] ?? '';
       if (contract.isNotEmpty) {
-        return 'ethereum:${address}?token=${Uri.encodeComponent(contract)}&amount=${amt(cryptoAmount)}';
+        return 'ethereum:$address?token=${Uri.encodeComponent(contract)}&amount=${amt(cryptoAmount)}';
       }
     }
 
     // Bitcoin
     if (net == 'BTC' || net == 'BITCOIN') {
-      return 'bitcoin:${address}?amount=${amt(cryptoAmount)}';
+      return 'bitcoin:$address?amount=${amt(cryptoAmount)}';
     }
 
     // Tron (TRX native, TRC20 tokens)
     if (net.startsWith('TR') || net.startsWith('TRC') || net == 'TRX') {
       // native TRX
       if (t == 'TRX') {
-        return 'tron:${address}?amount=${amt(cryptoAmount)}';
+        return 'tron:$address?amount=${amt(cryptoAmount)}';
       }
       // TRC20 token - no standard widely-adopted format; include contract param if known
       // For now include token name as token param and fall back to address only
-      return 'tron:${address}?token=${Uri.encodeComponent(t)}&amount=${amt(cryptoAmount)}';
+      return 'tron:$address?token=${Uri.encodeComponent(t)}&amount=${amt(cryptoAmount)}';
     }
 
     // Default: legacy app-specific payload
@@ -269,7 +295,7 @@ class PaymentsServiceV2 {
   /// This is intentionally permissive (no decode) but prevents obvious bad strings.
   static bool looksLikeBase58Pubkey(String? s) {
     if (s == null) return false;
-  final base58Reg = RegExp(r'^[1-9A-HJ-NP-Za-km-z]+$');
+    final base58Reg = RegExp(r'^[1-9A-HJ-NP-Za-km-z]+$');
     if (!base58Reg.hasMatch(s)) return false;
     if (s.length < 32 || s.length > 50) return false;
     return true;
