@@ -320,6 +320,20 @@ if (process.env.LOCAL_SERVER === 'true') {
     app.listen(port, () => console.log(`Local Express API listening on http://localhost:${port}`));
 }
 
+// If this file is executed directly (container entrypoint / `node dist/index.js`),
+// start the Express HTTP listener so containers (Cloud Run) properly bind to
+// the port provided by the runtime via process.env.PORT. We intentionally do
+// NOT gate this on NODE_ENV so containerized deployments reliably start.
+// This won't affect Firebase Functions deployments because we still export
+// `api = onRequest(app)` above.
+if (require.main === module) {
+    const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 5001;
+    // Bind to 0.0.0.0 so Cloud Run can route traffic into the container.
+    app.listen(port, '0.0.0.0', () => {
+        console.log(`Container Express API listening on http://0.0.0.0:${port}`);
+    });
+}
+
 // Helper function to generate payment link page HTML
 function generatePaymentLinkPageHtml(paymentLink: any, merchant: any, selectedNetwork?: string, selectedToken?: string): string {
   // Find the selected crypto option or use the first one

@@ -54,10 +54,17 @@ void main() async {
   // the convenience API and a Settings fallback for older plugin versions.
   final baseUrl = const String.fromEnvironment(
     'METARTPAY_BASE_URL',
-    defaultValue: 'http://127.0.0.1:5001/metartpay-bac2f/us-central1/api',
+    defaultValue: 'https://metartpay-api-456120304945.us-central1.run.app',
   );
+  // Only enable the Firestore emulator when the configured backend URL
+  // explicitly points at a localhost host (127.0.0.1 or 10.0.2.2) or when the
+  // build is invoked with --dart-define=FORCE_FIRESTORE_EMULATOR=true.
+  //
+  // Previously we enabled the emulator by default for debug builds which
+  // caused devices to attempt connections to 127.0.0.1:8080 (and fail with
+  // ECONNREFUSED) when the emulator wasn't running. Make emulator usage
+  // explicit to avoid noisy errors on development devices.
   final shouldUseEmulator =
-      !bool.fromEnvironment('dart.vm.product') ||
       baseUrl.contains('127.0.0.1') ||
       baseUrl.contains('10.0.2.2') ||
       const bool.fromEnvironment(
@@ -247,7 +254,7 @@ class MyApp extends StatelessWidget {
               final baseUrl = const String.fromEnvironment(
                 'METARTPAY_BASE_URL',
                 defaultValue:
-                    'http://127.0.0.1:5001/metartpay-bac2f/us-central1/api',
+                    'https://metartpay-api-456120304945.us-central1.run.app',
               );
               return DemoSimulatePage(baseUrl: baseUrl);
             },

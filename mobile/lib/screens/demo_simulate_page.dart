@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../widgets/dev_simulate_toggle.dart';
 import '../services/payment_service.dart';
 import 'payment_status_screen.dart';
+import '../utils/app_config.dart';
 
 class DemoSimulatePage extends StatefulWidget {
   final String baseUrl;
@@ -37,7 +38,7 @@ class _DemoSimulatePageState extends State<DemoSimulatePage> {
       };
       final txId = await _svc.createPayment(
         payload,
-        simulateKey: 'dev-local-key',
+        simulateKey: AppConfig.devSimulateKey,
       );
       Navigator.push(
         context,

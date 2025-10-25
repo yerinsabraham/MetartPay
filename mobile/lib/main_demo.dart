@@ -13,7 +13,7 @@ Future<void> main() async {
   // running locally. You can override METARTPAY_BASE_URL when launching.
   final baseUrl = const String.fromEnvironment(
     'METARTPAY_BASE_URL',
-    defaultValue: 'http://127.0.0.1:5001/metartpay-bac2f/us-central1/api',
+    defaultValue: 'https://metartpay-api-456120304945.us-central1.run.app',
   );
 
   try {
@@ -34,6 +34,8 @@ Future<void> main() async {
   // This is best-effort and uses two approaches: the convenience
   // `useFirestoreEmulator` API and a lower-level Settings fallback for
   // older plugin versions or when called slightly out of order.
+  // Only enable emulator when baseUrl explicitly targets localhost or when
+  // the developer passes --dart-define=FORCE_FIRESTORE_EMULATOR=true.
   final shouldUseEmulator =
       baseUrl.contains('127.0.0.1') ||
       baseUrl.contains('10.0.2.2') ||

@@ -7,7 +7,12 @@ class AppConfig {
   // environment variable is provided. Change back before production builds.
   static const String? backendBaseUrl = String.fromEnvironment(
     'METARTPAY_BACKEND_BASE_URL',
-    defaultValue: 'https://metartpay-api-456120304945.us-central1.run.app',
+    defaultValue: 'https://metartpay-api-456120304945.us-central1.run.app/api',
+  );
+
+  static const String devSimulateKey = String.fromEnvironment(
+    'METARTPAY_DEV_SIMULATE_KEY',
+    defaultValue: 'SimKey123',
   );
 
   // When true the mobile app will synthesize a server-shaped payment

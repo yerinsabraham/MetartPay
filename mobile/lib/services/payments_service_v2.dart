@@ -102,7 +102,9 @@ class PaymentsServiceV2 {
       }
 
       // Call backend endpoint to create a payment server-side
-      final backendBase = AppConfig.backendBaseUrl ?? 'http://localhost:3000';
+      final backendBase =
+          AppConfig.backendBaseUrl ??
+          'https://metartpay-api-456120304945.us-central1.run.app';
       final url = Uri.parse('$backendBase/api/payments/create');
 
       final body = json.encode({

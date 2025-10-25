@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
+import '../../providers/merchant_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/firebase_service.dart';
 import '../../widgets/metartpay_branding.dart';
 import 'register_screen.dart';
 
@@ -16,6 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _isDemoSigning = false;
 
   @override
   void dispose() {
@@ -57,14 +62,78 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _signInAsDemo() async {
+    if (!kDebugMode) return;
+    setState(() {
+      _isDemoSigning = true;
+    });
+
+    final messenger = ScaffoldMessenger.of(context);
+
+    try {
+      // Sign in anonymously
+      final auth = fb_auth.FirebaseAuth.instance;
+      final userCred = await auth.signInAnonymously();
+
+      if (userCred.user == null) {
+        throw Exception('Anonymous sign-in failed');
+      }
+
+      // Create a demo merchant for this anonymous user so the app has data
+      final merchantProvider = context.read<MerchantProvider>();
+
+      final created = await merchantProvider.createMerchantWithSetup(
+        businessName: 'Demo Business',
+        industry: 'Demo',
+        contactEmail: 'demo@example.com',
+        fullName: 'Demo User',
+        bankAccountNumber: '0000000000',
+        bankName: 'Demo Bank',
+        bankAccountName: 'Demo User',
+      );
+
+      if (!created) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              'Demo setup failed: ${merchantProvider.error ?? 'unknown'}',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } else {
+        // Ensure merchant data is loaded
+        await merchantProvider.loadUserMerchants();
+        // Navigate to home
+        if (mounted) {
+          Navigator.pushNamedAndRemoveUntil(context, '/home', (r) => false);
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Demo sign-in failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDemoSigning = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
-          child: Consumer<AuthProvider>(
+          child: Consumer<AuthProvider?>(
             builder: (context, authProvider, _) {
+              final ap = authProvider; // nullable alias
               return Form(
                 key: _formKey,
                 child: Column(
@@ -172,13 +241,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     // Login Button
                     ElevatedButton(
-                      onPressed: authProvider.isLoading ? null : _login,
+                      onPressed: ap?.isLoading == true ? null : _login,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: authProvider.isLoading
+                      child: ap?.isLoading == true
                           ? const SizedBox(
                               height: 20,
                               width: 20,
@@ -219,7 +288,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     // Google Sign-in Button
                     OutlinedButton.icon(
-                      onPressed: authProvider.isLoading
+                      onPressed: ap?.isLoading == true
                           ? null
                           : () => _loginWithGoogle(),
                       icon: SizedBox(
@@ -278,6 +347,31 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
+
+                    const SizedBox(height: 16),
+
+                    // Debug-only: Sign in as Demo
+                    if (kDebugMode) ...[
+                      const SizedBox(height: 8),
+                      ElevatedButton.icon(
+                        onPressed: _isDemoSigning ? null : _signInAsDemo,
+                        icon: _isDemoSigning
+                            ? const SizedBox(
+                                height: 16,
+                                width: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.bug_report),
+                        label: const Text('Sign in as Demo (debug)'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
 
                     const SizedBox(height: 40),
 
