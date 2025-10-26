@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import '../../providers/merchant_provider.dart';
 
 class CreatePaymentV2 extends StatefulWidget {
-  const CreatePaymentV2({super.key});
+  const CreatePaymentV2({Key? key}) : super(key: key);
 
   @override
   State<CreatePaymentV2> createState() => _CreatePaymentV2State();
@@ -17,70 +17,22 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
   final _amountController = TextEditingController();
   String _network = 'BSC';
   String _token = 'USDT';
-  final bool _autoConvert = true;
+  bool _autoConvert = true;
   bool _loading = false;
   final PaymentControllerV2 _controller = PaymentControllerV2();
   int _step = 1;
   String? _selectedOptionKey;
   // tokens grid definition for step 2
-  final List<Map<String, String>> _tokenOptions = [
-    {
-      'key': 'BTC',
-      'label': 'Bitcoin (BTC)',
-      'asset': 'assets/icons/bitcoin-logo.png',
-      'network': 'BTC',
-      'standard': '',
-    },
+    final List<Map<String, String>> _tokenOptions = [
+    {'key': 'BTC', 'label': 'Bitcoin (BTC)', 'asset': 'assets/icons/bitcoin-logo.png', 'network': 'BTC', 'standard': ''},
     // Solana options: selecting these will immediately create an address-only QR
-    {
-      'key': 'SOL',
-      'label': 'Solana (SOL)',
-      'asset': 'assets/icons/solana-logo.png',
-      'network': 'SOL',
-      'standard': '',
-    },
-    {
-      'key': 'USDC_SOL',
-      'label': 'USDC – Solana',
-      'asset': 'assets/icons/usdc-logo.png',
-      'network': 'SOL',
-      'standard': 'SPL',
-    },
-    {
-      'key': 'USDT_SOL',
-      'label': 'USDT – Solana',
-      'asset': 'assets/icons/usdt-logo.png',
-      'network': 'SOL',
-      'standard': 'SPL',
-    },
-    {
-      'key': 'USDT_BSC',
-      'label': 'USDT – BSC',
-      'asset': 'assets/icons/usdt-logo.png',
-      'network': 'BSC',
-      'standard': 'BEP20',
-    },
-    {
-      'key': 'USDT_ETH',
-      'label': 'USDT – Ethereum',
-      'asset': 'assets/icons/usdt-logo.png',
-      'network': 'ETH',
-      'standard': 'ERC20',
-    },
-    {
-      'key': 'USDC_ETH',
-      'label': 'USDC – Ethereum',
-      'asset': 'assets/icons/usdc-logo.png',
-      'network': 'ETH',
-      'standard': 'ERC20',
-    },
-    {
-      'key': 'USDT_TRC',
-      'label': 'USDT – TRON',
-      'asset': 'assets/icons/usdt-logo.png',
-      'network': 'TRC20',
-      'standard': 'TRC20',
-    },
+    {'key': 'SOL', 'label': 'Solana (SOL)', 'asset': 'assets/icons/solana-logo.png', 'network': 'SOL', 'standard': ''},
+    {'key': 'USDC_SOL', 'label': 'USDC – Solana', 'asset': 'assets/icons/usdc-logo.png', 'network': 'SOL', 'standard': 'SPL'},
+    {'key': 'USDT_SOL', 'label': 'USDT – Solana', 'asset': 'assets/icons/usdt-logo.png', 'network': 'SOL', 'standard': 'SPL'},
+    {'key': 'USDT_BSC', 'label': 'USDT – BSC', 'asset': 'assets/icons/usdt-logo.png', 'network': 'BSC', 'standard': 'BEP20'},
+    {'key': 'USDT_ETH', 'label': 'USDT – Ethereum', 'asset': 'assets/icons/usdt-logo.png', 'network': 'ETH', 'standard': 'ERC20'},
+    {'key': 'USDC_ETH', 'label': 'USDC – Ethereum', 'asset': 'assets/icons/usdc-logo.png', 'network': 'ETH', 'standard': 'ERC20'},
+    {'key': 'USDT_TRC', 'label': 'USDT – TRON', 'asset': 'assets/icons/usdt-logo.png', 'network': 'TRC20', 'standard': 'TRC20'},
   ];
 
   @override
@@ -99,27 +51,20 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
 
     // Respect route arguments that may preselect a network/token and skip the amount step
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final args =
-          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ??
-          {};
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? {};
       final skip = args['skipAmountStep'] as bool? ?? false;
       final defNet = args['defaultNetwork'] as String?;
       final defTok = args['defaultToken'] as String?;
       if (defNet != null) _network = defNet;
       if (defTok != null) _token = defTok;
-      if (_token.isNotEmpty && _network.isNotEmpty)
-        _selectedOptionKey = _token == 'BTC' ? 'BTC' : '${_token}_$_network';
+      if (_token.isNotEmpty && _network.isNotEmpty) _selectedOptionKey = _token == 'BTC' ? 'BTC' : '${_token}_$_network';
       if (skip) setState(() => _step = 2);
     });
 
     // Ensure merchant data is loaded so we don't show "No merchant selected" when merchant exists
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final merchantProvider = Provider.of<MerchantProvider>(
-        context,
-        listen: false,
-      );
-      if (merchantProvider.currentMerchant == null &&
-          !merchantProvider.hasAttemptedLoad) {
+      final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+      if (merchantProvider.currentMerchant == null && !merchantProvider.hasAttemptedLoad) {
         merchantProvider.loadUserMerchants();
       }
     });
@@ -128,19 +73,10 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
   Future<void> _generate({double? amountOverride}) async {
     setState(() => _loading = true);
     try {
-      final merchantProvider = Provider.of<MerchantProvider>(
-        context,
-        listen: false,
-      );
+      final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
       final merchantId = merchantProvider.currentMerchant?.id;
       if (merchantId == null || merchantId.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'No merchant selected. Please set up a merchant first.',
-            ),
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No merchant selected. Please set up a merchant first.')));
         return;
       }
 
@@ -152,9 +88,7 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
       }
 
       // For Solana selections, create payment without amount so backend returns address-only QR
-      final isSol =
-          (_network.toUpperCase().startsWith('SOL') ||
-          _network.toUpperCase() == 'SOL');
+      final isSol = (_network.toUpperCase().startsWith('SOL') || _network.toUpperCase() == 'SOL');
 
       final result = await _controller.createPayment(
         merchantId: merchantId,
@@ -165,36 +99,24 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
         autoConvert: _autoConvert,
       );
 
-      final qrPayload =
-          result['qrPayload'] as String? ??
-          'placeholder:${result['paymentId'] ?? 'unknown'}';
+      final qrPayload = result['qrPayload'] as String? ?? 'placeholder:${result['paymentId'] ?? 'unknown'}';
 
       AppLogger.d('DEBUG: Generate payment result: $result');
 
-      Navigator.pushNamed(
-        context,
-        '/qr-view-v2',
-        arguments: {
-          'network': result['network'] ?? _network,
-          'token': result['token'] ?? _token,
-          'naira': isSol ? null : amount,
-          'crypto': result['cryptoAmount'] ?? 0.0,
-          'payload': qrPayload,
-          'paymentId': result['paymentId'],
-          'merchantId': merchantId,
-          'address': result['address'],
-        },
-      );
+      Navigator.pushNamed(context, '/qr-view-v2', arguments: {
+        'network': result['network'] ?? _network,
+        'token': result['token'] ?? _token,
+        'naira': isSol ? null : amount,
+        'crypto': result['cryptoAmount'] ?? 0.0,
+        'payload': qrPayload,
+        'paymentId': result['paymentId'],
+        'merchantId': merchantId,
+        'address': result['address'],
+      });
     } catch (e, st) {
       AppLogger.e('Failed to generate payment: $e', error: e, stackTrace: st);
-      final msg = e.toString() ?? 'Failed to generate payment';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Failed to generate payment: ${msg.length > 120 ? "${msg.substring(0, 120)}..." : msg}',
-          ),
-        ),
-      );
+      final msg = e?.toString() ?? 'Failed to generate payment';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to generate payment: ${msg.length > 120 ? msg.substring(0, 120) + "..." : msg}')));
     } finally {
       setState(() => _loading = false);
     }
@@ -212,10 +134,7 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (_step == 1) ...[
-                const Text(
-                  'Step 1 — Choose Token / Network',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
+                const Text('Step 1 — Choose Token / Network', style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
                 GridView.count(
                   crossAxisCount: 2,
@@ -246,15 +165,10 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
                         // selection before progressing.
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         decoration: BoxDecoration(
                           border: Border.all(
-                            color: _selectedOptionKey == key
-                                ? MetartPayColors.primaryDark
-                                : Colors.grey.shade300,
+                            color: _selectedOptionKey == key ? MetartPayColors.primaryDark : Colors.grey.shade300,
                             width: _selectedOptionKey == key ? 2 : 1,
                           ),
                           borderRadius: BorderRadius.circular(8),
@@ -265,8 +179,7 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
                             Image.asset(
                               t['asset']!,
                               height: 20,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.monetization_on, size: 20),
+                              errorBuilder: (context, error, stackTrace) => const Icon(Icons.monetization_on, size: 20),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -276,10 +189,7 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
                                 children: [
                                   Text(
                                     t['label']!,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -287,10 +197,7 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
                                     const SizedBox(height: 2),
                                     Text(
                                       t['standard']!,
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.grey.shade600,
-                                      ),
+                                      style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -307,69 +214,39 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
                 const SizedBox(height: 20),
                 Row(
                   children: [
-                    OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Back'),
-                    ),
+                    OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('Back')),
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: _loading
-                            ? null
-                            : () async {
-                                // If nothing selected, prompt user
-                                if (_selectedOptionKey == null) {
-                                  if (mounted)
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Select a token/network first',
-                                        ),
-                                      ),
-                                    );
-                                  return;
-                                }
-                                // Ensure merchant data loaded when moving to amount step
-                                final merchantProvider =
-                                    Provider.of<MerchantProvider>(
-                                      context,
-                                      listen: false,
-                                    );
-                                if (merchantProvider.currentMerchant == null &&
-                                    !merchantProvider.hasAttemptedLoad) {
-                                  await merchantProvider.loadUserMerchants();
-                                }
+                        onPressed: _loading ? null : () async {
+                          // If nothing selected, prompt user
+                          if (_selectedOptionKey == null) {
+                            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select a token/network first')));
+                            return;
+                          }
+                          // Ensure merchant data loaded when moving to amount step
+                          final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+                          if (merchantProvider.currentMerchant == null && !merchantProvider.hasAttemptedLoad) {
+                            await merchantProvider.loadUserMerchants();
+                          }
 
-                                // If selected network is Solana, generate immediate address-only QR
-                                final parts = _selectedOptionKey!.split('_');
-                                final selNet = parts.length == 1
-                                    ? parts[0]
-                                    : parts[1];
-                                if (selNet.toUpperCase().startsWith('SOL')) {
-                                  await _generate(amountOverride: 0.0);
-                                  return;
-                                }
+                          // If selected network is Solana, generate immediate address-only QR
+                          final parts = _selectedOptionKey!.split('_');
+                          final selNet = parts.length == 1 ? parts[0] : parts[1];
+                          if (selNet.toUpperCase().startsWith('SOL')) {
+                            await _generate(amountOverride: 0.0);
+                            return;
+                          }
 
-                                // Otherwise, advance to amount input
-                                setState(() => _step = 2);
-                              },
+                          // Otherwise, advance to amount input
+                          setState(() => _step = 2);
+                        },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
+                          backgroundColor: Theme.of(context).colorScheme.primary,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
-                        child: _loading
-                            ? const SizedBox(
-                                height: 18,
-                                width: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text('Next'),
+                        child: _loading ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Next'),
                       ),
                     ),
                   ],
@@ -380,14 +257,9 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 6,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                     decoration: BoxDecoration(
-                      border: Border.all(
-                        color: MetartPayColors.primaryBorder60,
-                      ),
+                      border: Border.all(color: MetartPayColors.primaryBorder60),
                       borderRadius: BorderRadius.circular(8),
                       color: Colors.grey.shade50,
                     ),
@@ -396,10 +268,7 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
                       children: [
                         Image.asset('assets/icons/naira-flag.png', height: 18),
                         const SizedBox(width: 6),
-                        const Text(
-                          'NGN',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
+                        const Text('NGN', style: TextStyle(fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
@@ -412,23 +281,14 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
                     child: TextFormField(
                       controller: _amountController,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        hintText: '0.00',
-                      ),
+                      style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(border: InputBorder.none, hintText: '0.00'),
                       validator: (v) {
                         if (v == null || v.isEmpty) return 'Enter amount';
                         final cleaned = v.replaceAll(',', '').trim();
                         final val = double.tryParse(cleaned);
-                        if (val == null || val <= 0)
-                          return 'Enter a valid numeric amount';
+                        if (val == null || val <= 0) return 'Enter a valid numeric amount';
                         return null;
                       },
                     ),
@@ -437,45 +297,24 @@ class _CreatePaymentV2State extends State<CreatePaymentV2> {
                 const SizedBox(height: 20),
                 Row(
                   children: [
-                    OutlinedButton(
-                      onPressed: () => setState(() => _step = 1),
-                      child: const Text('Back'),
-                    ),
+                    OutlinedButton(onPressed: () => setState(() => _step = 1), child: const Text('Back')),
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: _loading
-                            ? null
-                            : () async {
-                                // Ensure merchant is loaded before attempting to create a payment
-                                final merchantProvider =
-                                    Provider.of<MerchantProvider>(
-                                      context,
-                                      listen: false,
-                                    );
-                                if (merchantProvider.currentMerchant == null &&
-                                    !merchantProvider.hasAttemptedLoad) {
-                                  await merchantProvider.loadUserMerchants();
-                                }
-                                if (!_formKey.currentState!.validate()) return;
-                                await _generate();
-                              },
+                        onPressed: _loading ? null : () async {
+                          // Ensure merchant is loaded before attempting to create a payment
+                          final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+                          if (merchantProvider.currentMerchant == null && !merchantProvider.hasAttemptedLoad) {
+                            await merchantProvider.loadUserMerchants();
+                          }
+                          if (!_formKey.currentState!.validate()) return;
+                          await _generate();
+                        },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
+                          backgroundColor: Theme.of(context).colorScheme.primary,
                           foregroundColor: Colors.white,
                         ),
-                        child: _loading
-                            ? const SizedBox(
-                                height: 18,
-                                width: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text('Next'),
+                        child: _loading ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Next'),
                       ),
                     ),
                   ],

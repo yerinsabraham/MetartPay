@@ -1,4 +1,4 @@
-﻿import 'dart:developer' as developer;
+import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 
 /// Simple application logger wrapper that routes logs through

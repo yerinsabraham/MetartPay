@@ -3,17 +3,6 @@ import { asyncHandler } from '../middleware/errorHandler';
 import { PaymentLinkController } from '../controllers/paymentLinkController';
 import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 import { db } from '../index';
-// dev-only in-memory store
-let inMemoryStore: any = null;
-if (process.env.ENABLE_DEV_IN_MEMORY === 'true') {
-  try {
-    inMemoryStore = require('../dev/inMemoryStore').default;
-    console.info('Using ENABLE_DEV_IN_MEMORY in-memory store for simulate-confirm');
-  } catch (e) {
-    console.warn('Failed to load in-memory store:', e);
-    inMemoryStore = null;
-  }
-}
 
 const router = Router();
 const paymentLinkController = new PaymentLinkController();
@@ -65,90 +54,53 @@ router.post('/simulate-confirm', asyncHandler(async (req: Request, res: Response
       updatedAt: new Date(),
     };
 
-    let txRef: any;
-    if (inMemoryStore) {
-      const r = await inMemoryStore.addTransaction(transaction);
-      txRef = { id: r.id };
-    } else {
-      txRef = await db.collection('transactions').add(transaction);
-    }
+    const txRef = await db.collection('transactions').add(transaction);
 
     // Find active monitored addresses that match this destination
-    let monitoredSnapshot: any[] = [];
-    if (inMemoryStore) {
-      const found = await inMemoryStore.findMonitoredByAddress(toAddr);
-      monitoredSnapshot = found.map((f: any) => ({ id: f.id, data: () => f.data, exists: true }));
-    } else {
-      monitoredSnapshot = (await db.collection('monitoredAddresses')
-        .where('address', '==', toAddr)
-        .where('status', '==', 'active')
-        .get()).docs;
-    }
+    const monitoredSnapshot = await db.collection('monitoredAddresses')
+      .where('address', '==', toAddr)
+      .where('status', '==', 'active')
+      .get();
 
     const affected: Array<any> = [];
 
-    for (const doc of monitoredSnapshot) {
-      const monitored = { id: doc.id, ...(typeof doc.data === 'function' ? doc.data() : doc.data) } as any;
+    for (const doc of monitoredSnapshot.docs) {
+      const monitored = { id: doc.id, ...doc.data() } as any;
 
       // Mark monitored address completed
-      if (inMemoryStore) {
-        await inMemoryStore.updateMonitoredStatus(monitored.id, 'completed');
-      } else {
-        await db.collection('monitoredAddresses').doc(monitored.id).update({ status: 'completed', updatedAt: new Date() });
-      }
+      await db.collection('monitoredAddresses').doc(monitored.id).update({ status: 'completed', updatedAt: new Date() });
 
       // If linked to a payment link, update totals
       if (monitored.paymentLinkId) {
-        if (inMemoryStore) {
-          await inMemoryStore.updatePaymentLinkTotals(monitored.paymentLinkId, 1, parseFloat(amountCrypto));
-        } else {
-          const plRef = db.collection('paymentLinks').doc(monitored.paymentLinkId);
-          const plDoc = await plRef.get();
-          if (plDoc.exists) {
-            const cur = plDoc.data() as any;
-            await plRef.update({
-              totalPayments: (cur?.totalPayments || 0) + 1,
-              totalAmountReceived: (cur?.totalAmountReceived || 0) + parseFloat(amountCrypto),
-              updatedAt: new Date()
-            });
-          }
+        const plRef = db.collection('paymentLinks').doc(monitored.paymentLinkId);
+        const plDoc = await plRef.get();
+        if (plDoc.exists) {
+          const cur = plDoc.data() as any;
+          await plRef.update({
+            totalPayments: (cur?.totalPayments || 0) + 1,
+            totalAmountReceived: (cur?.totalAmountReceived || 0) + parseFloat(amountCrypto),
+            updatedAt: new Date()
+          });
         }
       }
 
       // Create an in-app notification for merchant
       try {
-        if (inMemoryStore) {
-          await inMemoryStore.addNotification({
-            merchantId: monitored.merchantId,
-            type: 'payment_received',
-            title: 'Payment Received (SIMULATED)',
-            message: `Received ${amountCrypto} ${cryptoCurrency} on ${network}`,
-            data: {
-              transactionId: txRef.id,
-              txHash: txHash.toString(),
-              amount: parseFloat(amountCrypto),
-              currency: cryptoCurrency,
-              network,
-            },
-            read: false,
-          });
-        } else {
-          await db.collection('notifications').add({
-            merchantId: monitored.merchantId,
-            type: 'payment_received',
-            title: 'Payment Received (SIMULATED)',
-            message: `Received ${amountCrypto} ${cryptoCurrency} on ${network}`,
-            data: {
-              transactionId: txRef.id,
-              txHash: txHash.toString(),
-              amount: parseFloat(amountCrypto),
-              currency: cryptoCurrency,
-              network,
-            },
-            read: false,
-            createdAt: new Date(),
-          });
-        }
+        await db.collection('notifications').add({
+          merchantId: monitored.merchantId,
+          type: 'payment_received',
+          title: 'Payment Received (SIMULATED)',
+          message: `Received ${amountCrypto} ${cryptoCurrency} on ${network}`,
+          data: {
+            transactionId: txRef.id,
+            txHash: txHash.toString(),
+            amount: parseFloat(amountCrypto),
+            currency: cryptoCurrency,
+            network,
+          },
+          read: false,
+          createdAt: new Date(),
+        });
       } catch (notifyErr) {
         console.warn('Failed to create simulate notification:', notifyErr);
       }

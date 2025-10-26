@@ -27,8 +27,9 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
         final theme = Theme.of(context);
         final colorScheme = theme.colorScheme;
 
+        
         return Scaffold(
-          backgroundColor: colorScheme.surface,
+          backgroundColor: colorScheme.background,
           appBar: AppBar(
             backgroundColor: colorScheme.surface,
             elevation: 0,
@@ -43,10 +44,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
             ),
             actions: [
               IconButton(
-                icon: Icon(
-                  Icons.notifications_outlined,
-                  color: colorScheme.primary,
-                ),
+                icon: Icon(Icons.notifications_outlined, color: colorScheme.primary),
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -57,10 +55,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                 },
               ),
               IconButton(
-                icon: Icon(
-                  Icons.account_circle_outlined,
-                  color: colorScheme.primary,
-                ),
+                icon: Icon(Icons.account_circle_outlined, color: colorScheme.primary),
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -95,23 +90,19 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
     );
   }
 
-  Widget _buildKYCBanner(
-    BuildContext context,
-    MerchantProvider merchantProvider,
-  ) {
+  Widget _buildKYCBanner(BuildContext context, MerchantProvider merchantProvider) {
     final merchant = merchantProvider.currentMerchant;
     final colorScheme = Theme.of(context).colorScheme;
-
+    
     // Don't show banner if KYC is verified
     if (merchant?.kycStatus == 'verified') return const SizedBox.shrink();
-
+    
     // Check if KYC has been submitted (has fullName, idNumber, etc.)
-    final bool hasSubmittedKYC =
-        merchant != null &&
+    final bool hasSubmittedKYC = merchant != null &&
         merchant.fullName.isNotEmpty &&
         merchant.idNumber != null &&
         merchant.idNumber!.isNotEmpty;
-
+    
     // If KYC has been submitted and is pending, show "pending confirmation"
     if (hasSubmittedKYC && merchant.kycStatus == 'pending') {
       return Container(
@@ -164,7 +155,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
         ),
       );
     }
-
+    
     // If KYC hasn't been submitted yet, show "complete KYC" banner
     return GestureDetector(
       onTap: () {
@@ -175,7 +166,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
           ),
         );
       },
-      child: Container(
+        child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -191,7 +182,11 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                 color: colorScheme.error.withAlpha((0.12 * 255).round()),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.warning, color: colorScheme.error, size: 24),
+              child: Icon(
+                Icons.warning,
+                color: colorScheme.error,
+                size: 24,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -209,22 +204,26 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                   const SizedBox(height: 4),
                   Text(
                     'Verify your identity to access all features and start receiving payments.',
-                    style: TextStyle(fontSize: 14, color: colorScheme.error),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: colorScheme.error,
+                    ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, color: colorScheme.error, size: 16),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: colorScheme.error,
+              size: 16,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildWelcomeCard(
-    BuildContext context,
-    MerchantProvider merchantProvider,
-  ) {
+  Widget _buildWelcomeCard(BuildContext context, MerchantProvider merchantProvider) {
     final merchant = merchantProvider.currentMerchant;
     final businessName = merchant?.businessName ?? 'Your Business';
     final colorScheme = Theme.of(context).colorScheme;
@@ -266,11 +265,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildStatItem(
-                  'Total Balance',
-                  '₦0.00',
-                  Icons.account_balance_wallet,
-                ),
+                child: _buildStatItem('Total Balance', '₦0.00', Icons.account_balance_wallet),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -288,7 +283,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: colorScheme.onPrimary.withAlpha((0.2 * 255).round()),
+  color: colorScheme.onPrimary.withAlpha((0.2 * 255).round()),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -298,13 +293,13 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
             children: [
               Icon(icon, color: colorScheme.onPrimary, size: 18),
               const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  color: colorScheme.onPrimary.withAlpha((0.9 * 255).round()),
-                  fontSize: 12,
-                ),
-              ),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: colorScheme.onPrimary.withAlpha((0.9 * 255).round()),
+                      fontSize: 12,
+                    ),
+                  ),
             ],
           ),
           const SizedBox(height: 4),
@@ -321,49 +316,20 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
     );
   }
 
-  Widget _buildQuickStats(
-    BuildContext context,
-    MerchantProvider merchantProvider,
-  ) {
+  Widget _buildQuickStats(BuildContext context, MerchantProvider merchantProvider) {
     final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Expanded(
-          child: _buildQuickStatCard(
-            'Transactions',
-            '0',
-            Icons.receipt_long,
-            cs.primary,
-          ),
-        ),
+        Expanded(child: _buildQuickStatCard('Transactions', '0', Icons.receipt_long, cs.primary)),
         const SizedBox(width: 12),
-        Expanded(
-          child: _buildQuickStatCard(
-            'Customers',
-            '0',
-            Icons.people,
-            cs.secondary,
-          ),
-        ),
+        Expanded(child: _buildQuickStatCard('Customers', '0', Icons.people, cs.secondary)),
         const SizedBox(width: 12),
-        Expanded(
-          child: _buildQuickStatCard(
-            'Revenue',
-            '₦0.00',
-            Icons.monetization_on,
-            cs.tertiary,
-          ),
-        ),
+        Expanded(child: _buildQuickStatCard('Revenue', '₦0.00', Icons.monetization_on, cs.tertiary)),
       ],
     );
   }
 
-  Widget _buildQuickStatCard(
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
+  Widget _buildQuickStatCard(String title, String value, IconData icon, Color color) {
     final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
@@ -384,7 +350,10 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
@@ -405,7 +374,10 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
       children: [
         const Text(
           'Quick Actions',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 12),
         LayoutBuilder(
@@ -434,12 +406,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => ReceivePaymentsScreen(
-                        merchantId:
-                            Provider.of<MerchantProvider>(
-                              context,
-                              listen: false,
-                            ).currentMerchant?.id ??
-                            'demo_merchant',
+                        merchantId: Provider.of<MerchantProvider>(context, listen: false).currentMerchant?.id ?? 'demo_merchant',
                       ),
                     ),
                   ),
@@ -450,9 +417,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                   Colors.green,
                   () => Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => const CreatePaymentLinkScreen(),
-                    ),
+                    MaterialPageRoute(builder: (context) => const CreatePaymentLinkScreen()),
                   ),
                 ),
                 _buildActionCard(
@@ -461,9 +426,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                   Colors.blue,
                   () => Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => const PaymentLinksScreen(),
-                    ),
+                    MaterialPageRoute(builder: (context) => const PaymentLinksScreen()),
                   ),
                 ),
                 _buildActionCard(
@@ -472,9 +435,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                   Colors.teal,
                   () => Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => const CryptoWalletsScreen(),
-                    ),
+                    MaterialPageRoute(builder: (context) => const CryptoWalletsScreen()),
                   ),
                 ),
                 _buildActionCard(
@@ -483,9 +444,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                   Colors.orange,
                   () => Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => const TransactionHistoryScreen(),
-                    ),
+                    MaterialPageRoute(builder: (context) => const TransactionHistoryScreen()),
                   ),
                 ),
               ],
@@ -496,12 +455,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
     );
   }
 
-  Widget _buildActionCard(
-    String title,
-    IconData icon,
-    Color color,
-    VoidCallback onTap,
-  ) {
+  Widget _buildActionCard(String title, IconData icon, Color color, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Material(
@@ -558,15 +512,16 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
           children: [
             const Text(
               'Recent Transactions',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             TextButton(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const TransactionHistoryScreen(),
-                  ),
+                  MaterialPageRoute(builder: (context) => const TransactionHistoryScreen()),
                 );
               },
               child: const Text('View All'),
@@ -581,9 +536,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withAlpha((0.06 * 255).round()),
+                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.06 * 255).round()),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -610,9 +563,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen> {
                 'Your recent transactions will appear here',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurfaceVariant.withAlpha((0.9 * 255).round()),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha((0.9 * 255).round()),
                 ),
                 textAlign: TextAlign.center,
               ),

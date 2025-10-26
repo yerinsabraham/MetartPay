@@ -1,13 +1,13 @@
 class Merchant {
   final String id;
   final String userId;
-
+  
   // Business Information
   final String businessName;
   final String industry;
   final String contactEmail;
   final String? businessAddress;
-
+  
   // KYC Information
   final String fullName;
   final String? idNumber;
@@ -15,17 +15,17 @@ class Merchant {
   final String? address;
   final String kycStatus;
   final bool isSetupComplete;
-
+  
   // Bank Account Information
   final String bankAccountNumber;
   final String bankName;
   final String bankAccountName;
-
+  
   // Wallet Information
   final Map<String, String> walletAddresses; // {network: address}
   final double totalBalance;
   final double availableBalance;
-
+  
   // Timestamps
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -55,7 +55,7 @@ class Merchant {
 
   factory Merchant.fromJson(Map<String, dynamic> json) {
     // Helper to parse timestamps coming from Firestore (Timestamp), int(ms), ISO string, or DateTime
-    DateTime parseTimestamp(dynamic value) {
+    DateTime _parseTimestamp(dynamic value) {
       if (value == null) return DateTime.now();
       // Firestore Timestamp
       try {
@@ -69,8 +69,7 @@ class Merchant {
         // Firestore Timestamp has toDate() method
         if (value is Map && value.containsKey('_seconds')) {
           final seconds = value['_seconds'];
-          if (seconds is int)
-            return DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
+          if (seconds is int) return DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
         }
         // Fallback to toDate() if available
         final toDate = value?.toDate;
@@ -83,22 +82,18 @@ class Merchant {
     }
 
     // Normalize wallet addresses map
-    Map<String, String> parseWallets(dynamic w) {
+    Map<String, String> _parseWallets(dynamic w) {
       if (w == null) return {};
       try {
         if (w is Map<String, String>) return w;
-        if (w is Map) {
-          return Map<String, String>.fromEntries(
-            w.entries.map(
-              (e) => MapEntry(e.key.toString(), e.value?.toString() ?? ''),
-            ),
-          );
-        }
+        if (w is Map) return Map<String, String>.fromEntries(
+          w.entries.map((e) => MapEntry(e.key.toString(), e.value?.toString() ?? '')),
+        );
       } catch (_) {}
       return {};
     }
 
-    bool parseBool(dynamic v) {
+    bool _parseBool(dynamic v) {
       if (v == null) return false;
       if (v is bool) return v;
       if (v is String) return v.toLowerCase() == 'true';
@@ -106,7 +101,7 @@ class Merchant {
       return false;
     }
 
-    double parseDouble(dynamic v) {
+    double _parseDouble(dynamic v) {
       if (v == null) return 0.0;
       if (v is double) return v;
       if (v is int) return v.toDouble();
@@ -126,15 +121,15 @@ class Merchant {
       bvn: json['bvn'],
       address: json['address'],
       kycStatus: json['kycStatus'] ?? 'pending',
-      isSetupComplete: parseBool(json['isSetupComplete']),
+      isSetupComplete: _parseBool(json['isSetupComplete']),
       bankAccountNumber: json['bankAccountNumber'] ?? '',
       bankName: json['bankName'] ?? '',
       bankAccountName: json['bankAccountName'] ?? '',
-      walletAddresses: parseWallets(json['walletAddresses']),
-      totalBalance: parseDouble(json['totalBalance']),
-      availableBalance: parseDouble(json['availableBalance']),
-      createdAt: parseTimestamp(json['createdAt']),
-      updatedAt: parseTimestamp(json['updatedAt']),
+      walletAddresses: _parseWallets(json['walletAddresses']),
+      totalBalance: _parseDouble(json['totalBalance']),
+      availableBalance: _parseDouble(json['availableBalance']),
+      createdAt: _parseTimestamp(json['createdAt']),
+      updatedAt: _parseTimestamp(json['updatedAt']),
     );
   }
 
@@ -384,9 +379,7 @@ class Transaction {
       feeCrypto: (json['feeCrypto'] as num?)?.toDouble() ?? 0.0,
       fxRate: (json['fxRate'] as num?)?.toDouble() ?? 0.0,
       createdAt: DateTime.parse(json['createdAt']),
-      completedAt: json['completedAt'] != null
-          ? DateTime.parse(json['completedAt'])
-          : null,
+      completedAt: json['completedAt'] != null ? DateTime.parse(json['completedAt']) : null,
       metadata: json['metadata'],
     );
   }
@@ -507,9 +500,7 @@ class PaymentLink {
       isActive: json['isActive'] ?? true,
       usageLimit: json['usageLimit'],
       usageCount: json['usageCount'] ?? 0,
-      expiresAt: json['expiresAt'] != null
-          ? DateTime.parse(json['expiresAt'])
-          : null,
+      expiresAt: json['expiresAt'] != null ? DateTime.parse(json['expiresAt']) : null,
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
       metadata: json['metadata'],
@@ -539,8 +530,7 @@ class PaymentLink {
   }
 
   bool get isExpired => expiresAt != null && DateTime.now().isAfter(expiresAt!);
-  bool get hasReachedUsageLimit =>
-      usageLimit != null && usageCount >= usageLimit!;
+  bool get hasReachedUsageLimit => usageLimit != null && usageCount >= usageLimit!;
   bool get canBeUsed => isActive && !isExpired && !hasReachedUsageLimit;
 
   String get url => 'https://metartpay.com/pay/$id';
@@ -567,7 +557,7 @@ class Customer {
   final List<String> tags;
   final Map<String, dynamic> metadata;
   final Map<String, String> socialMedia;
-
+  
   // Transaction Statistics
   final int totalTransactions;
   final double totalSpentNaira;
@@ -577,7 +567,7 @@ class Customer {
   final double spentThisMonth;
   final DateTime? firstTransactionAt;
   final DateTime? lastTransactionAt;
-
+  
   // Engagement & Communication
   final DateTime? lastContactDate;
   final DateTime? lastLoginDate;
@@ -588,12 +578,12 @@ class Customer {
   final String? referralSource;
   final String? referredBy;
   final int referralCount;
-
+  
   // VIP & Scoring
   final bool isVIP;
   final int loyaltyScore; // 0-100
   final int riskScore; // 0-100
-
+  
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -656,9 +646,7 @@ class Customer {
       state: json['state'],
       country: json['country'],
       postalCode: json['postalCode'],
-      dateOfBirth: json['dateOfBirth'] != null
-          ? DateTime.parse(json['dateOfBirth'])
-          : null,
+      dateOfBirth: json['dateOfBirth'] != null ? DateTime.parse(json['dateOfBirth']) : null,
       gender: json['gender'],
       status: json['status'] ?? 'active',
       tier: json['tier'] ?? 'bronze',
@@ -669,22 +657,13 @@ class Customer {
       totalTransactions: json['totalTransactions'] ?? 0,
       totalSpentNaira: (json['totalSpentNaira'] as num?)?.toDouble() ?? 0.0,
       totalSpentUSD: (json['totalSpentUSD'] as num?)?.toDouble() ?? 0.0,
-      averageTransactionAmount:
-          (json['averageTransactionAmount'] as num?)?.toDouble() ?? 0.0,
+      averageTransactionAmount: (json['averageTransactionAmount'] as num?)?.toDouble() ?? 0.0,
       transactionsThisMonth: json['transactionsThisMonth'] ?? 0,
       spentThisMonth: (json['spentThisMonth'] as num?)?.toDouble() ?? 0.0,
-      firstTransactionAt: json['firstTransactionAt'] != null
-          ? DateTime.parse(json['firstTransactionAt'])
-          : null,
-      lastTransactionAt: json['lastTransactionAt'] != null
-          ? DateTime.parse(json['lastTransactionAt'])
-          : null,
-      lastContactDate: json['lastContactDate'] != null
-          ? DateTime.parse(json['lastContactDate'])
-          : null,
-      lastLoginDate: json['lastLoginDate'] != null
-          ? DateTime.parse(json['lastLoginDate'])
-          : null,
+      firstTransactionAt: json['firstTransactionAt'] != null ? DateTime.parse(json['firstTransactionAt']) : null,
+      lastTransactionAt: json['lastTransactionAt'] != null ? DateTime.parse(json['lastTransactionAt']) : null,
+      lastContactDate: json['lastContactDate'] != null ? DateTime.parse(json['lastContactDate']) : null,
+      lastLoginDate: json['lastLoginDate'] != null ? DateTime.parse(json['lastLoginDate']) : null,
       preferredContactMethod: json['preferredContactMethod'],
       isSubscribedToNewsletter: json['isSubscribedToNewsletter'] ?? false,
       allowsMarketingEmails: json['allowsMarketingEmails'] ?? true,
@@ -815,21 +794,16 @@ class Customer {
       totalTransactions: totalTransactions ?? this.totalTransactions,
       totalSpentNaira: totalSpentNaira ?? this.totalSpentNaira,
       totalSpentUSD: totalSpentUSD ?? this.totalSpentUSD,
-      averageTransactionAmount:
-          averageTransactionAmount ?? this.averageTransactionAmount,
-      transactionsThisMonth:
-          transactionsThisMonth ?? this.transactionsThisMonth,
+      averageTransactionAmount: averageTransactionAmount ?? this.averageTransactionAmount,
+      transactionsThisMonth: transactionsThisMonth ?? this.transactionsThisMonth,
       spentThisMonth: spentThisMonth ?? this.spentThisMonth,
       firstTransactionAt: firstTransactionAt ?? this.firstTransactionAt,
       lastTransactionAt: lastTransactionAt ?? this.lastTransactionAt,
       lastContactDate: lastContactDate ?? this.lastContactDate,
       lastLoginDate: lastLoginDate ?? this.lastLoginDate,
-      preferredContactMethod:
-          preferredContactMethod ?? this.preferredContactMethod,
-      isSubscribedToNewsletter:
-          isSubscribedToNewsletter ?? this.isSubscribedToNewsletter,
-      allowsMarketingEmails:
-          allowsMarketingEmails ?? this.allowsMarketingEmails,
+      preferredContactMethod: preferredContactMethod ?? this.preferredContactMethod,
+      isSubscribedToNewsletter: isSubscribedToNewsletter ?? this.isSubscribedToNewsletter,
+      allowsMarketingEmails: allowsMarketingEmails ?? this.allowsMarketingEmails,
       allowsSMSMarketing: allowsSMSMarketing ?? this.allowsSMSMarketing,
       referralSource: referralSource ?? this.referralSource,
       referredBy: referredBy ?? this.referredBy,
@@ -858,9 +832,9 @@ class Customer {
   }
 
   bool get isReturning => totalTransactions > 1;
-
+  
   bool get isActive => status == 'active';
-
+  
   // Computed transaction properties
   double get averageTransactionValue {
     if (totalTransactions > 0) {
@@ -868,21 +842,21 @@ class Customer {
     }
     return 0.0;
   }
-
+  
   DateTime? get lastTransactionDate => lastTransactionAt;
-
+  
   // Attention tracking
   bool get requiresAttention {
     if (lastTransactionDate == null) return true;
     final daysSince = DateTime.now().difference(lastTransactionDate!).inDays;
     return daysSince > 30; // No transaction in 30+ days
   }
-
+  
   int get daysSinceLastTransaction {
     if (lastTransactionDate == null) return 9999;
     return DateTime.now().difference(lastTransactionDate!).inDays;
   }
-
+  
   String get customerValue {
     if (totalSpentNaira >= 1000000) return 'High Value';
     if (totalSpentNaira >= 100000) return 'Medium Value';
@@ -918,6 +892,8 @@ class Customer {
     }
   }
 
+
+
   String get engagementLevel {
     if (transactionsThisMonth >= 10) return 'Highly Active';
     if (transactionsThisMonth >= 5) return 'Active';
@@ -931,8 +907,7 @@ class Customer {
 class AppNotification {
   final String id;
   final String merchantId;
-  final String
-  type; // 'kyc_update', 'payment_received', 'payment_confirmed', 'account_security', 'system'
+  final String type; // 'kyc_update', 'payment_received', 'payment_confirmed', 'account_security', 'system'
   final String title;
   final String body;
   final String? imageUrl;
@@ -978,9 +953,7 @@ class AppNotification {
       priority: json['priority'] ?? 'normal',
       createdAt: DateTime.parse(json['createdAt']),
       readAt: json['readAt'] != null ? DateTime.parse(json['readAt']) : null,
-      scheduledAt: json['scheduledAt'] != null
-          ? DateTime.parse(json['scheduledAt'])
-          : null,
+      scheduledAt: json['scheduledAt'] != null ? DateTime.parse(json['scheduledAt']) : null,
       actionUrl: json['actionUrl'],
       actionText: json['actionText'],
     );
@@ -1169,21 +1142,14 @@ class MerchantNotificationSettings {
   }) {
     return MerchantNotificationSettings(
       merchantId: merchantId ?? this.merchantId,
-      enablePushNotifications:
-          enablePushNotifications ?? this.enablePushNotifications,
-      enableEmailNotifications:
-          enableEmailNotifications ?? this.enableEmailNotifications,
-      enableSMSNotifications:
-          enableSMSNotifications ?? this.enableSMSNotifications,
-      notifyOnPaymentReceived:
-          notifyOnPaymentReceived ?? this.notifyOnPaymentReceived,
-      notifyOnPaymentConfirmed:
-          notifyOnPaymentConfirmed ?? this.notifyOnPaymentConfirmed,
+      enablePushNotifications: enablePushNotifications ?? this.enablePushNotifications,
+      enableEmailNotifications: enableEmailNotifications ?? this.enableEmailNotifications,
+      enableSMSNotifications: enableSMSNotifications ?? this.enableSMSNotifications,
+      notifyOnPaymentReceived: notifyOnPaymentReceived ?? this.notifyOnPaymentReceived,
+      notifyOnPaymentConfirmed: notifyOnPaymentConfirmed ?? this.notifyOnPaymentConfirmed,
       notifyOnKYCUpdate: notifyOnKYCUpdate ?? this.notifyOnKYCUpdate,
-      notifyOnSecurityEvents:
-          notifyOnSecurityEvents ?? this.notifyOnSecurityEvents,
-      notifyOnSystemUpdates:
-          notifyOnSystemUpdates ?? this.notifyOnSystemUpdates,
+      notifyOnSecurityEvents: notifyOnSecurityEvents ?? this.notifyOnSecurityEvents,
+      notifyOnSystemUpdates: notifyOnSystemUpdates ?? this.notifyOnSystemUpdates,
       notifyOnLowBalance: notifyOnLowBalance ?? this.notifyOnLowBalance,
       quietHoursStart: quietHoursStart ?? this.quietHoursStart,
       quietHoursEnd: quietHoursEnd ?? this.quietHoursEnd,
@@ -1194,18 +1160,15 @@ class MerchantNotificationSettings {
 
   bool isInQuietHours() {
     if (!enableQuietHours) return false;
-
+    
     final now = DateTime.now();
-    final currentTime =
-        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-
+    final currentTime = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    
     // Handle quiet hours that span midnight
     if (quietHoursStart.compareTo(quietHoursEnd) > 0) {
-      return currentTime.compareTo(quietHoursStart) >= 0 ||
-          currentTime.compareTo(quietHoursEnd) < 0;
+      return currentTime.compareTo(quietHoursStart) >= 0 || currentTime.compareTo(quietHoursEnd) < 0;
     } else {
-      return currentTime.compareTo(quietHoursStart) >= 0 &&
-          currentTime.compareTo(quietHoursEnd) < 0;
+      return currentTime.compareTo(quietHoursStart) >= 0 && currentTime.compareTo(quietHoursEnd) < 0;
     }
   }
 }
@@ -1258,12 +1221,8 @@ class UserSession {
       ipAddress: json['ipAddress'],
       location: json['location'],
       loginTime: DateTime.parse(json['loginTime']),
-      lastActivity: json['lastActivity'] != null
-          ? DateTime.parse(json['lastActivity'])
-          : null,
-      logoutTime: json['logoutTime'] != null
-          ? DateTime.parse(json['logoutTime'])
-          : null,
+      lastActivity: json['lastActivity'] != null ? DateTime.parse(json['lastActivity']) : null,
+      logoutTime: json['logoutTime'] != null ? DateTime.parse(json['logoutTime']) : null,
       isActive: json['isActive'],
       sessionToken: json['sessionToken'],
       metadata: Map<String, dynamic>.from(json['metadata'] ?? {}),
@@ -1329,7 +1288,7 @@ class UserSession {
   bool isExpired() {
     if (!isActive) return true;
     if (logoutTime != null) return true;
-
+    
     // Session expires after 7 days of inactivity
     final lastActivityTime = lastActivity ?? loginTime;
     return DateTime.now().difference(lastActivityTime).inDays >= 7;
@@ -1397,9 +1356,7 @@ class SecurityLog {
       timestamp: DateTime.parse(json['timestamp']),
       isResolved: json['isResolved'] ?? false,
       resolvedBy: json['resolvedBy'],
-      resolvedAt: json['resolvedAt'] != null
-          ? DateTime.parse(json['resolvedAt'])
-          : null,
+      resolvedAt: json['resolvedAt'] != null ? DateTime.parse(json['resolvedAt']) : null,
       resolution: json['resolution'],
     );
   }
@@ -1514,16 +1471,12 @@ class BiometricSettings {
       enableFingerprintAuth: json['enableFingerprintAuth'] ?? false,
       enableFaceAuth: json['enableFaceAuth'] ?? false,
       requireBiometricForLogin: json['requireBiometricForLogin'] ?? false,
-      requireBiometricForTransactions:
-          json['requireBiometricForTransactions'] ?? false,
-      requireBiometricForSensitiveActions:
-          json['requireBiometricForSensitiveActions'] ?? false,
+      requireBiometricForTransactions: json['requireBiometricForTransactions'] ?? false,
+      requireBiometricForSensitiveActions: json['requireBiometricForSensitiveActions'] ?? false,
       updatedAt: DateTime.parse(json['updatedAt']),
       enrolledBiometrics: List<String>.from(json['enrolledBiometrics'] ?? []),
       maxFailedAttempts: json['maxFailedAttempts'] ?? 3,
-      lockoutDuration: Duration(
-        milliseconds: json['lockoutDuration'] ?? 300000,
-      ),
+      lockoutDuration: Duration(milliseconds: json['lockoutDuration'] ?? 300000),
     );
   }
 
@@ -1535,8 +1488,7 @@ class BiometricSettings {
       'enableFaceAuth': enableFaceAuth,
       'requireBiometricForLogin': requireBiometricForLogin,
       'requireBiometricForTransactions': requireBiometricForTransactions,
-      'requireBiometricForSensitiveActions':
-          requireBiometricForSensitiveActions,
+      'requireBiometricForSensitiveActions': requireBiometricForSensitiveActions,
       'updatedAt': updatedAt.toIso8601String(),
       'enrolledBiometrics': enrolledBiometrics,
       'maxFailedAttempts': maxFailedAttempts,
@@ -1560,17 +1512,11 @@ class BiometricSettings {
     return BiometricSettings(
       userId: userId ?? this.userId,
       enableBiometrics: enableBiometrics ?? this.enableBiometrics,
-      enableFingerprintAuth:
-          enableFingerprintAuth ?? this.enableFingerprintAuth,
+      enableFingerprintAuth: enableFingerprintAuth ?? this.enableFingerprintAuth,
       enableFaceAuth: enableFaceAuth ?? this.enableFaceAuth,
-      requireBiometricForLogin:
-          requireBiometricForLogin ?? this.requireBiometricForLogin,
-      requireBiometricForTransactions:
-          requireBiometricForTransactions ??
-          this.requireBiometricForTransactions,
-      requireBiometricForSensitiveActions:
-          requireBiometricForSensitiveActions ??
-          this.requireBiometricForSensitiveActions,
+      requireBiometricForLogin: requireBiometricForLogin ?? this.requireBiometricForLogin,
+      requireBiometricForTransactions: requireBiometricForTransactions ?? this.requireBiometricForTransactions,
+      requireBiometricForSensitiveActions: requireBiometricForSensitiveActions ?? this.requireBiometricForSensitiveActions,
       updatedAt: updatedAt ?? this.updatedAt,
       enrolledBiometrics: enrolledBiometrics ?? this.enrolledBiometrics,
       maxFailedAttempts: maxFailedAttempts ?? this.maxFailedAttempts,
@@ -1578,8 +1524,7 @@ class BiometricSettings {
     );
   }
 
-  bool get hasBiometricsEnabled =>
-      enableBiometrics && (enableFingerprintAuth || enableFaceAuth);
+  bool get hasBiometricsEnabled => enableBiometrics && (enableFingerprintAuth || enableFaceAuth);
   bool get hasEnrolledBiometrics => enrolledBiometrics.isNotEmpty;
 }
 
@@ -1588,12 +1533,10 @@ class CustomerInteraction {
   final String id;
   final String customerId;
   final String merchantId;
-  final String
-  type; // 'email', 'phone', 'sms', 'meeting', 'support', 'marketing'
+  final String type; // 'email', 'phone', 'sms', 'meeting', 'support', 'marketing'
   final String subject;
   final String content;
-  final String
-  status; // 'pending', 'sent', 'delivered', 'read', 'replied', 'failed'
+  final String status; // 'pending', 'sent', 'delivered', 'read', 'replied', 'failed'
   final String direction; // 'inbound', 'outbound'
   final DateTime scheduledAt;
   final DateTime? sentAt;
@@ -1639,13 +1582,9 @@ class CustomerInteraction {
       direction: json['direction'] ?? 'outbound',
       scheduledAt: DateTime.parse(json['scheduledAt']),
       sentAt: json['sentAt'] != null ? DateTime.parse(json['sentAt']) : null,
-      deliveredAt: json['deliveredAt'] != null
-          ? DateTime.parse(json['deliveredAt'])
-          : null,
+      deliveredAt: json['deliveredAt'] != null ? DateTime.parse(json['deliveredAt']) : null,
       readAt: json['readAt'] != null ? DateTime.parse(json['readAt']) : null,
-      repliedAt: json['repliedAt'] != null
-          ? DateTime.parse(json['repliedAt'])
-          : null,
+      repliedAt: json['repliedAt'] != null ? DateTime.parse(json['repliedAt']) : null,
       metadata: Map<String, dynamic>.from(json['metadata'] ?? {}),
       attachments: json['attachments'],
       createdBy: json['createdBy'],
@@ -1721,13 +1660,12 @@ class CustomerInteraction {
 
   // Getter for backward compatibility with UI
   String? get notes => content;
-
-  bool get isCompleted =>
-      status == 'delivered' || status == 'read' || status == 'replied';
+  
+  bool get isCompleted => status == 'delivered' || status == 'read' || status == 'replied';
   bool get hasFailed => status == 'failed';
   bool get isPending => status == 'pending';
   bool get isScheduled => scheduledAt.isAfter(DateTime.now());
-
+  
   String get statusColor {
     switch (status) {
       case 'delivered':
@@ -1908,9 +1846,7 @@ class CustomerNote {
       type: json['type'] ?? 'general',
       priority: json['priority'],
       isPrivate: json['isPrivate'] ?? false,
-      reminderDate: json['reminderDate'] != null
-          ? DateTime.parse(json['reminderDate'])
-          : null,
+      reminderDate: json['reminderDate'] != null ? DateTime.parse(json['reminderDate']) : null,
       isCompleted: json['isCompleted'] ?? false,
       tags: List<String>.from(json['tags'] ?? []),
       createdBy: json['createdBy'],
@@ -1973,9 +1909,8 @@ class CustomerNote {
   }
 
   bool get hasReminder => reminderDate != null;
-  bool get isReminderDue =>
-      reminderDate != null && reminderDate!.isBefore(DateTime.now());
-
+  bool get isReminderDue => reminderDate != null && reminderDate!.isBefore(DateTime.now());
+  
   String get priorityColor {
     switch (priority) {
       case 'urgent':

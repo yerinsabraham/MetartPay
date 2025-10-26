@@ -9,7 +9,7 @@ import 'home_controller_new.dart';
 /// A simplified, minimal homepage (v2).
 /// Keep this file separate from existing `home_screen.dart` while we validate.
 class HomePageNew extends StatelessWidget {
-  const HomePageNew({super.key});
+  const HomePageNew({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -45,25 +45,14 @@ class HomePageNew extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Show only the merchant business name in the header (user requested)
-                      Text(
-                        merchant?.businessName ?? 'Merchant',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                      ),
+                          // Show only the merchant business name in the header (user requested)
+                          Text(
+                            merchant?.businessName ?? 'Merchant',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
+                          ),
                       const SizedBox(height: 6),
-                      if (merchant != null &&
-                          (merchant.kycStatus ?? '').toLowerCase() == 'pending')
-                        Text(
-                          'KYC Verification Pending.',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodySmall?.copyWith(color: Colors.white),
-                        ),
+                      if (merchant != null && (merchant.kycStatus ?? '').toLowerCase() == 'pending')
+                        Text('KYC Verification Pending.', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white)),
                     ],
                   ),
                 ),
@@ -80,64 +69,31 @@ class HomePageNew extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Ensure merchant data is loaded when this page appears so the
-              // welcome text and KYC status reflect backend state.
-              Builder(
-                builder: (context) {
+                // Ensure merchant data is loaded when this page appears so the
+                // welcome text and KYC status reflect backend state.
+                Builder(builder: (context) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
-                    final mp = Provider.of<MerchantProvider>(
-                      context,
-                      listen: false,
-                    );
+                    final mp = Provider.of<MerchantProvider>(context, listen: false);
                     if (mp.currentMerchant == null && !mp.hasAttemptedLoad) {
                       mp.loadUserMerchants();
                     }
                   });
                   return const SizedBox.shrink();
-                },
-              ),
+                }),
               SimpleDashboard(
                 merchant: merchant,
-                onCreatePressed: () =>
-                    HomeController.openCreatePayment(context),
+                onCreatePressed: () => HomeController.openCreatePayment(context),
               ),
               const SizedBox(height: 20),
               Expanded(
                 child: HomeShortcuts(
                   onCreate: () => HomeController.openCreatePayment(context),
-                  onViewTransactions: () =>
-                      HomeController.openTransactions(context),
+                  onViewTransactions: () => HomeController.openTransactions(context),
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-// Add a debug-only FloatingActionButton by extending Scaffold behavior.
-// We keep the main widget unchanged and provide a wrapper that inserts
-// the FAB only in non-production builds. This avoids changing layout for
-// release builds.
-class HomePageNewWrapper extends StatelessWidget {
-  const HomePageNewWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final child = const HomePageNew();
-    if (bool.fromEnvironment('dart.vm.product')) return child;
-
-    // Show FAB for debug/demo navigation
-    return Scaffold(
-      body: child,
-      floatingActionButton: FloatingActionButton.extended(
-        icon: const Icon(Icons.developer_mode),
-        label: const Text('Demo'),
-        onPressed: () {
-          Navigator.of(context).pushNamed('/demo-simulate');
-        },
       ),
     );
   }

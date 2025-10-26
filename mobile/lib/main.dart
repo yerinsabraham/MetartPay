@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
+import 'screens/auth/auth_wrapper.dart';
 import 'screens/home/home_page_new.dart';
 import 'screens/receive_payments_screen.dart';
 import 'screens/payment_links/create_payment_link_screen.dart';
@@ -25,12 +25,10 @@ import 'providers/security_provider.dart';
 import 'providers/customer_provider.dart';
 import 'services/notification_service.dart';
 import 'utils/app_logger.dart';
-import 'config/environment.dart';
-import 'widgets/debug_overlay.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  
   try {
     AppLogger.d('DEBUG: Initializing Firebase...');
     await Firebase.initializeApp(
@@ -42,71 +40,10 @@ void main() async {
     // Initialize Firebase Messaging background handler
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     AppLogger.d('DEBUG: Firebase Messaging background handler registered');
-  } catch (e, s) {
-    AppLogger.e(
-      'DEBUG: Firebase initialization failed: $e',
-      error: e,
-      stackTrace: s,
-    );
-    // Continue app launch even if Firebase fails
-  }
 
-  // Resolve configured base URL (allow override via METARTPAY_BASE_URL).
-  final configuredBase = const String.fromEnvironment('METARTPAY_BASE_URL', defaultValue: '');
-  final baseUrl = configuredBase.isNotEmpty ? configuredBase : Environment.apiBaseUrl;
-  // Only enable the Firestore emulator when the configured backend URL
-  // explicitly points at a localhost host (127.0.0.1 or 10.0.2.2) or when the
-  // build is invoked with --dart-define=FORCE_FIRESTORE_EMULATOR=true.
-  //
-  // Previously we enabled the emulator by default for debug builds which
-  // caused devices to attempt connections to 127.0.0.1:8080 (and fail with
-  // ECONNREFUSED) when the emulator wasn't running. Make emulator usage
-  // explicit to avoid noisy errors on development devices.
-  final shouldUseEmulator =
-      baseUrl.contains('127.0.0.1') ||
-      baseUrl.contains('10.0.2.2') ||
-      const bool.fromEnvironment(
-        'FORCE_FIRESTORE_EMULATOR',
-        defaultValue: false,
-      );
-  if (shouldUseEmulator) {
-    try {
-      FirebaseFirestore.instance.useFirestoreEmulator('127.0.0.1', 8080);
-      AppLogger.d(
-        'DEBUG: Firestore emulator configured via useFirestoreEmulator',
-      );
-      // Also explicitly set Settings host to 127.0.0.1:8080 on debug devices.
-      // Some plugin/platform combos remap to 10.0.2.2 internally which
-      // doesn't work for physical devices; enforcing Settings ensures
-      // the client targets localhost which `adb reverse` forwards.
-      try {
-        FirebaseFirestore.instance.settings = Settings(
-          host: '127.0.0.1:8080',
-          sslEnabled: false,
-          persistenceEnabled: false,
-        );
-        AppLogger.d(
-          'DEBUG: Firestore settings host explicitly set to 127.0.0.1:8080',
-        );
-      } catch (es) {
-        AppLogger.w(
-          'DEBUG: Failed to explicitly set Firestore settings after useFirestoreEmulator: $es',
-        );
-      }
-    } catch (e) {
-      try {
-        FirebaseFirestore.instance.settings = Settings(
-          host: '127.0.0.1:8080',
-          sslEnabled: false,
-          persistenceEnabled: false,
-        );
-        AppLogger.d(
-          'DEBUG: Firestore emulator configured via Settings fallback',
-        );
-      } catch (e2) {
-        AppLogger.e('DEBUG: Failed to configure Firestore emulator: $e / $e2');
-      }
-    }
+  } catch (e, s) {
+    AppLogger.e('DEBUG: Firebase initialization failed: $e', error: e, stackTrace: s);
+    // Continue app launch even if Firebase fails
   }
 
   AppLogger.d('DEBUG: Launching MetartPay...');
@@ -118,28 +55,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    AppLogger.d('DEBUG: Building MetartPay App');
-
+  AppLogger.d('DEBUG: Building MetartPay App');
+    
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) {
-            AppLogger.d('DEBUG: Creating AuthProvider');
-            return AuthProvider();
-          },
-        ),
-        ChangeNotifierProvider(
-          create: (_) {
-            AppLogger.d('DEBUG: Creating MerchantProvider');
-            return MerchantProvider();
-          },
-        ),
-        ChangeNotifierProvider(
-          create: (_) {
-            AppLogger.d('DEBUG: Creating WalletProvider');
-            return WalletProvider();
-          },
-        ),
+        ChangeNotifierProvider(create: (_) {
+          AppLogger.d('DEBUG: Creating AuthProvider');
+          return AuthProvider();
+        }),
+        ChangeNotifierProvider(create: (_) {
+          AppLogger.d('DEBUG: Creating MerchantProvider');
+          return MerchantProvider();
+        }),
+        ChangeNotifierProvider(create: (_) {
+          AppLogger.d('DEBUG: Creating WalletProvider');
+          return WalletProvider();
+        }),
         ChangeNotifierProxyProvider<MerchantProvider, PaymentLinkProvider>(
           create: (context) {
             AppLogger.d('DEBUG: Creating PaymentLinkProvider');
@@ -149,40 +80,20 @@ class MyApp extends StatelessWidget {
             return previous ?? PaymentLinkProvider(merchantProvider);
           },
         ),
-        ChangeNotifierProxyProvider<MerchantProvider, NotificationProvider>(
-          create: (context) {
-            AppLogger.d('DEBUG: Creating NotificationProvider');
-            return NotificationProvider();
-          },
-          update: (context, merchantProvider, previous) {
-            final np = previous ?? NotificationProvider();
-            // Initialize or clear notification data when merchant changes
-            final merchant = merchantProvider.currentMerchant;
-            if (merchant != null) {
-              // Fire-and-forget initialization; provider will notifyListeners when ready
-              np.initialize(merchant.id).catchError((e) {
-                AppLogger.w('DEBUG: NotificationProvider initialize failed: $e', error: e);
-              });
-            } else {
-              np.clearData();
-            }
-            return np;
-          },
-        ),
-        ChangeNotifierProvider(
-          create: (_) {
-            AppLogger.d('DEBUG: Creating SecurityProvider');
-            return SecurityProvider();
-          },
-        ),
-        ChangeNotifierProvider(
-          create: (_) {
-            AppLogger.d('DEBUG: Creating CustomerProvider');
-            return CustomerProvider();
-          },
-        ),
+        ChangeNotifierProvider(create: (_) {
+          AppLogger.d('DEBUG: Creating NotificationProvider');
+          return NotificationProvider();
+        }),
+        ChangeNotifierProvider(create: (_) {
+          AppLogger.d('DEBUG: Creating SecurityProvider');
+          return SecurityProvider();
+        }),
+        ChangeNotifierProvider(create: (_) {
+          AppLogger.d('DEBUG: Creating CustomerProvider');
+          return CustomerProvider();
+        }),
       ],
-  child: MaterialApp(
+      child: MaterialApp(
         title: 'MetartPay',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
@@ -217,7 +128,10 @@ class MyApp extends StatelessWidget {
             floatingLabelStyle: TextStyle(color: Color(0xFFC62B14)),
           ),
           useMaterial3: true,
-          appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
+          appBarTheme: const AppBarTheme(
+            centerTitle: true,
+            elevation: 0,
+          ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -233,32 +147,14 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-        // Set Home V2 (new simplified home) as the initial page per request.
-        // In debug builds use HomePageNewWrapper which adds a Demo FAB.
-        home: !bool.fromEnvironment('dart.vm.product')
-            ? const HomePageNewWrapper()
-            : const HomePageNew(),
-        // Debug overlay shows current environment and API host when not prod
-        builder: (context, child) {
-          return Stack(
-            children: [
-              if (child != null) child,
-              if (!Environment.isProduction)
-                DebugOverlay(environment: Environment.environment, apiBase: Environment.apiBaseUrl),
-            ],
-          );
-        },
+  // Set Home V2 (new simplified home) as the initial page per request.
+  home: const HomePageNew(),
         routes: {
           '/home': (context) => const HomePageNew(),
           '/home-v2': (context) => const HomePageNew(),
           // Lightweight alias routes for HomeController navigation
           '/receive': (context) {
-            final merchantId =
-                Provider.of<MerchantProvider>(
-                  context,
-                  listen: false,
-                ).currentMerchant?.id ??
-                '';
+            final merchantId = Provider.of<MerchantProvider>(context, listen: false).currentMerchant?.id ?? '';
             return ReceivePaymentsScreen(merchantId: merchantId);
           },
           '/create-payment-link': (context) => const CreatePaymentLinkScreen(),
@@ -271,12 +167,10 @@ class MyApp extends StatelessWidget {
           '/profile': (context) => const ProfileScreen(),
           '/notifications': (context) => const NotificationsScreen(),
           // Debug/demo route - only enabled in debug builds
-          if (!bool.fromEnvironment('dart.vm.product'))
-            '/demo-simulate': (context) {
-              final demoBase = const String.fromEnvironment('METARTPAY_BASE_URL', defaultValue: '');
-              final demoResolved = demoBase.isNotEmpty ? demoBase : Environment.apiBaseUrl;
-              return DemoSimulatePage(baseUrl: demoResolved);
-            },
+          if (!bool.fromEnvironment('dart.vm.product')) '/demo-simulate': (context) {
+            final baseUrl = const String.fromEnvironment('METARTPAY_BASE_URL', defaultValue: 'http://127.0.0.1:5001/metartpay-bac2f/us-central1/api');
+            return DemoSimulatePage(baseUrl: baseUrl);
+          },
         },
       ),
     );

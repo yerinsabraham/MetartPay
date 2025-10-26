@@ -8,11 +8,13 @@ import '../../providers/payment_link_provider.dart';
 class PaymentLinkDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> paymentLink;
 
-  const PaymentLinkDetailsScreen({super.key, required this.paymentLink});
+  const PaymentLinkDetailsScreen({
+    super.key,
+    required this.paymentLink,
+  });
 
   @override
-  State<PaymentLinkDetailsScreen> createState() =>
-      _PaymentLinkDetailsScreenState();
+  State<PaymentLinkDetailsScreen> createState() => _PaymentLinkDetailsScreenState();
 }
 
 class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
@@ -41,8 +43,7 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
     final status = widget.paymentLink['status'] ?? 'unknown';
     final cryptoOptions = List.from(widget.paymentLink['cryptoOptions'] ?? []);
     final currentOption = cryptoOptions.firstWhere(
-      (opt) =>
-          opt['network'] == _selectedNetwork && opt['token'] == _selectedToken,
+      (opt) => opt['network'] == _selectedNetwork && opt['token'] == _selectedToken,
       orElse: () => cryptoOptions.isNotEmpty ? cryptoOptions.first : null,
     );
 
@@ -134,18 +135,18 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
           children: [
             Text(
               widget.paymentLink['title'] ?? 'Payment Link',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
             if (widget.paymentLink['description'] != null) ...[
               const SizedBox(height: 8),
               Text(
                 widget.paymentLink['description'],
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[600],
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -164,13 +165,17 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.schedule, size: 16, color: Colors.orange[700]),
+                  Icon(
+                    Icons.schedule,
+                    size: 16,
+                    color: Colors.orange[700],
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     'Expires ${_formatDate(DateTime.parse(widget.paymentLink['expiresAt']))}',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: Colors.orange[700]),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.orange[700],
+                    ),
                   ),
                 ],
               ),
@@ -192,9 +197,9 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
           children: [
             Text(
               'Payment Method',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
             Wrap(
@@ -203,9 +208,8 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
               children: cryptoOptions.map<Widget>((option) {
                 final network = option['network'];
                 final token = option['token'];
-                final isSelected =
-                    _selectedNetwork == network && _selectedToken == token;
-
+                final isSelected = _selectedNetwork == network && _selectedToken == token;
+                
                 return InkWell(
                   onTap: () {
                     setState(() {
@@ -215,12 +219,9 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
                     _generateQRCode();
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: isSelected
+                      color: isSelected 
                           ? Theme.of(context).colorScheme.primary
                           : Colors.grey[200],
                       borderRadius: BorderRadius.circular(20),
@@ -238,9 +239,7 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
                           '$network $token',
                           style: TextStyle(
                             color: isSelected ? Colors.white : Colors.grey[800],
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                           ),
                         ),
                       ],
@@ -265,9 +264,9 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
           children: [
             Text(
               'Scan to Pay',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 16),
             Container(
@@ -279,33 +278,39 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
                 border: Border.all(color: Colors.grey[300]!),
               ),
               child: _isGeneratingQR
-                  ? const Center(child: CircularProgressIndicator())
-                  : _qrCodeData != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.memory(
-                        base64Decode(_qrCodeData!['qrCode'].split(',')[1]),
-                        fit: BoxFit.cover,
-                      ),
+                  ? const Center(
+                      child: CircularProgressIndicator(),
                     )
-                  : const Center(
-                      child: Icon(Icons.qr_code, size: 64, color: Colors.grey),
-                    ),
+                  : _qrCodeData != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.memory(
+                            base64Decode(_qrCodeData!['qrCode'].split(',')[1]),
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : const Center(
+                          child: Icon(
+                            Icons.qr_code,
+                            size: 64,
+                            color: Colors.grey,
+                          ),
+                        ),
             ),
             const SizedBox(height: 16),
             if (currentOption != null) ...[
               Text(
                 'Send ${currentOption['amount']} ${currentOption['token']}',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 'on ${_getNetworkDisplayName(currentOption['network'])}',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.grey[600],
+                ),
               ),
             ],
           ],
@@ -327,26 +332,23 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
           children: [
             Text(
               'Payment Details',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 16),
-            _buildDetailRow(
-              'Network',
-              _getNetworkDisplayName(currentOption['network']),
-            ),
+            _buildDetailRow('Network', _getNetworkDisplayName(currentOption['network'])),
             const SizedBox(height: 8),
             _buildDetailRow('Token', currentOption['token']),
             const SizedBox(height: 8),
-            _buildDetailRow(
-              'Amount',
-              '${currentOption['amount']} ${currentOption['token']}',
-            ),
+            _buildDetailRow('Amount', '${currentOption['amount']} ${currentOption['token']}'),
             const SizedBox(height: 16),
             const Text(
               'Wallet Address',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
             ),
             const SizedBox(height: 8),
             Container(
@@ -359,15 +361,16 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
               ),
               child: Text(
                 currentOption['address'],
-                style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                style: const TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                ),
               ),
             ),
             const SizedBox(height: 8),
             ElevatedButton.icon(
               onPressed: () {
-                Clipboard.setData(
-                  ClipboardData(text: currentOption['address']),
-                );
+                Clipboard.setData(ClipboardData(text: currentOption['address']));
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Address copied to clipboard'),
@@ -390,8 +393,7 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
 
   Widget _buildStatsCard() {
     final totalPayments = widget.paymentLink['totalPayments'] ?? 0;
-    final totalAmount =
-        widget.paymentLink['totalAmountReceived']?.toDouble() ?? 0.0;
+    final totalAmount = widget.paymentLink['totalAmountReceived']?.toDouble() ?? 0.0;
 
     return Card(
       elevation: 2,
@@ -403,9 +405,9 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
           children: [
             Text(
               'Statistics',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 16),
             Row(
@@ -435,12 +437,7 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
     );
   }
 
-  Widget _buildStatItem(
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
+  Widget _buildStatItem(String label, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -462,9 +459,9 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
           const SizedBox(height: 4),
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.grey[600],
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -483,7 +480,12 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
             color: Colors.grey,
           ),
         ),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text(
+          value,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }
@@ -569,10 +571,7 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
     });
 
     try {
-      final paymentLinkProvider = Provider.of<PaymentLinkProvider>(
-        context,
-        listen: false,
-      );
+      final paymentLinkProvider = Provider.of<PaymentLinkProvider>(context, listen: false);
       final result = await paymentLinkProvider.generateQRCode(
         widget.paymentLink['id'],
         network: _selectedNetwork!,
@@ -597,36 +596,29 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
   }
 
   void _sharePaymentLink() {
-    final paymentLinkProvider = Provider.of<PaymentLinkProvider>(
-      context,
-      listen: false,
-    );
+    final paymentLinkProvider = Provider.of<PaymentLinkProvider>(context, listen: false);
     final url = paymentLinkProvider.getPaymentUrl(
       widget.paymentLink['id'],
       network: _selectedNetwork,
       token: _selectedToken,
     );
-
+    
     SharePlus.instance.share(
       ShareParams(
-        text:
-            'Pay ${widget.paymentLink['title']} - \u20a6${widget.paymentLink['amount']}\n\n$url',
+        text: 'Pay ${widget.paymentLink['title']} - \u20a6${widget.paymentLink['amount']}\n\n$url',
         subject: 'Payment Request - ${widget.paymentLink['title']}',
       ),
     );
   }
 
   void _copyLink() {
-    final paymentLinkProvider = Provider.of<PaymentLinkProvider>(
-      context,
-      listen: false,
-    );
+    final paymentLinkProvider = Provider.of<PaymentLinkProvider>(context, listen: false);
     final url = paymentLinkProvider.getPaymentUrl(widget.paymentLink['id']);
-
+    
     // capture and perform clipboard operation, then use State.context for UI
     Clipboard.setData(ClipboardData(text: url));
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.of(this.context).showSnackBar(
       const SnackBar(
         content: Text('Payment link copied to clipboard'),
         duration: Duration(seconds: 2),
@@ -635,21 +627,17 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
   }
 
   Future<void> _toggleStatus() async {
-    final paymentLinkProvider = Provider.of<PaymentLinkProvider>(
-      context,
-      listen: false,
-    );
+    final paymentLinkProvider = Provider.of<PaymentLinkProvider>(context, listen: false);
     await paymentLinkProvider.togglePaymentLinkStatus(
-      widget.paymentLink['id'],
+      widget.paymentLink['id'], 
       widget.paymentLink['status'],
     );
-
+    
     // Update local state
     if (!mounted) return;
     setState(() {
-      widget.paymentLink['status'] = widget.paymentLink['status'] == 'active'
-          ? 'inactive'
-          : 'active';
+      widget.paymentLink['status'] = 
+          widget.paymentLink['status'] == 'active' ? 'inactive' : 'active';
     });
   }
 
@@ -658,9 +646,7 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Payment Link'),
-        content: const Text(
-          'Are you sure you want to delete this payment link? This action cannot be undone.',
-        ),
+        content: const Text('Are you sure you want to delete this payment link? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -674,15 +660,12 @@ class _PaymentLinkDetailsScreenState extends State<PaymentLinkDetailsScreen> {
         ],
       ),
     );
-
+    
     if (confirmed == true) {
-      final paymentLinkProvider = Provider.of<PaymentLinkProvider>(
-        context,
-        listen: false,
-      );
+      final paymentLinkProvider = Provider.of<PaymentLinkProvider>(this.context, listen: false);
       await paymentLinkProvider.deletePaymentLink(widget.paymentLink['id']);
       if (!mounted) return;
-      Navigator.pop(context, true);
+      Navigator.pop(this.context, true);
     }
   }
 }

@@ -9,7 +9,7 @@ import '../../providers/wallet_provider.dart';
 import '../../widgets/metartpay_branding.dart';
 
 class CryptoWalletsScreen extends StatefulWidget {
-  const CryptoWalletsScreen({super.key});
+  const CryptoWalletsScreen({Key? key}) : super(key: key);
 
   @override
   State<CryptoWalletsScreen> createState() => _CryptoWalletsScreenState();
@@ -22,21 +22,15 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
   @override
   void initState() {
     super.initState();
-    final merchantProvider = Provider.of<MerchantProvider>(
-      context,
-      listen: false,
-    );
+    final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
     _networks = merchantProvider.getWalletNetworks();
     _loadWallets();
   }
 
   Future<void> _loadWallets() async {
-    final merchantProvider = Provider.of<MerchantProvider>(
-      context,
-      listen: false,
-    );
+    final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
     final walletProvider = Provider.of<WalletProvider>(context, listen: false);
-
+    
     final merchant = merchantProvider.currentMerchant;
     if (merchant != null) {
       await walletProvider.loadWallets(merchant.id);
@@ -54,9 +48,7 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
           children: [
             const Icon(Icons.check_circle, color: Colors.white, size: 20),
             const SizedBox(width: 8),
-            Text(
-              'Address copied: ${address.substring(0, 8)}...${address.substring(address.length - 6)}',
-            ),
+            Text('Address copied: ${address.substring(0, 8)}...${address.substring(address.length - 6)}'),
           ],
         ),
         backgroundColor: Colors.green,
@@ -85,9 +77,7 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
             children: [
               const Icon(Icons.download, color: Colors.white, size: 20),
               const SizedBox(width: 8),
-              Expanded(
-                child: Text('QR Code for $tokenName saved to Downloads'),
-              ),
+              Expanded(child: Text('QR Code for $tokenName saved to Downloads')),
             ],
           ),
           backgroundColor: Colors.green,
@@ -104,12 +94,7 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
     }
   }
 
-  void _showQRCode(
-    BuildContext context,
-    String address,
-    String tokenName,
-    Color networkColor,
-  ) {
+  void _showQRCode(BuildContext context, String address, String tokenName, Color networkColor) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -121,7 +106,10 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
                 color: networkColor.withAlpha((0.1 * 255).round()),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.qr_code, color: networkColor),
+              child: Icon(
+                Icons.qr_code,
+                color: networkColor,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -176,12 +164,7 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                     ),
-                    Image.asset(
-                      'assets/icons/app logo qr.png',
-                      width: 28,
-                      height: 28,
-                      fit: BoxFit.contain,
-                    ),
+                    Image.asset('assets/icons/app logo qr.png', width: 28, height: 28, fit: BoxFit.contain),
                   ],
                 ),
               ),
@@ -245,10 +228,7 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: MetartPayColors.primary,
-          ),
+          icon: const Icon(Icons.arrow_back_ios, color: MetartPayColors.primary),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -260,10 +240,7 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(
-              Icons.help_outline,
-              color: MetartPayColors.primary,
-            ),
+            icon: const Icon(Icons.help_outline, color: MetartPayColors.primary),
             onPressed: () => _showHelpDialog(context),
           ),
         ],
@@ -271,7 +248,7 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
       body: Consumer<MerchantProvider>(
         builder: (context, merchantProvider, _) {
           final merchant = merchantProvider.currentMerchant;
-
+          
           if (merchant?.walletAddresses.isEmpty ?? true) {
             return _buildEmptyState(context);
           }
@@ -289,29 +266,26 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
                   itemBuilder: (context, index) {
                     final network = _networks[index];
                     final isSelected = index == _selectedNetworkIndex;
-
+                    
                     return GestureDetector(
-                      onTap: () =>
-                          setState(() => _selectedNetworkIndex = index),
+                      onTap: () => setState(() => _selectedNetworkIndex = index),
                       child: Container(
                         width: 120,
                         margin: const EdgeInsets.only(right: 12),
                         decoration: BoxDecoration(
-                          gradient: isSelected
+                          gradient: isSelected 
                               ? LinearGradient(
                                   colors: [
                                     Color(network['color']),
-                                    Color(
-                                      network['color'],
-                                    ).withAlpha((0.8 * 255).round()),
+                                    Color(network['color']).withAlpha((0.8 * 255).round()),
                                   ],
                                 )
                               : null,
                           color: isSelected ? null : Colors.grey[100],
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: isSelected
-                                ? Colors.transparent
+                            color: isSelected 
+                                ? Colors.transparent 
                                 : Colors.grey.shade300,
                           ),
                         ),
@@ -376,7 +350,10 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
             const SizedBox(height: 24),
             const Text(
               'No Wallets Found',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
@@ -396,10 +373,7 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
                 children: [
                   Icon(Icons.settings, color: Colors.white),
                   SizedBox(width: 8),
-                  Text(
-                    'Complete Setup',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
+                  Text('Complete Setup', style: TextStyle(color: Colors.white, fontSize: 16)),
                 ],
               ),
             ),
@@ -409,13 +383,9 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
     );
   }
 
-  Widget _buildNetworkDetails(
-    BuildContext context,
-    Map<String, dynamic> network,
-    Map<String, String> walletAddresses,
-  ) {
+  Widget _buildNetworkDetails(BuildContext context, Map<String, dynamic> network, Map<String, String> walletAddresses) {
     final networkColor = Color(network['color']);
-
+    
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -449,7 +419,10 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
             ),
             child: Row(
               children: [
-                Text(network['icon'], style: const TextStyle(fontSize: 32)),
+                Text(
+                  network['icon'],
+                  style: const TextStyle(fontSize: 32),
+                ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -485,9 +458,9 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
               itemBuilder: (context, index) {
                 final token = network['tokens'][index];
                 final address = walletAddresses[token['key']] ?? '';
-
+                
                 if (address.isEmpty) return const SizedBox.shrink();
-
+                
                 return Container(
                   margin: const EdgeInsets.only(bottom: 16),
                   padding: const EdgeInsets.all(16),
@@ -503,14 +476,9 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: networkColor.withAlpha(
-                                (0.1 * 255).round(),
-                              ),
+                              color: networkColor.withAlpha((0.1 * 255).round()),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Text(
@@ -534,9 +502,9 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
                           ),
                         ],
                       ),
-
+                      
                       const SizedBox(height: 12),
-
+                      
                       // Address
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -569,9 +537,9 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
                           ],
                         ),
                       ),
-
+                      
                       const SizedBox(height: 12),
-
+                      
                       // Actions
                       Row(
                         children: [
@@ -589,12 +557,7 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: ElevatedButton.icon(
-                              onPressed: () => _showQRCode(
-                                context,
-                                address,
-                                token['name'],
-                                networkColor,
-                              ),
+                              onPressed: () => _showQRCode(context, address, token['name'], networkColor),
                               icon: const Icon(Icons.qr_code, size: 16),
                               label: const Text('QR Code'),
                               style: ElevatedButton.styleFrom(
@@ -637,13 +600,9 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
                 style: TextStyle(fontWeight: FontWeight.w500),
               ),
               SizedBox(height: 16),
-              Text(
-                '• Share these addresses with customers to receive payments',
-              ),
+              Text('• Share these addresses with customers to receive payments'),
               SizedBox(height: 8),
-              Text(
-                '• Each network supports multiple tokens (USDT, USDC, etc.)',
-              ),
+              Text('• Each network supports multiple tokens (USDT, USDC, etc.)'),
               SizedBox(height: 8),
               Text('• QR codes make it easy for customers to send payments'),
               SizedBox(height: 8),
@@ -651,10 +610,7 @@ class _CryptoWalletsScreenState extends State<CryptoWalletsScreen> {
               SizedBox(height: 16),
               Text(
                 'Security Tips:',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: MetartPayColors.primary,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w600, color: MetartPayColors.primary),
               ),
               SizedBox(height: 8),
               Text('• Never share your private keys'),

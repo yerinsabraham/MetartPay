@@ -4,12 +4,11 @@ import '../../providers/merchant_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/metartpay_branding.dart';
 import '../kyc/kyc_verification_screen.dart';
-import '../auth/login_screen.dart';
 import '../security/security_settings_screen.dart';
 import 'admin_dashboard_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({Key? key}) : super(key: key);
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
@@ -24,10 +23,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: MetartPayColors.primary,
-          ),
+          icon: const Icon(Icons.arrow_back_ios, color: MetartPayColors.primary),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -41,7 +37,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: Consumer<MerchantProvider>(
         builder: (context, merchantProvider, _) {
           final merchant = merchantProvider.currentMerchant;
-
+          
           if (merchant == null) {
             return const Center(
               child: Column(
@@ -62,31 +58,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 // Profile Header
                 _buildProfileHeader(merchant),
                 const SizedBox(height: 24),
-
+                
                 // Personal Information Section
                 _buildPersonalInfoSection(merchant),
                 const SizedBox(height: 16),
-
+                
                 // Business Information Section
                 _buildBusinessInfoSection(merchant),
                 const SizedBox(height: 16),
-
+                
                 // Account & Security Section
-                _buildAccountSecuritySection(
-                  context,
-                  merchant,
-                  Provider.of<AuthProvider>(context).isAdmin,
-                ),
+                _buildAccountSecuritySection(context, merchant, Provider.of<AuthProvider>(context).isAdmin),
                 const SizedBox(height: 16),
-
+                
                 // Support & Help Section
                 _buildSupportSection(context),
                 const SizedBox(height: 16),
-
+                
                 // App Information Section
                 _buildAppInfoSection(context),
                 const SizedBox(height: 24),
-
+                
                 // Logout Button
                 _buildLogoutButton(context),
               ],
@@ -135,7 +127,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 12),
-
+          
           // Name and Business
           Text(
             merchant.fullName,
@@ -148,17 +140,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 4),
           Text(
             merchant.businessName,
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
           ),
           const SizedBox(height: 8),
-
+          
           // KYC Status Badge
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: _getKYCStatusColor(
-                merchant.kycStatus,
-              ).withAlpha((0.1 * 255).round()),
+              color: _getKYCStatusColor(merchant.kycStatus).withAlpha((0.1 * 255).round()),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: _getKYCStatusColor(merchant.kycStatus),
@@ -216,18 +209,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _buildInfoRow('Business Name', merchant.businessName),
         if (merchant.industry.isNotEmpty)
           _buildInfoRow('Industry', merchant.industry),
-        if (merchant.businessAddress != null &&
-            merchant.businessAddress!.isNotEmpty)
+        if (merchant.businessAddress != null && merchant.businessAddress!.isNotEmpty)
           _buildInfoRow('Business Address', merchant.businessAddress!),
       ],
     );
   }
 
-  Widget _buildAccountSecuritySection(
-    BuildContext context,
-    merchant,
-    bool isAdmin,
-  ) {
+  Widget _buildAccountSecuritySection(BuildContext context, merchant, bool isAdmin) {
     return _buildSection(
       title: 'Account & Security',
       icon: Icons.security_outlined,
@@ -401,7 +389,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             width: 120,
             child: Text(
               label,
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
             ),
           ),
           Expanded(
@@ -449,12 +440,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey[400]),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 14,
+              color: Colors.grey[400],
+            ),
           ],
         ),
       ),
@@ -549,20 +547,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String _formatDate(DateTime date) {
     final months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
-
+    
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
@@ -581,10 +569,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ElevatedButton(
             onPressed: () async {
               // Capture locals that depend on context before async gaps
-              final authProvider = Provider.of<AuthProvider>(
-                context,
-                listen: false,
-              );
+              final authProvider = Provider.of<AuthProvider>(context, listen: false);
               final navigator = Navigator.of(context);
               final messenger = ScaffoldMessenger.of(context);
 
@@ -598,8 +583,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 showDialog(
                   context: context,
                   barrierDismissible: false,
-                  builder: (ctx) =>
-                      const Center(child: CircularProgressIndicator()),
+                  builder: (ctx) => const Center(child: CircularProgressIndicator()),
                 );
               }
 
@@ -612,16 +596,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     navigator.pop();
                   } catch (_) {}
 
-                    // Navigate to the login screen widget directly since
-                    // the named route '/login' is not registered in
-                    // MaterialApp routes. This avoids the "Could not find
-                    // a generator for route settings" runtime error.
-                    navigator.pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (ctx) => const LoginScreen(),
-                      ),
-                      (route) => false,
-                    );
+                  navigator.pushNamedAndRemoveUntil(
+                    '/login',
+                    (route) => false,
+                  );
                 }
               } catch (e) {
                 // Dismiss progress dialog if visible
@@ -737,9 +715,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text(
-                    'Issue reported successfully. We\'ll get back to you soon.',
-                  ),
+                  content: Text('Issue reported successfully. We\'ll get back to you soon.'),
                   backgroundColor: Colors.green,
                 ),
               );

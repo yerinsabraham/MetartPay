@@ -7,11 +7,11 @@ class BusinessInfoStep extends StatefulWidget {
   final VoidCallback onNext;
 
   const BusinessInfoStep({
-    super.key,
+    Key? key,
     required this.setupData,
     required this.onDataUpdate,
     required this.onNext,
-  });
+  }) : super(key: key);
 
   @override
   State<BusinessInfoStep> createState() => _BusinessInfoStepState();
@@ -48,8 +48,8 @@ class _BusinessInfoStepState extends State<BusinessInfoStep> {
     _industryController.text = widget.setupData['industry'] ?? '';
     _contactEmailController.text = widget.setupData['contactEmail'] ?? '';
     _businessAddressController.text = widget.setupData['businessAddress'] ?? '';
-    _selectedIndustry = widget.setupData['industry']?.isEmpty == true
-        ? null
+    _selectedIndustry = widget.setupData['industry']?.isEmpty == true 
+        ? null 
         : widget.setupData['industry'];
   }
 
@@ -69,7 +69,7 @@ class _BusinessInfoStepState extends State<BusinessInfoStep> {
       widget.onDataUpdate('industry', _selectedIndustry ?? '');
       widget.onDataUpdate('contactEmail', _contactEmailController.text);
       widget.onDataUpdate('businessAddress', _businessAddressController.text);
-
+      
       widget.onNext();
     }
   }
@@ -94,12 +94,12 @@ class _BusinessInfoStepState extends State<BusinessInfoStep> {
             const SizedBox(height: 8),
             Text(
               'This information helps us customize MetartPay for your business needs.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.grey[600],
+              ),
             ),
             const SizedBox(height: 32),
-
+            
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -110,13 +110,10 @@ class _BusinessInfoStepState extends State<BusinessInfoStep> {
                       decoration: InputDecoration(
                         labelText: 'Business Name *',
                         hintText: 'Enter your business name',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.primary,
-                            width: 1,
-                          ),
-                        ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1),
+                            ),
                         prefixIcon: const Icon(Icons.business),
                       ),
                       validator: (value) {
@@ -170,22 +167,17 @@ class _BusinessInfoStepState extends State<BusinessInfoStep> {
                       decoration: InputDecoration(
                         labelText: 'Business Email *',
                         hintText: 'contact@yourbusiness.com',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.primary,
-                            width: 1,
-                          ),
-                        ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1),
+                            ),
                         prefixIcon: const Icon(Icons.email),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Email is required';
                         }
-                        if (!RegExp(
-                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                        ).hasMatch(value)) {
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
                           return 'Please enter a valid email';
                         }
                         return null;
@@ -217,7 +209,7 @@ class _BusinessInfoStepState extends State<BusinessInfoStep> {
             ),
 
             const SizedBox(height: 24),
-
+            
             // Continue Button
             SizedBox(
               width: double.infinity,

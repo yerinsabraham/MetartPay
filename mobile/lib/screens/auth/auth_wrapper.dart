@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import '../home/home_page_new.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/merchant_provider.dart';
@@ -36,16 +37,10 @@ class AuthWrapper extends StatelessWidget {
         // Use debugPrint only in debug builds
         if (merchantProvider.currentMerchant != null) {
           final m = merchantProvider.currentMerchant!;
-          debugPrint(
-            'DEBUG: AuthWrapper - hasAttemptedLoad=${merchantProvider.hasAttemptedLoad} isLoading=${merchantProvider.isLoading} merchantsCount=${merchantProvider.merchants.length} currentMerchant=${m.id}',
-          );
-          debugPrint(
-            'DEBUG: AuthWrapper - currentMerchant: id=${m.id} fullName=${m.fullName} idNumber=${m.idNumber} kyc=${m.kycStatus} isSetup=${m.isSetupComplete}',
-          );
+          debugPrint('DEBUG: AuthWrapper - hasAttemptedLoad=${merchantProvider.hasAttemptedLoad} isLoading=${merchantProvider.isLoading} merchantsCount=${merchantProvider.merchants.length} currentMerchant=${m.id}');
+          debugPrint('DEBUG: AuthWrapper - currentMerchant: id=${m.id} fullName=${m.fullName} idNumber=${m.idNumber} kyc=${m.kycStatus} isSetup=${m.isSetupComplete}');
         } else {
-          debugPrint(
-            'DEBUG: AuthWrapper - hasAttemptedLoad=${merchantProvider.hasAttemptedLoad} isLoading=${merchantProvider.isLoading} merchantsCount=${merchantProvider.merchants.length} currentMerchant=null',
-          );
+          debugPrint('DEBUG: AuthWrapper - hasAttemptedLoad=${merchantProvider.hasAttemptedLoad} isLoading=${merchantProvider.isLoading} merchantsCount=${merchantProvider.merchants.length} currentMerchant=null');
         }
 
         // Check merchant and KYC state
@@ -79,10 +74,7 @@ class AuthWrapper extends StatelessWidget {
                     },
                     backgroundColor: Colors.white,
                     foregroundColor: Theme.of(context).colorScheme.primary,
-                    child: const Text(
-                      'V2',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
+                    child: const Text('V2', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
               ),

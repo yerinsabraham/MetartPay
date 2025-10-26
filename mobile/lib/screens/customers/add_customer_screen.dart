@@ -23,11 +23,11 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   final _stateController = TextEditingController();
   final _countryController = TextEditingController();
   final _notesController = TextEditingController();
-
+  
   String _selectedTier = 'bronze';
   String _selectedStatus = 'active';
   bool _isVIP = false;
-  final List<String> _tags = [];
+  List<String> _tags = [];
   final TextEditingController _tagController = TextEditingController();
   bool _isLoading = false;
 
@@ -80,295 +80,291 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Basic Information
-              _buildSection('Basic Information', Icons.person, [
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _firstNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'First Name',
-                          border: OutlineInputBorder(),
+              _buildSection(
+                'Basic Information',
+                Icons.person,
+                [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _firstNameController,
+                          decoration: const InputDecoration(
+                            labelText: 'First Name',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter first name';
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter first name';
-                          }
-                          return null;
-                        },
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _lastNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Last Name',
-                          border: OutlineInputBorder(),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _lastNameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Last Name',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter last name';
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter last name';
-                          }
-                          return null;
-                        },
                       ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(
+                      labelText: 'Email Address',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.email),
                     ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email Address',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter email address';
+                      }
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                        return 'Please enter a valid email address';
+                      }
+                      return null;
+                    },
                   ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter email address';
-                    }
-                    if (!RegExp(
-                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                    ).hasMatch(value)) {
-                      return 'Please enter a valid email address';
-                    }
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 16),
-
-                TextFormField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone Number',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.phone),
-                    hintText: '+234...',
+                  
+                  const SizedBox(height: 16),
+                  
+                  TextFormField(
+                    controller: _phoneController,
+                    decoration: const InputDecoration(
+                      labelText: 'Phone Number',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.phone),
+                      hintText: '+234...',
+                    ),
+                    keyboardType: TextInputType.phone,
                   ),
-                  keyboardType: TextInputType.phone,
-                ),
-              ]),
+                ],
+              ),
 
               const SizedBox(height: 24),
 
               // Address Information
-              _buildSection('Address Information', Icons.location_on, [
-                TextFormField(
-                  controller: _addressController,
-                  decoration: const InputDecoration(
-                    labelText: 'Street Address',
-                    border: OutlineInputBorder(),
+              _buildSection(
+                'Address Information',
+                Icons.location_on,
+                [
+                  TextFormField(
+                    controller: _addressController,
+                    decoration: const InputDecoration(
+                      labelText: 'Street Address',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 2,
                   ),
-                  maxLines: 2,
-                ),
-
-                const SizedBox(height: 16),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _cityController,
-                        decoration: const InputDecoration(
-                          labelText: 'City',
-                          border: OutlineInputBorder(),
+                  
+                  const SizedBox(height: 16),
+                  
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _cityController,
+                          decoration: const InputDecoration(
+                            labelText: 'City',
+                            border: OutlineInputBorder(),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _stateController,
-                        decoration: const InputDecoration(
-                          labelText: 'State',
-                          border: OutlineInputBorder(),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _stateController,
+                          decoration: const InputDecoration(
+                            labelText: 'State',
+                            border: OutlineInputBorder(),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                TextFormField(
-                  controller: _countryController,
-                  decoration: const InputDecoration(
-                    labelText: 'Country',
-                    border: OutlineInputBorder(),
+                    ],
                   ),
-                ),
-              ]),
+                  
+                  const SizedBox(height: 16),
+                  
+                  TextFormField(
+                    controller: _countryController,
+                    decoration: const InputDecoration(
+                      labelText: 'Country',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
 
               const SizedBox(height: 24),
 
               // Customer Settings
-              _buildSection('Customer Settings', Icons.settings, [
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _selectedTier,
-                        decoration: const InputDecoration(
-                          labelText: 'Customer Tier',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.workspace_premium),
+              _buildSection(
+                'Customer Settings',
+                Icons.settings,
+                [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedTier,
+                          decoration: const InputDecoration(
+                            labelText: 'Customer Tier',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.workspace_premium),
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'bronze', child: Text('Bronze')),
+                            DropdownMenuItem(value: 'silver', child: Text('Silver')),
+                            DropdownMenuItem(value: 'gold', child: Text('Gold')),
+                            DropdownMenuItem(value: 'platinum', child: Text('Platinum')),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                _selectedTier = value;
+                              });
+                            }
+                          },
                         ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'bronze',
-                            child: Text('Bronze'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'silver',
-                            child: Text('Silver'),
-                          ),
-                          DropdownMenuItem(value: 'gold', child: Text('Gold')),
-                          DropdownMenuItem(
-                            value: 'platinum',
-                            child: Text('Platinum'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _selectedTier = value;
-                            });
-                          }
-                        },
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _selectedStatus,
-                        decoration: const InputDecoration(
-                          labelText: 'Status',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.circle),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedStatus,
+                          decoration: const InputDecoration(
+                            labelText: 'Status',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.circle),
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'active', child: Text('Active')),
+                            DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
+                            DropdownMenuItem(value: 'blocked', child: Text('Blocked')),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                _selectedStatus = value;
+                              });
+                            }
+                          },
                         ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'active',
-                            child: Text('Active'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'inactive',
-                            child: Text('Inactive'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'blocked',
-                            child: Text('Blocked'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _selectedStatus = value;
-                            });
-                          }
-                        },
                       ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                SwitchListTile(
-                  title: const Text('VIP Customer'),
-                  subtitle: const Text('Mark as VIP for special treatment'),
-                  value: _isVIP,
-                  onChanged: (value) {
-                    setState(() {
-                      _isVIP = value;
-                      if (value && _selectedTier == 'bronze') {
-                        _selectedTier = 'gold';
-                      }
-                    });
-                  },
-                  activeThumbColor: Colors.purple,
-                ),
-              ]),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  SwitchListTile(
+                    title: const Text('VIP Customer'),
+                    subtitle: const Text('Mark as VIP for special treatment'),
+                    value: _isVIP,
+                    onChanged: (value) {
+                      setState(() {
+                        _isVIP = value;
+                        if (value && _selectedTier == 'bronze') {
+                          _selectedTier = 'gold';
+                        }
+                      });
+                    },
+                    activeThumbColor: Colors.purple,
+                  ),
+                ],
+              ),
 
               const SizedBox(height: 24),
 
               // Tags Section
-              _buildSection('Tags', Icons.tag, [
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _tagController,
-                        decoration: const InputDecoration(
-                          labelText: 'Add Tag',
-                          border: OutlineInputBorder(),
-                          hintText: 'e.g., premium, frequent buyer',
+              _buildSection(
+                'Tags',
+                Icons.tag,
+                [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _tagController,
+                          decoration: const InputDecoration(
+                            labelText: 'Add Tag',
+                            border: OutlineInputBorder(),
+                            hintText: 'e.g., premium, frequent buyer',
+                          ),
+                          onFieldSubmitted: _addTag,
                         ),
-                        onFieldSubmitted: _addTag,
                       ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () => _addTag(_tagController.text),
+                        child: const Text('Add'),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 12),
+                  
+                  if (_tags.isNotEmpty) ...[
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _tags.map((tag) => Chip(
+                        label: Text(tag),
+                        deleteIcon: const Icon(Icons.close, size: 18),
+                        onDeleted: () => _removeTag(tag),
+                        backgroundColor: Colors.blue[50],
+                        labelStyle: TextStyle(color: Colors.blue[700]),
+                      )).toList(),
                     ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: () => _addTag(_tagController.text),
-                      child: const Text('Add'),
+                  ] else ...[
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'No tags added yet',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      ),
                     ),
                   ],
-                ),
-
-                const SizedBox(height: 12),
-
-                if (_tags.isNotEmpty) ...[
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _tags
-                        .map(
-                          (tag) => Chip(
-                            label: Text(tag),
-                            deleteIcon: const Icon(Icons.close, size: 18),
-                            onDeleted: () => _removeTag(tag),
-                            backgroundColor: Colors.blue[50],
-                            labelStyle: TextStyle(color: Colors.blue[700]),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ] else ...[
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'No tags added yet',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ),
-                  ),
                 ],
-              ]),
+              ),
 
               const SizedBox(height: 24),
 
               // Notes Section
-              _buildSection('Initial Notes', Icons.note, [
-                TextFormField(
-                  controller: _notesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Notes about this customer',
-                    border: OutlineInputBorder(),
-                    hintText: 'Any additional information...',
+              _buildSection(
+                'Initial Notes',
+                Icons.note,
+                [
+                  TextFormField(
+                    controller: _notesController,
+                    decoration: const InputDecoration(
+                      labelText: 'Notes about this customer',
+                      border: OutlineInputBorder(),
+                      hintText: 'Any additional information...',
+                    ),
+                    maxLines: 3,
                   ),
-                  maxLines: 3,
-                ),
-              ]),
+                ],
+              ),
 
               const SizedBox(height: 32),
 
@@ -377,9 +373,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: _isLoading
-                          ? null
-                          : () => Navigator.of(context).pop(),
+                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
                       child: const Text('Cancel'),
                     ),
                   ),
@@ -459,24 +453,15 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     });
 
     try {
-      final customerProvider = Provider.of<CustomerProvider>(
-        context,
-        listen: false,
-      );
-      final merchantProvider = Provider.of<MerchantProvider>(
-        context,
-        listen: false,
-      );
+      final customerProvider = Provider.of<CustomerProvider>(context, listen: false);
+      final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
 
       // Capture values from context before any await to avoid using BuildContext across async gaps
       if (merchantProvider.currentMerchant == null) {
         throw Exception('No merchant found');
       }
       final merchantId = merchantProvider.currentMerchant!.id;
-      final createdByUid = Provider.of<AuthProvider>(
-        context,
-        listen: false,
-      ).currentUser?.uid;
+      final createdByUid = Provider.of<AuthProvider>(context, listen: false).currentUser?.uid;
 
       if (createdByUid == null) {
         throw Exception('No authenticated user');
@@ -492,20 +477,20 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
         email: email,
         firstName: firstName,
         lastName: lastName,
-        phone: _phoneController.text.trim().isNotEmpty
-            ? _phoneController.text.trim()
+        phone: _phoneController.text.trim().isNotEmpty 
+            ? _phoneController.text.trim() 
             : null,
-        address: _addressController.text.trim().isNotEmpty
-            ? _addressController.text.trim()
+        address: _addressController.text.trim().isNotEmpty 
+            ? _addressController.text.trim() 
             : null,
-        city: _cityController.text.trim().isNotEmpty
-            ? _cityController.text.trim()
+        city: _cityController.text.trim().isNotEmpty 
+            ? _cityController.text.trim() 
             : null,
-        state: _stateController.text.trim().isNotEmpty
-            ? _stateController.text.trim()
+        state: _stateController.text.trim().isNotEmpty 
+            ? _stateController.text.trim() 
             : null,
-        country: _countryController.text.trim().isNotEmpty
-            ? _countryController.text.trim()
+        country: _countryController.text.trim().isNotEmpty 
+            ? _countryController.text.trim() 
             : null,
         tier: _selectedTier,
         status: _selectedStatus,
@@ -519,7 +504,10 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
         updatedAt: DateTime.now(),
       );
 
-      await customerProvider.addCustomer(merchantId, customer);
+      await customerProvider.addCustomer(
+        merchantId,
+        customer,
+      );
 
       // Add initial note if provided
       if (_notesController.text.trim().isNotEmpty) {
@@ -544,9 +532,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Customer ${customer.displayName} added successfully',
-            ),
+            content: Text('Customer ${customer.displayName} added successfully'),
             backgroundColor: Colors.green,
           ),
         );

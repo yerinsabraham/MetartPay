@@ -8,7 +8,10 @@ import 'edit_customer_screen.dart';
 class CustomerDetailScreen extends StatefulWidget {
   final Customer customer;
 
-  const CustomerDetailScreen({super.key, required this.customer});
+  const CustomerDetailScreen({
+    super.key,
+    required this.customer,
+  });
 
   @override
   State<CustomerDetailScreen> createState() => _CustomerDetailScreenState();
@@ -34,15 +37,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
   }
 
   void _loadCustomerData() {
-    final customerProvider = Provider.of<CustomerProvider>(
-      context,
-      listen: false,
-    );
-    final merchantProvider = Provider.of<MerchantProvider>(
-      context,
-      listen: false,
-    );
-
+    final customerProvider = Provider.of<CustomerProvider>(context, listen: false);
+    final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+    
     if (merchantProvider.currentMerchant != null) {
       customerProvider.loadCustomerInteractions(widget.customer.id);
       customerProvider.loadCustomerNotes(widget.customer.id);
@@ -60,21 +57,17 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
-              Navigator.of(context)
-                  .push(
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          EditCustomerScreen(customer: _currentCustomer!),
-                    ),
-                  )
-                  .then((updatedCustomer) {
-                    if (updatedCustomer != null &&
-                        updatedCustomer is Customer) {
-                      setState(() {
-                        _currentCustomer = updatedCustomer;
-                      });
-                    }
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => EditCustomerScreen(customer: _currentCustomer!),
+                ),
+              ).then((updatedCustomer) {
+                if (updatedCustomer != null && updatedCustomer is Customer) {
+                  setState(() {
+                    _currentCustomer = updatedCustomer;
                   });
+                }
+              });
             },
           ),
           PopupMenuButton<String>(
@@ -193,17 +186,16 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
                                 Expanded(
                                   child: Text(
                                     customer.displayName,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall
-                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                                 if (customer.isVIP)
                                   Container(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
+                                      horizontal: 12, 
+                                      vertical: 6
                                     ),
                                     decoration: BoxDecoration(
                                       color: Colors.purple,
@@ -229,9 +221,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: _getTierColor(
-                                      customer.tier,
-                                    ).withAlpha((0.1 * 255).round()),
+                                    color: _getTierColor(customer.tier).withAlpha((0.1 * 255).round()),
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
                                       color: _getTierColor(customer.tier),
@@ -264,9 +254,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: _getStatusColor(
-                                      customer.status,
-                                    ).withAlpha((0.1 * 255).round()),
+                                    color: _getStatusColor(customer.status).withAlpha((0.1 * 255).round()),
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Row(
@@ -276,9 +264,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
                                         width: 8,
                                         height: 8,
                                         decoration: BoxDecoration(
-                                          color: _getStatusColor(
-                                            customer.status,
-                                          ),
+                                          color: _getStatusColor(customer.status),
                                           shape: BoxShape.circle,
                                         ),
                                       ),
@@ -286,9 +272,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
                                       Text(
                                         customer.status.toUpperCase(),
                                         style: TextStyle(
-                                          color: _getStatusColor(
-                                            customer.status,
-                                          ),
+                                          color: _getStatusColor(customer.status),
                                           fontSize: 12,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -303,7 +287,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
                       ),
                     ],
                   ),
-
+                  
                   if (customer.requiresAttention) ...[
                     const SizedBox(height: 16),
                     Container(
@@ -350,72 +334,84 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
           const SizedBox(height: 16),
 
           // Contact Information
-          _buildInfoSection('Contact Information', Icons.contact_mail, [
-            _buildInfoRow('Email', customer.email, Icons.email),
-            if (customer.phone != null)
-              _buildInfoRow('Phone', customer.phone!, Icons.phone),
-            if (customer.address != null)
-              _buildInfoRow('Address', customer.address!, Icons.location_on),
-            if (customer.city != null)
-              _buildInfoRow('City', customer.city!, Icons.location_city),
-            if (customer.country != null)
-              _buildInfoRow('Country', customer.country!, Icons.flag),
-          ]),
+          _buildInfoSection(
+            'Contact Information',
+            Icons.contact_mail,
+            [
+              _buildInfoRow('Email', customer.email, Icons.email),
+              if (customer.phone != null)
+                _buildInfoRow('Phone', customer.phone!, Icons.phone),
+              if (customer.address != null)
+                _buildInfoRow('Address', customer.address!, Icons.location_on),
+              if (customer.city != null)
+                _buildInfoRow('City', customer.city!, Icons.location_city),
+              if (customer.country != null)
+                _buildInfoRow('Country', customer.country!, Icons.flag),
+            ],
+          ),
 
           const SizedBox(height: 16),
 
           // Transaction Statistics
-          _buildInfoSection('Transaction Statistics', Icons.analytics, [
-            _buildInfoRow(
-              'Total Spent',
-              '₦${customer.totalSpentNaira.toStringAsFixed(0)}',
-              Icons.money,
-            ),
-            _buildInfoRow(
-              'Total Transactions',
-              customer.totalTransactions.toString(),
-              Icons.receipt,
-            ),
-            _buildInfoRow(
-              'Average Transaction',
-              '₦${customer.averageTransactionValue.toStringAsFixed(0)}',
-              Icons.trending_up,
-            ),
-            if (customer.lastTransactionDate != null)
+          _buildInfoSection(
+            'Transaction Statistics',
+            Icons.analytics,
+            [
               _buildInfoRow(
-                'Last Transaction',
-                _formatDate(customer.lastTransactionDate!),
-                Icons.schedule,
+                'Total Spent',
+                '₦${customer.totalSpentNaira.toStringAsFixed(0)}',
+                Icons.money,
               ),
-          ]),
+              _buildInfoRow(
+                'Total Transactions',
+                customer.totalTransactions.toString(),
+                Icons.receipt,
+              ),
+              _buildInfoRow(
+                'Average Transaction',
+                '₦${customer.averageTransactionValue.toStringAsFixed(0)}',
+                Icons.trending_up,
+              ),
+              if (customer.lastTransactionDate != null)
+                _buildInfoRow(
+                  'Last Transaction',
+                  _formatDate(customer.lastTransactionDate!),
+                  Icons.schedule,
+                ),
+            ],
+          ),
 
           const SizedBox(height: 16),
 
           // Engagement Metrics
-          _buildInfoSection('Engagement Metrics', Icons.insights, [
-            _buildInfoRow(
-              'Loyalty Score',
-              '${customer.loyaltyScore}/100',
-              Icons.favorite,
-            ),
-            _buildInfoRow(
-              'Risk Score',
-              '${customer.riskScore}/100',
-              Icons.security,
-            ),
-            _buildInfoRow(
-              'Last Login',
-              customer.lastLoginDate != null
-                  ? _formatDate(customer.lastLoginDate!)
-                  : 'Never',
-              Icons.login,
-            ),
-            _buildInfoRow(
-              'Account Created',
-              _formatDate(customer.createdAt),
-              Icons.person_add,
-            ),
-          ]),
+          _buildInfoSection(
+            'Engagement Metrics',
+            Icons.insights,
+            [
+              _buildInfoRow(
+                'Loyalty Score',
+                '${customer.loyaltyScore}/100',
+                Icons.favorite,
+              ),
+              _buildInfoRow(
+                'Risk Score',
+                '${customer.riskScore}/100',
+                Icons.security,
+              ),
+              _buildInfoRow(
+                'Last Login',
+                customer.lastLoginDate != null
+                    ? _formatDate(customer.lastLoginDate!)
+                    : 'Never',
+                Icons.login,
+              ),
+              _buildInfoRow(
+                'Account Created',
+                _formatDate(customer.createdAt),
+                Icons.person_add,
+              ),
+            ],
+          ),
 
           if (customer.tags.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -514,18 +510,14 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: tags
-                  .map(
-                    (tag) => Chip(
-                      label: Text(tag),
-                      backgroundColor: Colors.blue[50],
-                      labelStyle: TextStyle(
-                        color: Colors.blue[700],
-                        fontSize: 12,
-                      ),
-                    ),
-                  )
-                  .toList(),
+              children: tags.map((tag) => Chip(
+                label: Text(tag),
+                backgroundColor: Colors.blue[50],
+                labelStyle: TextStyle(
+                  color: Colors.blue[700],
+                  fontSize: 12,
+                ),
+              )).toList(),
             ),
           ],
         ),
@@ -558,9 +550,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
     return Consumer<CustomerProvider>(
       builder: (context, customerProvider, child) {
         final interactions = customerProvider.customerInteractions
-            .where(
-              (interaction) => interaction.customerId == _currentCustomer!.id,
-            )
+            .where((interaction) => interaction.customerId == _currentCustomer!.id)
             .toList();
 
         if (customerProvider.isLoadingInteractions) {
@@ -572,11 +562,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.chat_bubble_outline,
-                  size: 64,
-                  color: Colors.grey,
-                ),
+                const Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey),
                 const SizedBox(height: 16),
                 const Text(
                   'No interactions yet',
@@ -645,14 +631,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getInteractionTypeColor(
-                      interaction.type,
-                    ).withAlpha((0.1 * 255).round()),
+                    color: _getInteractionTypeColor(interaction.type).withAlpha((0.1 * 255).round()),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -667,23 +648,31 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
                 const Spacer(),
                 Text(
                   _formatDate(interaction.createdAt),
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
-
+            
             const SizedBox(height: 12),
-
+            
             Text(
               interaction.subject ?? 'No Subject',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
             ),
-
+            
             if (interaction.notes != null) ...[
               const SizedBox(height: 8),
               Text(
                 interaction.notes!,
-                style: TextStyle(color: Colors.grey[700]),
+                style: TextStyle(
+                  color: Colors.grey[700],
+                ),
               ),
             ],
           ],
@@ -708,11 +697,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.note_add_outlined,
-                  size: 64,
-                  color: Colors.grey,
-                ),
+                const Icon(Icons.note_add_outlined, size: 64, color: Colors.grey),
                 const SizedBox(height: 16),
                 const Text(
                   'No notes yet',
@@ -781,14 +766,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getNotePriorityColor(
-                      note.priority ?? 'low',
-                    ).withAlpha((0.1 * 255).round()),
+                    color: _getNotePriorityColor(note.priority ?? 'low').withAlpha((0.1 * 255).round()),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -803,15 +783,21 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
                 const Spacer(),
                 Text(
                   _formatDate(note.createdAt),
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
-
+            
             const SizedBox(height: 12),
-
-            Text(note.content, style: const TextStyle(fontSize: 14)),
-
+            
+            Text(
+              note.content,
+              style: const TextStyle(fontSize: 14),
+            ),
+            
             if (note.reminderDate != null &&
                 note.reminderDate!.isAfter(DateTime.now())) ...[
               const SizedBox(height: 8),
@@ -829,7 +815,10 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
                     const SizedBox(width: 4),
                     Text(
                       'Reminder: ${_formatDate(note.reminderDate!)}',
-                      style: TextStyle(color: Colors.blue[700], fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.blue[700],
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -911,14 +900,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
   }
 
   void _handleMenuAction(String action) async {
-    final customerProvider = Provider.of<CustomerProvider>(
-      context,
-      listen: false,
-    );
-    final merchantProvider = Provider.of<MerchantProvider>(
-      context,
-      listen: false,
-    );
+    final customerProvider = Provider.of<CustomerProvider>(context, listen: false);
+    final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
 
     if (merchantProvider.currentMerchant == null) return;
 
@@ -927,17 +910,17 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
         _showBlockCustomerDialog();
         break;
       case 'make_vip':
-        // capture id and newCustomer locally before awaiting
-        final merchantId = merchantProvider.currentMerchant!.id;
-        final updated = _currentCustomer!.copyWith(isVIP: true, tier: 'gold');
-        await customerProvider.updateCustomer(merchantId, updated);
-        if (!mounted) return;
-        setState(() {
-          _currentCustomer = updated;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Customer promoted to VIP')),
-        );
+          // capture id and newCustomer locally before awaiting
+          final merchantId = merchantProvider.currentMerchant!.id;
+          final updated = _currentCustomer!.copyWith(isVIP: true, tier: 'gold');
+          await customerProvider.updateCustomer(merchantId, updated);
+          if (!mounted) return;
+          setState(() {
+            _currentCustomer = updated;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Customer promoted to VIP')),
+          );
         break;
       case 'export':
         // TODO: Implement export functionality
@@ -968,14 +951,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
               Navigator.of(dialogContext).pop();
 
               // use the State's context / providers (capture before awaiting)
-              final customerProvider = Provider.of<CustomerProvider>(
-                context,
-                listen: false,
-              );
-              final merchantProvider = Provider.of<MerchantProvider>(
-                context,
-                listen: false,
-              );
+              final customerProvider = Provider.of<CustomerProvider>(this.context, listen: false);
+              final merchantProvider = Provider.of<MerchantProvider>(this.context, listen: false);
 
               final merchantId = merchantProvider.currentMerchant!.id;
               final updated = _currentCustomer!.copyWith(status: 'blocked');
@@ -986,9 +963,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
               setState(() {
                 _currentCustomer = updated;
               });
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Customer blocked')));
+              ScaffoldMessenger.of(this.context).showSnackBar(
+                const SnackBar(content: Text('Customer blocked')),
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,

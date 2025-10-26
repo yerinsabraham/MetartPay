@@ -3,24 +3,23 @@ import 'package:flutter/material.dart';
 import '../widgets/dev_simulate_toggle.dart';
 import '../services/payment_service.dart';
 import 'payment_status_screen.dart';
-import '../utils/app_config.dart';
 
 class DemoSimulatePage extends StatefulWidget {
   final String baseUrl;
-  const DemoSimulatePage({super.key, required this.baseUrl});
+  const DemoSimulatePage({Key? key, required this.baseUrl}) : super(key: key);
 
   @override
   _DemoSimulatePageState createState() => _DemoSimulatePageState();
 }
 
 class _DemoSimulatePageState extends State<DemoSimulatePage> {
-  late final PaymentService _svc;
+  final _svc = PaymentService(baseUrl: '');
   bool _busy = false;
 
   @override
   void initState() {
     super.initState();
-    _svc = PaymentService(baseUrl: widget.baseUrl);
+    _svc.baseUrl = widget.baseUrl;
   }
 
   Future<void> _simulateAndOpen() async {
@@ -34,23 +33,12 @@ class _DemoSimulatePageState extends State<DemoSimulatePage> {
         'cryptoCurrency': 'ETH',
         'network': 'sepolia',
         'merchantId': 'dev-merchant-1',
-        'paymentLinkId': '',
+        'paymentLinkId': ''
       };
-      final txId = await _svc.createPayment(
-        payload,
-        simulateKey: AppConfig.devSimulateKey,
-      );
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>
-              PaymentStatusScreen(transactionId: txId, baseUrl: widget.baseUrl),
-        ),
-      );
+      final txId = await _svc.createPayment(payload, simulateKey: 'dev-local-key');
+      Navigator.push(context, MaterialPageRoute(builder: (_) => PaymentStatusScreen(transactionId: txId, baseUrl: widget.baseUrl)));
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Simulate failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Simulate failed: $e')));
     } finally {
       setState(() => _busy = false);
     }
@@ -65,24 +53,17 @@ class _DemoSimulatePageState extends State<DemoSimulatePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Dev simulate flow (debug only)',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            const Text('Dev simulate flow (debug only)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             DevSimulateToggle(baseUrl: widget.baseUrl),
             const SizedBox(height: 12),
             ElevatedButton.icon(
               icon: const Icon(Icons.play_arrow),
-              label: _busy
-                  ? const Text('Simulating...')
-                  : const Text('Simulate & Open Status'),
+              label: _busy ? const Text('Simulating...') : const Text('Simulate & Open Status'),
               onPressed: kDebugMode && !_busy ? _simulateAndOpen : null,
             ),
             const SizedBox(height: 12),
-            Text(
-              'Note: This demo expects backend emulator or backend dev server reachable at the base URL.',
-            ),
+            Text('Note: This demo expects backend emulator or backend dev server reachable at the base URL.'),
           ],
         ),
       ),

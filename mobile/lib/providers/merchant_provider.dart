@@ -207,13 +207,6 @@ class MerchantProvider extends ChangeNotifier {
       }
 
       // Check if setup is needed
-      // If no merchants were found, create a demo/sample merchant in debug
-      // builds so developers can exercise flows without a backend account.
-      if (_merchants.isEmpty && !bool.fromEnvironment('dart.vm.product')) {
-        AppLogger.d('DEBUG: No merchants found — creating sample merchant for demo');
-        _createSampleMerchant();
-      }
-
       _checkSetupStatus();
 
       notifyListeners();
@@ -777,29 +770,6 @@ class MerchantProvider extends ChangeNotifier {
     }, onError: (e) {
       AppLogger.w('Realtime payment links subscription error: $e', error: e);
       // Keep the app functional; the provider can fall back to non-realtime loading.
-    });
-
-    // Subscribe to invoices realtime updates so UI reflecting pending amounts
-    // and invoice lists update automatically when backend writes invoices.
-    _firebaseService.watchMerchantInvoices(_currentMerchant!.id).listen((invoices) {
-      _invoices = List<Invoice>.from(invoices);
-      notifyListeners();
-    }, onError: (e) {
-      AppLogger.w('Realtime invoices subscription error: $e', error: e);
-    });
-
-    // Also watch the merchant document for any profile/KYC changes
-    _firebaseService.watchMerchantDocument(_currentMerchant!.id).listen((merchantDoc) {
-      try {
-        final updated = Merchant.fromJson(merchantDoc);
-        _currentMerchant = updated;
-        _checkSetupStatus();
-        notifyListeners();
-      } catch (e) {
-        AppLogger.w('Failed to parse merchant realtime update: $e', error: e);
-      }
-    }, onError: (e) {
-      AppLogger.w('Realtime merchant document subscription error: $e', error: e);
     });
   }
 }

@@ -26,7 +26,7 @@ class AuthProvider extends ChangeNotifier {
   AuthProvider() {
     _initializeAuth();
   }
-
+  
   void _initializeAuth() {
     try {
       _auth = FirebaseAuth.instance;
@@ -40,12 +40,9 @@ class AuthProvider extends ChangeNotifier {
         }
         notifyListeners();
       });
-      AppLogger.d('✅ DEBUG: AuthProvider initialized with Firebase Auth');
+  AppLogger.d('✅ DEBUG: AuthProvider initialized with Firebase Auth');
     } catch (e) {
-      AppLogger.e(
-        '❌ DEBUG: AuthProvider failed to initialize Firebase Auth: $e',
-        error: e,
-      );
+  AppLogger.e('❌ DEBUG: AuthProvider failed to initialize Firebase Auth: $e', error: e);
       _setError('Firebase Auth not available');
     }
   }
@@ -60,7 +57,7 @@ class AuthProvider extends ChangeNotifier {
       }
       notifyListeners();
     } catch (e) {
-      AppLogger.e('DEBUG: Failed to load user role: $e', error: e);
+  AppLogger.e('DEBUG: Failed to load user role: $e', error: e);
       _isAdmin = false;
       notifyListeners();
     }
@@ -82,42 +79,34 @@ class AuthProvider extends ChangeNotifier {
       _setError(null);
 
       if (_auth == null) {
-        AppLogger.e('❌ DEBUG: Firebase Auth not initialized for login');
+  AppLogger.e('❌ DEBUG: Firebase Auth not initialized for login');
         _setError('Firebase Auth not available');
         return false;
       }
 
-      AppLogger.d('🔍 DEBUG: Starting login for email: $email');
+  AppLogger.d('🔍 DEBUG: Starting login for email: $email');
 
       final userCredential = await _auth!.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      AppLogger.d('✅ DEBUG: Login successful!');
-
+  AppLogger.d('✅ DEBUG: Login successful!');
+      
       // Create security session
       if (userCredential.user != null) {
         try {
-          await _securityService.createSession(
-            userId: userCredential.user!.uid,
-          );
+          await _securityService.createSession(userId: userCredential.user!.uid);
           AppLogger.d('✅ DEBUG: Security session created');
         } catch (e) {
-          AppLogger.w(
-            '⚠️ DEBUG: Failed to create security session: $e',
-            error: e,
-          );
+          AppLogger.w('⚠️ DEBUG: Failed to create security session: $e', error: e);
         }
       }
-
+      
       return true;
     } on FirebaseAuthException catch (e) {
-      AppLogger.e(
-        '❌ DEBUG: Login FirebaseAuthException: ${e.code} ${e.message}',
-        error: e,
-      );
-
+  AppLogger.e('❌ DEBUG: Login FirebaseAuthException: ${e.code} ${e.message}', error: e);
+      
       String errorMessage;
       switch (e.code) {
         case 'user-not-found':
@@ -138,7 +127,7 @@ class AuthProvider extends ChangeNotifier {
       _setError(errorMessage);
       return false;
     } catch (e) {
-      AppLogger.e('❌ DEBUG: Login general exception: $e', error: e);
+  AppLogger.e('❌ DEBUG: Login general exception: $e', error: e);
       _setError('Login failed: $e');
       return false;
     } finally {
@@ -156,38 +145,32 @@ class AuthProvider extends ChangeNotifier {
       _setError(null);
 
       if (_auth == null) {
-        AppLogger.e('❌ DEBUG: Firebase Auth not initialized');
+  AppLogger.e('❌ DEBUG: Firebase Auth not initialized');
         _setError('Firebase Auth not available');
         return false;
       }
 
-      AppLogger.d('🔍 DEBUG: Starting registration for email: $email');
-      AppLogger.d('🔍 DEBUG: Firebase Auth instance: ${_auth.toString()}');
-      AppLogger.d(
-        '🔍 DEBUG: Current user: ${_auth?.currentUser?.email ?? 'None'}',
-      );
+  AppLogger.d('🔍 DEBUG: Starting registration for email: $email');
+  AppLogger.d('🔍 DEBUG: Firebase Auth instance: ${_auth.toString()}');
+  AppLogger.d('🔍 DEBUG: Current user: ${_auth?.currentUser?.email ?? 'None'}');
 
       UserCredential result = await _auth!.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      AppLogger.d('✅ DEBUG: Registration successful!');
-      AppLogger.d('✅ DEBUG: User UID: ${result.user?.uid}');
-      AppLogger.d('✅ DEBUG: User email: ${result.user?.email}');
+  AppLogger.d('✅ DEBUG: Registration successful!');
+  AppLogger.d('✅ DEBUG: User UID: ${result.user?.uid}');
+  AppLogger.d('✅ DEBUG: User email: ${result.user?.email}');
 
       // Update user profile with name
       await result.user?.updateDisplayName(name);
-      AppLogger.d('✅ DEBUG: Display name updated to: $name');
+  AppLogger.d('✅ DEBUG: Display name updated to: $name');
 
       return true;
     } on FirebaseAuthException catch (e) {
-      AppLogger.e(
-        '❌ DEBUG: FirebaseAuthException caught: ${e.code} ${e.message}',
-        error: e,
-        stackTrace: e.stackTrace,
-      );
-
+  AppLogger.e('❌ DEBUG: FirebaseAuthException caught: ${e.code} ${e.message}', error: e, stackTrace: e.stackTrace);
+      
       String errorMessage;
       switch (e.code) {
         case 'weak-password':
@@ -211,11 +194,11 @@ class AuthProvider extends ChangeNotifier {
       _setError(errorMessage);
       return false;
     } catch (e) {
-      AppLogger.e('❌ DEBUG: General exception caught: $e', error: e);
+  AppLogger.e('❌ DEBUG: General exception caught: $e', error: e);
       _setError('Unexpected error: $e');
       return false;
     } finally {
-      AppLogger.d('🔍 DEBUG: Registration attempt completed');
+  AppLogger.d('🔍 DEBUG: Registration attempt completed');
       _setLoading(false);
     }
   }
@@ -227,15 +210,14 @@ class AuthProvider extends ChangeNotifier {
 
       // Trigger the authentication flow
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-
+      
       if (googleUser == null) {
         // User canceled the sign-in
         return false;
       }
 
       // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
@@ -251,29 +233,23 @@ class AuthProvider extends ChangeNotifier {
         _setError('Firebase Auth not available for Google Sign-in');
         return false;
       }
-
+      
       // Create security session
-      if (userCredential.user != null) {
+      if (userCredential?.user != null) {
         try {
-          await _securityService.createSession(
-            userId: userCredential.user!.uid,
-          );
+          await _securityService.createSession(userId: userCredential!.user!.uid);
           AppLogger.d('✅ DEBUG: Security session created for Google sign-in');
         } catch (e) {
-          AppLogger.w(
-            '⚠️ DEBUG: Failed to create security session: $e',
-            error: e,
-          );
+          AppLogger.w('⚠️ DEBUG: Failed to create security session: $e', error: e);
         }
       }
-
+      
       return true;
     } on FirebaseAuthException catch (e) {
       String errorMessage;
       switch (e.code) {
         case 'account-exists-with-different-credential':
-          errorMessage =
-              'An account already exists with the same email but different sign-in credentials.';
+          errorMessage = 'An account already exists with the same email but different sign-in credentials.';
           break;
         case 'invalid-credential':
           errorMessage = 'The credential received is malformed or has expired.';
@@ -304,11 +280,14 @@ class AuthProvider extends ChangeNotifier {
         await _securityService.endSession(reason: 'user_logout');
         AppLogger.d('✅ DEBUG: Security session ended');
       } catch (e) {
-        AppLogger.w('⚠️ DEBUG: Failed to end security session: $e', error: e);
+  AppLogger.w('⚠️ DEBUG: Failed to end security session: $e', error: e);
       }
-
+      
       if (_auth != null) {
-        await Future.wait([_auth!.signOut(), _googleSignIn.signOut()]);
+        await Future.wait([
+          _auth!.signOut(),
+          _googleSignIn.signOut(),
+        ]);
       } else {
         await _googleSignIn.signOut();
       }

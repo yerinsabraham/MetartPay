@@ -1,12 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
-import '../config/environment.dart';
 
 class ApiService {
-  // Use the environment-configured base URL so builds can target staging/production/etc.
-  static String get baseUrl => Environment.apiBaseUrl;
-
+  static const String baseUrl = 'https://us-central1-metartpay-bac2f.cloudfunctions.net/api';
+  
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
   ApiService._internal();
@@ -14,24 +12,16 @@ class ApiService {
   Future<Map<String, String>> _getHeaders() async {
     final user = FirebaseAuth.instance.currentUser;
     final token = await user?.getIdToken();
-
-    final headers = <String, String>{
+    
+    return {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
-
-    // Add dev simulate key header in non-production builds if configured
-    final simulateKey = Environment.devSimulateKey;
-    if (Environment.enableSimulate && simulateKey.isNotEmpty) {
-      headers['x-dev-simulate-key'] = simulateKey;
-    }
-
-    return headers;
   }
 
   Future<Map<String, dynamic>> _handleResponse(http.Response response) async {
     final data = json.decode(response.body);
-
+    
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return data;
     } else {
@@ -113,7 +103,9 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> getInvoice(String invoiceId) async {
-    final response = await http.get(Uri.parse('$baseUrl/invoices/$invoiceId'));
+    final response = await http.get(
+      Uri.parse('$baseUrl/invoices/$invoiceId'),
+    );
 
     return _handleResponse(response);
   }
@@ -132,7 +124,10 @@ class ApiService {
       },
     );
 
-    final response = await http.get(uri, headers: await _getHeaders());
+    final response = await http.get(
+      uri,
+      headers: await _getHeaders(),
+    );
 
     final data = await _handleResponse(response);
     return data['data'] as List<dynamic>;

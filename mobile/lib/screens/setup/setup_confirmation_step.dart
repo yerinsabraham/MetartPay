@@ -9,11 +9,11 @@ class SetupConfirmationStep extends StatelessWidget {
   final VoidCallback onPrevious;
 
   const SetupConfirmationStep({
-    super.key,
+    Key? key,
     required this.setupData,
     required this.onComplete,
     required this.onPrevious,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -33,12 +33,12 @@ class SetupConfirmationStep extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Please review your information before completing setup.',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Colors.grey[600],
+            ),
           ),
           const SizedBox(height: 32),
-
+          
           Expanded(
             child: SingleChildScrollView(
               child: Column(
@@ -48,25 +48,16 @@ class SetupConfirmationStep extends StatelessWidget {
                     title: 'Business Information',
                     icon: Icons.business,
                     items: [
-                      _buildInfoItem(
-                        'Business Name',
-                        setupData['businessName'],
-                      ),
+                      _buildInfoItem('Business Name', setupData['businessName']),
                       _buildInfoItem('Industry', setupData['industry']),
-                      _buildInfoItem(
-                        'Contact Email',
-                        setupData['contactEmail'],
-                      ),
+                      _buildInfoItem('Contact Email', setupData['contactEmail']),
                       if (setupData['businessAddress']?.isNotEmpty == true)
-                        _buildInfoItem(
-                          'Business Address',
-                          setupData['businessAddress'],
-                        ),
+                        _buildInfoItem('Business Address', setupData['businessAddress']),
                     ],
                   ),
-
+                  
                   const SizedBox(height: 16),
-
+                  
                   // Personal Information
                   _buildSectionCard(
                     title: 'Personal Information',
@@ -76,76 +67,57 @@ class SetupConfirmationStep extends StatelessWidget {
                       if (setupData['idNumber']?.isNotEmpty == true)
                         _buildInfoItem('ID Number', setupData['idNumber']),
                       if (setupData['bvn']?.isNotEmpty == true)
-                        _buildInfoItem(
-                          'BVN',
-                          _maskSensitiveData(setupData['bvn']),
-                        ),
+                        _buildInfoItem('BVN', _maskSensitiveData(setupData['bvn'])),
                       if (setupData['address']?.isNotEmpty == true)
                         _buildInfoItem('Address', setupData['address']),
                     ],
                   ),
-
+                  
                   const SizedBox(height: 16),
-
+                  
                   // Bank Account
                   _buildSectionCard(
                     title: 'Bank Account',
                     icon: Icons.account_balance,
                     items: [
                       _buildInfoItem('Bank', setupData['bankName']),
-                      _buildInfoItem(
-                        'Account Number',
-                        _maskAccountNumber(setupData['bankAccountNumber']),
-                      ),
-                      _buildInfoItem(
-                        'Account Name',
-                        setupData['bankAccountName'],
-                      ),
+                      _buildInfoItem('Account Number', _maskAccountNumber(setupData['bankAccountNumber'])),
+                      _buildInfoItem('Account Name', setupData['bankAccountName']),
                     ],
                   ),
-
+                  
                   const SizedBox(height: 16),
-
+                  
                   // Crypto Wallets
                   _buildSectionCard(
                     title: 'Crypto Wallets',
                     icon: Icons.account_balance_wallet,
                     items: [
-                      ...(setupData['walletAddresses']
-                                  as Map<String, String>? ??
-                              {})
+                      ...(setupData['walletAddresses'] as Map<String, String>? ?? {})
                           .entries
-                          .map(
-                            (entry) => _buildInfoItem(
-                              entry.key,
-                              _maskWalletAddress(entry.value),
-                            ),
-                          ),
+                          .map((entry) => _buildInfoItem(
+                                entry.key,
+                                _maskWalletAddress(entry.value),
+                              )),
                     ],
                   ),
-
+                  
                   const SizedBox(height: 24),
-
+                  
                   // Welcome Message
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          MetartPayColors.primary.withAlpha(
-                            (0.1 * 255).round(),
-                          ),
+                          MetartPayColors.primary.withAlpha((0.1 * 255).round()),
                           Colors.orange.withAlpha((0.1 * 255).round()),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: MetartPayColors.primary.withAlpha(
-                          (0.2 * 255).round(),
-                        ),
-                      ),
+                      border: Border.all(color: MetartPayColors.primary.withAlpha((0.2 * 255).round())),
                     ),
                     child: Column(
                       children: [
@@ -157,18 +129,18 @@ class SetupConfirmationStep extends StatelessWidget {
                         const SizedBox(height: 16),
                         Text(
                           'Welcome to MetartPay!',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: MetartPayColors.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: MetartPayColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'You\'re all set to start accepting crypto payments and growing your business with MetartPay.',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: Colors.grey[700]),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey[700],
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -180,7 +152,7 @@ class SetupConfirmationStep extends StatelessWidget {
           ),
 
           const SizedBox(height: 24),
-
+          
           // Action Buttons
           Consumer<MerchantProvider>(
             builder: (context, merchantProvider, child) {
@@ -206,8 +178,8 @@ class SetupConfirmationStep extends StatelessWidget {
                   Expanded(
                     flex: 2,
                     child: MetartPayButton(
-                      text: merchantProvider.isLoading
-                          ? 'Completing Setup...'
+                      text: merchantProvider.isLoading 
+                          ? 'Completing Setup...' 
                           : 'Complete Setup',
                       onPressed: merchantProvider.isLoading ? null : onComplete,
                       isGradient: false,
@@ -217,9 +189,7 @@ class SetupConfirmationStep extends StatelessWidget {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
                           : null,
@@ -272,7 +242,7 @@ class SetupConfirmationStep extends StatelessWidget {
 
   Widget _buildInfoItem(String label, String? value) {
     if (value == null || value.isEmpty) return const SizedBox.shrink();
-
+    
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -282,13 +252,19 @@ class SetupConfirmationStep extends StatelessWidget {
             width: 120,
             child: Text(
               label,
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
             ),
           ),
         ],
