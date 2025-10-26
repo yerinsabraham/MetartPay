@@ -9,12 +9,12 @@ class KYCDetailsStep extends StatefulWidget {
   final VoidCallback onPrevious;
 
   const KYCDetailsStep({
-    Key? key,
+    super.key,
     required this.setupData,
     required this.onDataUpdate,
     required this.onNext,
     required this.onPrevious,
-  }) : super(key: key);
+  });
 
   @override
   State<KYCDetailsStep> createState() => _KYCDetailsStepState();
@@ -53,7 +53,7 @@ class _KYCDetailsStepState extends State<KYCDetailsStep> {
       widget.onDataUpdate('idNumber', _idNumberController.text);
       widget.onDataUpdate('bvn', _bvnController.text);
       widget.onDataUpdate('address', _addressController.text);
-      
+
       widget.onNext();
     }
   }
@@ -78,12 +78,12 @@ class _KYCDetailsStepState extends State<KYCDetailsStep> {
             const SizedBox(height: 8),
             Text(
               'We need to verify your identity to comply with financial regulations.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 32),
-            
+
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -152,7 +152,9 @@ class _KYCDetailsStepState extends State<KYCDetailsStep> {
                         helperText: 'This helps with bank account verification',
                       ),
                       validator: (value) {
-                        if (value != null && value.isNotEmpty && value.length != 11) {
+                        if (value != null &&
+                            value.isNotEmpty &&
+                            value.length != 11) {
                           return 'BVN must be 11 digits';
                         }
                         return null;
@@ -180,7 +182,7 @@ class _KYCDetailsStepState extends State<KYCDetailsStep> {
                     ),
 
                     const SizedBox(height: 24),
-                    
+
                     // Info Card
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -211,7 +213,7 @@ class _KYCDetailsStepState extends State<KYCDetailsStep> {
             ),
 
             const SizedBox(height: 24),
-            
+
             // Action Buttons
             Row(
               children: [

@@ -4,7 +4,7 @@ import '../services/payment_service.dart';
 
 class DevSimulateToggle extends StatefulWidget {
   final String baseUrl;
-  const DevSimulateToggle({Key? key, required this.baseUrl}) : super(key: key);
+  const DevSimulateToggle({super.key, required this.baseUrl});
 
   @override
   _DevSimulateToggleState createState() => _DevSimulateToggleState();
@@ -13,12 +13,12 @@ class DevSimulateToggle extends StatefulWidget {
 class _DevSimulateToggleState extends State<DevSimulateToggle> {
   bool _enabled = false;
   bool _busy = false;
-  final _paymentService = PaymentService(baseUrl: '');
+  late final PaymentService _paymentService;
 
   @override
   void initState() {
     super.initState();
-    _paymentService.baseUrl = widget.baseUrl; // minor mutation for convenience
+    _paymentService = PaymentService(baseUrl: widget.baseUrl);
   }
 
   Future<void> _simulate() async {
@@ -32,12 +32,19 @@ class _DevSimulateToggleState extends State<DevSimulateToggle> {
         'cryptoCurrency': 'ETH',
         'network': 'sepolia',
         'merchantId': 'dev-merchant-1',
-        'paymentLinkId': ''
+        'paymentLinkId': '',
       };
-      final txId = await _paymentService.createPayment(payload, simulateKey: 'dev-local-key');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Simulated tx: $txId')));
+      final txId = await _paymentService.createPayment(
+        payload,
+        simulateKey: 'dev-local-key',
+      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Simulated tx: $txId')));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Simulate failed: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Simulate failed: $e')));
     } finally {
       setState(() => _busy = false);
     }
@@ -52,10 +59,22 @@ class _DevSimulateToggleState extends State<DevSimulateToggle> {
         Row(
           children: [
             const Text('Dev simulate'),
-            Switch(value: _enabled, onChanged: (v) => setState(() => _enabled = v)),
-            ElevatedButton(onPressed: _enabled && !_busy ? _simulate : null, child: _busy ? const SizedBox(width:16,height:16,child:CircularProgressIndicator(strokeWidth:2)) : const Text('Simulate'))
+            Switch(
+              value: _enabled,
+              onChanged: (v) => setState(() => _enabled = v),
+            ),
+            ElevatedButton(
+              onPressed: _enabled && !_busy ? _simulate : null,
+              child: _busy
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Simulate'),
+            ),
           ],
-        )
+        ),
       ],
     );
   }

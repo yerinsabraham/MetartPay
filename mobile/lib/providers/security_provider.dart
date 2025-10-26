@@ -7,6 +7,18 @@ class SecurityProvider extends ChangeNotifier {
   final SecurityService _securityService = SecurityService();
   final BiometricService _biometricService = BiometricService();
 
+  SecurityProvider() {
+    // Initialize security service in background so device id and session
+    // storage are available before sign-in attempts that create sessions.
+    _securityService.initialize().then((_) {
+      // Load biometric capability after initialization
+      loadBiometricCapability();
+      notifyListeners();
+    }).catchError((e) {
+      debugPrint('Error initializing SecurityService: $e');
+    });
+  }
+
   // Session Management
   List<UserSession> _activeSessions = [];
   UserSession? _currentSession;

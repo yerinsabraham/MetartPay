@@ -1,0 +1,58 @@
+{
+  "transactions": {
+    "tx_8rpjfxkc": {
+      "paymentLinkId": null,
+      "merchantId": "dev-merchant",
+      "txHash": "sim_1761065611.23501.646",
+      "fromAddress": "",
+      "toAddress": "0x000000000000000000000000000000000000dead",
+      "amountCrypto": 0.01,
+      "expectedAmount": null,
+      "cryptoCurrency": "ETH",
+      "network": "goerli",
+      "blockNumber": 0,
+      "confirmations": 999,
+      "requiredConfirmations": 1,
+      "status": "confirmed",
+      "observedAt": "2025-10-21T15:53:31.365Z",
+      "confirmedAt": "2025-10-21T15:53:31.365Z",
+      "gasUsed": 0,
+      "gasPrice": "0",
+      "transactionFee": 0,
+      "metadata": {
+        "synthetic": true
+      },
+      "createdAt": "2025-10-21T15:53:31.365Z",
+      "updatedAt": "2025-10-21T15:53:31.365Z",
+      "id": "tx_8rpjfxkc"
+    },
+    "tx_18ouy2ta": {
+      "paymentLinkId": null,
+      "merchantId": "dev-merchant-1",
+      "txHash": "SIM_TEST_1761062267523",
+      "fromAddress": "simulated-sender",
+      "toAddress": "simulated-address-1",
+      "amountCrypto": 0.25,
+      "expectedAmount": null,
+      "cryptoCurrency": "ETH",
+      "network": "sepolia",
+      "blockNumber": 0,
+      "confirmations": 999,
+      "requiredConfirmations": 1,
+      "status": "confirmed",
+      "observedAt": "2025-10-21T15:57:50.866Z",
+      "confirmedAt": "2025-10-21T15:57:50.866Z",
+      "gasUsed": 0,
+      "gasPrice": "0",
+      "transactionFee": 0,
+      "metadata": {
+        "synthetic": true
+      },
+      "createdAt": "2025-10-21T15:57:50.866Z",
+      "updatedAt": "2025-10-21T15:57:50.866Z",
+      "id": "tx_18ouy2ta"
+    }
+  },
+  "monitored": {},
+  "paymentLinks": {}
+}

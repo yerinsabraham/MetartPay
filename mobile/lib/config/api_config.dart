@@ -1,17 +1,15 @@
+import 'environment.dart';
+
 class ApiConfig {
-  // Backend API base URL - change this to your Firebase Functions URL or custom domain
-  static const String baseUrl = 'https://us-central1-metartpay-bac2f.cloudfunctions.net/api';
-  
-  // Local development URL (when running emulator)
-  static const String localUrl = 'http://localhost:5001/metartpay-bac2f/us-central1/api';
-  
-  // Use local URL for development, production URL for release
-  static bool get isProduction => const bool.fromEnvironment('dart.vm.product');
-  static String get apiBaseUrl => isProduction ? baseUrl : localUrl;
-  
+  // Use Environment to determine base URL so we can switch between dev/staging/prod
+  static String get apiBaseUrl => Environment.apiBaseUrl;
+
+  // Backwards-compatible alias used by older code that referenced ApiConfig.baseUrl
+  static String get baseUrl => apiBaseUrl;
+
   // Request timeout duration
   static const Duration timeout = Duration(seconds: 30);
-  
+
   // API endpoints
   static const String authEndpoint = '/api/auth';
   static const String merchantsEndpoint = '/api/merchants';

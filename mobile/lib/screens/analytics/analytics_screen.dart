@@ -17,7 +17,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _selectedPeriod = '7d';
-  
+
   final FirebaseService _firebaseService = FirebaseService();
   Map<String, dynamic>? _analyticsData;
   bool _isLoadingAnalytics = false;
@@ -34,7 +34,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    
+
     // Load merchant data and real analytics
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final merchantProvider = context.read<MerchantProvider>();
@@ -58,7 +58,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   Future<void> _loadRealAnalytics() async {
     final merchantProvider = context.read<MerchantProvider>();
     final currentMerchant = merchantProvider.currentMerchant;
-    
+
     if (currentMerchant == null) return;
 
     setState(() {
@@ -68,7 +68,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
     try {
       final (startDate, endDate) = _getDateRangeForPeriod(_selectedPeriod);
-      
+
       final analytics = await _firebaseService.getMerchantAnalytics(
         currentMerchant.id,
         startDate: startDate,
@@ -106,7 +106,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       appBar: GradientAppBar(
         title: 'Analytics & Reports',
@@ -152,9 +152,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _analyticsError ?? merchantProvider.error ?? 'Unknown error',
+                    _analyticsError ??
+                        merchantProvider.error ??
+                        'Unknown error',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()),
+                      color: theme.colorScheme.onSurface.withAlpha(
+                        (0.7 * 255).round(),
+                      ),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -188,10 +192,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    Text(
-                      'Period: ',
-                      style: theme.textTheme.titleMedium,
-                    ),
+                    Text('Period: ', style: theme.textTheme.titleMedium),
                     const SizedBox(width: 12),
                     Expanded(
                       child: SingleChildScrollView(
@@ -251,139 +252,149 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       padding: const EdgeInsets.all(16),
       physics: const AlwaysScrollableScrollPhysics(),
       child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Period Selector
-            Row(
-              children: [
-                Text(
-                  'Period:',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Wrap(
-                    spacing: 8,
-                    children: _periods.map((period) {
-                      final isSelected = _selectedPeriod == period['key'];
-                      return FilterChip(
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          if (selected) {
-                            setState(() {
-                              _selectedPeriod = period['key'];
-                            });
-                          }
-                        },
-                        label: Text(period['label']),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Revenue Overview Cards
-            Row(
-              children: [
-                Expanded(
-                  child: _MetricCard(
-                    title: 'Total Revenue',
-                    value: '₦${NumberFormat('#,##0.00').format(analytics.totalRevenue)}',
-                    icon: Icons.trending_up,
-                    color: Colors.green,
-                    subtitle: '+${analytics.revenueGrowth.toStringAsFixed(1)}% vs last period',
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _MetricCard(
-                    title: 'Total Payments',
-                    value: '${analytics.totalPayments}',
-                    icon: Icons.receipt_long,
-                    color: Colors.blue,
-                    subtitle: '${analytics.successRate.toStringAsFixed(1)}% success rate',
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            Row(
-              children: [
-                Expanded(
-                  child: _MetricCard(
-                    title: 'Pending Amount',
-                    value: '₦${NumberFormat('#,##0.00').format(analytics.pendingAmount)}',
-                    icon: Icons.schedule,
-                    color: Colors.orange,
-                    subtitle: '${analytics.pendingPayments} pending payments',
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _MetricCard(
-                    title: 'Avg. Transaction',
-                    value: '₦${NumberFormat('#,##0.00').format(analytics.averageTransaction)}',
-                    icon: Icons.analytics,
-                    color: Colors.purple,
-                    subtitle: 'Per successful payment',
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Recent Activity
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Recent Activity',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ...analytics.recentInvoices.isEmpty 
-                        ? [
-                            Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(24),
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      Icons.receipt_outlined,
-                                      size: 48,
-                                      color: theme.colorScheme.onSurface.withAlpha((0.4 * 255).round()),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      'No recent activity',
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            )
-                          ]
-                        : analytics.recentInvoices.take(5).map((invoice) => _ActivityTile(invoice: invoice)).toList(),
-                  ],
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Period Selector
+          Row(
+            children: [
+              Text(
+                'Period:',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
               ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Wrap(
+                  spacing: 8,
+                  children: _periods.map((period) {
+                    final isSelected = _selectedPeriod == period['key'];
+                    return FilterChip(
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        if (selected) {
+                          setState(() {
+                            _selectedPeriod = period['key'];
+                          });
+                        }
+                      },
+                      label: Text(period['label']),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // Revenue Overview Cards
+          Row(
+            children: [
+              Expanded(
+                child: _MetricCard(
+                  title: 'Total Revenue',
+                  value:
+                      '₦${NumberFormat('#,##0.00').format(analytics.totalRevenue)}',
+                  icon: Icons.trending_up,
+                  color: Colors.green,
+                  subtitle:
+                      '+${analytics.revenueGrowth.toStringAsFixed(1)}% vs last period',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _MetricCard(
+                  title: 'Total Payments',
+                  value: '${analytics.totalPayments}',
+                  icon: Icons.receipt_long,
+                  color: Colors.blue,
+                  subtitle:
+                      '${analytics.successRate.toStringAsFixed(1)}% success rate',
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          Row(
+            children: [
+              Expanded(
+                child: _MetricCard(
+                  title: 'Pending Amount',
+                  value:
+                      '₦${NumberFormat('#,##0.00').format(analytics.pendingAmount)}',
+                  icon: Icons.schedule,
+                  color: Colors.orange,
+                  subtitle: '${analytics.pendingPayments} pending payments',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _MetricCard(
+                  title: 'Avg. Transaction',
+                  value:
+                      '₦${NumberFormat('#,##0.00').format(analytics.averageTransaction)}',
+                  icon: Icons.analytics,
+                  color: Colors.purple,
+                  subtitle: 'Per successful payment',
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // Recent Activity
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Recent Activity',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...analytics.recentInvoices.isEmpty
+                      ? [
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.receipt_outlined,
+                                    size: 48,
+                                    color: theme.colorScheme.onSurface
+                                        .withAlpha((0.4 * 255).round()),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'No recent activity',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onSurface
+                                          .withAlpha((0.7 * 255).round()),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ]
+                      : analytics.recentInvoices
+                            .take(5)
+                            .map((invoice) => _ActivityTile(invoice: invoice))
+                            .toList(),
+                ],
+              ),
             ),
-          ],
+          ),
+        ],
       ),
     );
   }
@@ -435,9 +446,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       crypto: entry.key,
                       amount: entry.value['amount'],
                       count: entry.value['count'],
-                      percentage: (entry.value['count'] / analytics.totalPayments * 100),
+                      percentage:
+                          (entry.value['count'] /
+                          analytics.totalPayments *
+                          100),
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             ),
@@ -465,7 +479,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       count: entry.value,
                       percentage: (entry.value / analytics.totalPayments * 100),
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             ),
@@ -493,16 +507,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Container(
+                  SizedBox(
                     height: 200,
                     child: const Center(
                       child: Text(
                         'Revenue Chart\n(Chart library integration needed)',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 16,
-                        ),
+                        style: TextStyle(color: Colors.grey, fontSize: 16),
                       ),
                     ),
                   ),
@@ -510,7 +521,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
 
           Card(
@@ -526,16 +537,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Container(
+                  SizedBox(
                     height: 200,
                     child: const Center(
                       child: Text(
                         'Volume Chart\n(Chart library integration needed)',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 16,
-                        ),
+                        style: TextStyle(color: Colors.grey, fontSize: 16),
                       ),
                     ),
                   ),
@@ -551,14 +559,28 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   AnalyticsData _calculateAnalytics(List<Invoice> invoices) {
     final now = DateTime.now();
     final filteredInvoices = _filterInvoicesByPeriod(invoices, _selectedPeriod);
-    
-    final paidInvoices = filteredInvoices.where((i) => i.status == 'paid').toList();
-    final pendingInvoices = filteredInvoices.where((i) => i.status == 'pending').toList();
-    
-    final totalRevenue = paidInvoices.fold<double>(0, (sum, invoice) => sum + invoice.amountNaira);
-    final pendingAmount = pendingInvoices.fold<double>(0, (sum, invoice) => sum + invoice.amountNaira);
-    final averageTransaction = paidInvoices.isNotEmpty ? totalRevenue / paidInvoices.length : 0.0;
-    final successRate = invoices.isNotEmpty ? (paidInvoices.length / invoices.length * 100) : 0.0;
+
+    final paidInvoices = filteredInvoices
+        .where((i) => i.status == 'paid')
+        .toList();
+    final pendingInvoices = filteredInvoices
+        .where((i) => i.status == 'pending')
+        .toList();
+
+    final totalRevenue = paidInvoices.fold<double>(
+      0,
+      (sum, invoice) => sum + invoice.amountNaira,
+    );
+    final pendingAmount = pendingInvoices.fold<double>(
+      0,
+      (sum, invoice) => sum + invoice.amountNaira,
+    );
+    final averageTransaction = paidInvoices.isNotEmpty
+        ? totalRevenue / paidInvoices.length
+        : 0.0;
+    final successRate = invoices.isNotEmpty
+        ? (paidInvoices.length / invoices.length * 100)
+        : 0.0;
 
     // Calculate crypto breakdown
     final cryptoBreakdown = <String, Map<String, dynamic>>{};
@@ -613,75 +635,80 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
         cutoff = now.subtract(const Duration(days: 7));
     }
 
-    return invoices.where((invoice) => invoice.createdAt.isAfter(cutoff)).toList();
+    return invoices
+        .where((invoice) => invoice.createdAt.isAfter(cutoff))
+        .toList();
   }
-  }
+}
 
-  AnalyticsData _createAnalyticsFromFirebaseData(Map<String, dynamic> data) {
-    // Extract recent transactions and convert to Invoice format for compatibility
-    final recentTransactions = (data['recentTransactions'] as List<dynamic>? ?? [])
-        .cast<Map<String, dynamic>>();
-    
-    final recentInvoices = <Invoice>[];
-    
-    // Create crypto and chain breakdown from Firebase data
-    final cryptoBreakdown = <String, Map<String, dynamic>>{};
-    final chainBreakdown = <String, int>{};
-    
-    // Process recent transactions to build breakdowns
-    for (final txData in recentTransactions) {
-      final cryptoSymbol = txData['cryptoSymbol'] ?? txData['token'] ?? 'Unknown';
-      final chain = txData['chain'] ?? 'ethereum';
-      final amountNaira = (txData['amountNaira'] as num?)?.toDouble() ?? 0.0;
-      
-      // Build crypto breakdown
-      if (!cryptoBreakdown.containsKey(cryptoSymbol)) {
-        cryptoBreakdown[cryptoSymbol] = {'amount': 0.0, 'count': 0};
-      }
-      cryptoBreakdown[cryptoSymbol]!['amount'] = 
-          (cryptoBreakdown[cryptoSymbol]!['amount'] as double) + amountNaira;
-      cryptoBreakdown[cryptoSymbol]!['count'] = 
-          (cryptoBreakdown[cryptoSymbol]!['count'] as int) + 1;
-      
-      // Build chain breakdown
-      chainBreakdown[chain] = (chainBreakdown[chain] ?? 0) + 1;
-      
-      // Create compatible invoice for UI (if we need recent invoices display)
-      try {
-        final invoice = Invoice(
-          id: txData['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
-          merchantId: txData['merchantId'] ?? '',
-          reference: txData['reference'] ?? 'TXN-${txData['id'] ?? ''}',
-          amountNaira: amountNaira,
-          amountCrypto: (txData['amountCrypto'] as num?)?.toDouble() ?? 0.0,
-          cryptoSymbol: cryptoSymbol,
-          chain: chain,
-          receivingAddress: txData['receivingAddress'] ?? '',
-          status: txData['status'] ?? 'completed',
-          createdAt: DateTime.tryParse(txData['createdAt'] ?? '') ?? DateTime.now(),
-          feeNaira: (txData['feeNaira'] as num?)?.toDouble() ?? 0.0,
-          fxRate: (txData['fxRate'] as num?)?.toDouble() ?? 1.0,
-        );
-        recentInvoices.add(invoice);
-      } catch (e) {
-        // Skip invalid transaction data
-        debugPrint('Error creating invoice from transaction: $e');
-      }
+AnalyticsData _createAnalyticsFromFirebaseData(Map<String, dynamic> data) {
+  // Extract recent transactions and convert to Invoice format for compatibility
+  final recentTransactions =
+      (data['recentTransactions'] as List<dynamic>? ?? [])
+          .cast<Map<String, dynamic>>();
+
+  final recentInvoices = <Invoice>[];
+
+  // Create crypto and chain breakdown from Firebase data
+  final cryptoBreakdown = <String, Map<String, dynamic>>{};
+  final chainBreakdown = <String, int>{};
+
+  // Process recent transactions to build breakdowns
+  for (final txData in recentTransactions) {
+    final cryptoSymbol = txData['cryptoSymbol'] ?? txData['token'] ?? 'Unknown';
+    final chain = txData['chain'] ?? 'ethereum';
+    final amountNaira = (txData['amountNaira'] as num?)?.toDouble() ?? 0.0;
+
+    // Build crypto breakdown
+    if (!cryptoBreakdown.containsKey(cryptoSymbol)) {
+      cryptoBreakdown[cryptoSymbol] = {'amount': 0.0, 'count': 0};
     }
+    cryptoBreakdown[cryptoSymbol]!['amount'] =
+        (cryptoBreakdown[cryptoSymbol]!['amount'] as double) + amountNaira;
+    cryptoBreakdown[cryptoSymbol]!['count'] =
+        (cryptoBreakdown[cryptoSymbol]!['count'] as int) + 1;
 
-    return AnalyticsData(
-      totalRevenue: (data['totalRevenue'] as num?)?.toDouble() ?? 0.0,
-      totalPayments: (data['totalTransactions'] as num?)?.toInt() ?? 0,
-      pendingAmount: 0.0, // Firebase analytics focuses on completed transactions
-      pendingPayments: 0,  // We can add pending analytics later if needed
-      averageTransaction: (data['averageTransactionValue'] as num?)?.toDouble() ?? 0.0,
-      successRate: (data['successRate'] as num?)?.toDouble() ?? 0.0,
-      revenueGrowth: 0.0, // We can calculate this by comparing periods later
-      cryptoBreakdown: cryptoBreakdown,
-      chainBreakdown: chainBreakdown,
-      recentInvoices: recentInvoices,
-    );
+    // Build chain breakdown
+    chainBreakdown[chain] = (chainBreakdown[chain] ?? 0) + 1;
+
+    // Create compatible invoice for UI (if we need recent invoices display)
+    try {
+      final invoice = Invoice(
+        id: txData['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        merchantId: txData['merchantId'] ?? '',
+        reference: txData['reference'] ?? 'TXN-${txData['id'] ?? ''}',
+        amountNaira: amountNaira,
+        amountCrypto: (txData['amountCrypto'] as num?)?.toDouble() ?? 0.0,
+        cryptoSymbol: cryptoSymbol,
+        chain: chain,
+        receivingAddress: txData['receivingAddress'] ?? '',
+        status: txData['status'] ?? 'completed',
+        createdAt:
+            DateTime.tryParse(txData['createdAt'] ?? '') ?? DateTime.now(),
+        feeNaira: (txData['feeNaira'] as num?)?.toDouble() ?? 0.0,
+        fxRate: (txData['fxRate'] as num?)?.toDouble() ?? 1.0,
+      );
+      recentInvoices.add(invoice);
+    } catch (e) {
+      // Skip invalid transaction data
+      debugPrint('Error creating invoice from transaction: $e');
+    }
   }
+
+  return AnalyticsData(
+    totalRevenue: (data['totalRevenue'] as num?)?.toDouble() ?? 0.0,
+    totalPayments: (data['totalTransactions'] as num?)?.toInt() ?? 0,
+    pendingAmount: 0.0, // Firebase analytics focuses on completed transactions
+    pendingPayments: 0, // We can add pending analytics later if needed
+    averageTransaction:
+        (data['averageTransactionValue'] as num?)?.toDouble() ?? 0.0,
+    successRate: (data['successRate'] as num?)?.toDouble() ?? 0.0,
+    revenueGrowth: 0.0, // We can calculate this by comparing periods later
+    cryptoBreakdown: cryptoBreakdown,
+    chainBreakdown: chainBreakdown,
+    recentInvoices: recentInvoices,
+  );
+}
 
 class AnalyticsData {
   final double totalRevenue;
@@ -737,10 +764,7 @@ class _MetricCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
               ),
             ],
@@ -757,10 +781,7 @@ class _MetricCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             subtitle,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.white60,
-            ),
+            style: const TextStyle(fontSize: 12, color: Colors.white60),
           ),
         ],
       ),
@@ -777,14 +798,16 @@ class _ActivityTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final description = invoice.metadata?['description'] ?? 'Payment Link';
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: _getStatusColor(invoice.status).withAlpha((0.1 * 255).round()),
+            backgroundColor: _getStatusColor(
+              invoice.status,
+            ).withAlpha((0.1 * 255).round()),
             child: Icon(
               _getStatusIcon(invoice.status),
               size: 16,
@@ -805,7 +828,9 @@ class _ActivityTile extends StatelessWidget {
                 Text(
                   '₦${NumberFormat('#,##0.00').format(invoice.amountNaira)} • ${invoice.cryptoSymbol}',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()),
+                    color: theme.colorScheme.onSurface.withAlpha(
+                      (0.7 * 255).round(),
+                    ),
                   ),
                 ),
               ],
@@ -857,7 +882,7 @@ class _StatusBreakdownChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Column(
       children: [
         _StatusItem(
@@ -894,13 +919,10 @@ class _StatusItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final percentage = total > 0 ? (count / total) : 0.0;
-    
+
     return Row(
       children: [
-        SizedBox(
-          width: 80,
-          child: Text(label),
-        ),
+        SizedBox(width: 80, child: Text(label)),
         Expanded(
           child: Container(
             height: 8,
@@ -967,10 +989,7 @@ class _CryptoBreakdownItem extends StatelessWidget {
                 Text('₦${NumberFormat('#,##0').format(amount)}'),
                 Text(
                   '$count transactions',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],
             ),
@@ -1009,9 +1028,7 @@ class _ChainBreakdownItem extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
-          Expanded(
-            child: Text('$count transactions'),
-          ),
+          Expanded(child: Text('$count transactions')),
           Text(
             '${percentage.toStringAsFixed(1)}%',
             style: const TextStyle(fontWeight: FontWeight.w500),

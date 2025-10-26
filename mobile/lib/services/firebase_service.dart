@@ -44,8 +44,10 @@ class FirebaseService {
     }
 
     try {
-      final docRef = _firestore.collection(_merchantsCollection).doc(merchant.id);
-      
+      final docRef = _firestore
+          .collection(_merchantsCollection)
+          .doc(merchant.id);
+
       final data = {
         ...merchant.toJson(),
         'userId': currentUserId,
@@ -53,7 +55,7 @@ class FirebaseService {
       };
 
       // If wallet addresses are present, mark walletsGenerated for backend compatibility
-      if ((merchant.walletAddresses?.isNotEmpty ?? false)) {
+      if ((merchant.walletAddresses.isNotEmpty ?? false)) {
         data['walletsGenerated'] = true;
         data['walletsGeneratedAt'] = FieldValue.serverTimestamp();
       }
@@ -128,7 +130,7 @@ class FirebaseService {
     try {
       // Create merchant with auto-generated ID
       final docRef = _firestore.collection(_merchantsCollection).doc();
-      
+
       final merchant = models.Merchant(
         id: docRef.id,
         userId: currentUserId!,
@@ -185,8 +187,10 @@ class FirebaseService {
     }
 
     try {
-      final docRef = _firestore.collection(_merchantsCollection).doc(merchant.id);
-      
+      final docRef = _firestore
+          .collection(_merchantsCollection)
+          .doc(merchant.id);
+
       final updatedMerchant = merchant.copyWith(updatedAt: DateTime.now());
 
       final data = {
@@ -195,7 +199,7 @@ class FirebaseService {
       };
 
       // If wallet addresses exist, ensure backend flag is set
-      if ((updatedMerchant.walletAddresses?.isNotEmpty ?? false)) {
+      if ((updatedMerchant.walletAddresses.isNotEmpty ?? false)) {
         data['walletsGenerated'] = true;
         data['walletsGeneratedAt'] = FieldValue.serverTimestamp();
       } else {
@@ -212,7 +216,10 @@ class FirebaseService {
 
   Future<void> deleteMerchant(String merchantId) async {
     try {
-      await _firestore.collection(_merchantsCollection).doc(merchantId).delete();
+      await _firestore
+          .collection(_merchantsCollection)
+          .doc(merchantId)
+          .delete();
     } catch (e) {
       throw Exception('Failed to delete merchant: $e');
     }
@@ -222,7 +229,7 @@ class FirebaseService {
   Future<models.Invoice> saveInvoice(models.Invoice invoice) async {
     try {
       final docRef = _firestore.collection(_invoicesCollection).doc(invoice.id);
-      
+
       await docRef.set({
         ...invoice.toJson(),
         'createdAt': FieldValue.serverTimestamp(),
@@ -325,7 +332,9 @@ class FirebaseService {
   }
 
   // Admin: list merchants that require KYC review
-  Future<List<models.Merchant>> getMerchantsForKycReview({int limit = 50}) async {
+  Future<List<models.Merchant>> getMerchantsForKycReview({
+    int limit = 50,
+  }) async {
     try {
       final querySnapshot = await _firestore
           .collection(_merchantsCollection)
@@ -346,32 +355,47 @@ class FirebaseService {
   }
 
   // Admin: update merchant kyc status
-  Future<void> updateMerchantKycStatus(String merchantId, String newStatus, {String? reason}) async {
+  Future<void> updateMerchantKycStatus(
+    String merchantId,
+    String newStatus, {
+    String? reason,
+  }) async {
     // If a cloud function base URL is configured, prefer invoking the callable function
     if (_functionsBaseUrl != null) {
       try {
         final idToken = await _auth.currentUser?.getIdToken();
         if (idToken != null) {
-          final url = Uri.parse('${_functionsBaseUrl!.replaceAll(RegExp(r'/*$'), '')}/updateMerchantKyc');
+          final url = Uri.parse(
+            '${_functionsBaseUrl!.replaceAll(RegExp(r'/*$'), '')}/updateMerchantKyc',
+          );
           final resp = await http.post(
             url,
             headers: {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $idToken',
             },
-            body: jsonEncode({'merchantId': merchantId, 'newStatus': newStatus, 'reason': reason}),
+            body: jsonEncode({
+              'merchantId': merchantId,
+              'newStatus': newStatus,
+              'reason': reason,
+            }),
           );
 
           if (resp.statusCode >= 200 && resp.statusCode < 300) {
             // success; function already writes audit logs server-side
             return;
           } else {
-            AppLogger.e('Functions call failed (${resp.statusCode}): ${resp.body}');
+            AppLogger.e(
+              'Functions call failed (${resp.statusCode}): ${resp.body}',
+            );
             // fallthrough to direct update
           }
         }
       } catch (fnError) {
-        AppLogger.e('Error calling functions endpoint: $fnError', error: fnError);
+        AppLogger.e(
+          'Error calling functions endpoint: $fnError',
+          error: fnError,
+        );
         // continue to fallback
       }
     }
@@ -394,7 +418,10 @@ class FirebaseService {
         };
         await _firestore.collection('admin_audit_logs').add(audit);
       } catch (auditError) {
-        AppLogger.e('Failed to write admin audit log: $auditError', error: auditError);
+        AppLogger.e(
+          'Failed to write admin audit log: $auditError',
+          error: auditError,
+        );
       }
 
       AppLogger.d('Merchant $merchantId KYC status updated to $newStatus');
@@ -420,12 +447,12 @@ class FirebaseService {
     required String bankAccountName,
   }) {
     return businessName.isNotEmpty &&
-           industry.isNotEmpty &&
-           contactEmail.isNotEmpty &&
-           fullName.isNotEmpty &&
-           bankAccountNumber.isNotEmpty &&
-           bankName.isNotEmpty &&
-           bankAccountName.isNotEmpty;
+        industry.isNotEmpty &&
+        contactEmail.isNotEmpty &&
+        fullName.isNotEmpty &&
+        bankAccountNumber.isNotEmpty &&
+        bankName.isNotEmpty &&
+        bankAccountName.isNotEmpty;
   }
 
   // Stream methods for real-time updates
@@ -440,22 +467,27 @@ class FirebaseService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        data['id'] = doc.id;
-        return models.Merchant.fromJson(data);
-      }).toList();
-    });
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return models.Merchant.fromJson(data);
+          }).toList();
+        });
   }
 
   /// Ensure wallet documents exist in the 'wallets' collection for a merchant.
   /// Uses deterministic document ids of the form '<merchantId>_<network>' so
   /// repeated calls are idempotent.
-  Future<void> upsertMerchantWallets(String merchantId, Map<String, String> walletAddresses) async {
+  Future<void> upsertMerchantWallets(
+    String merchantId,
+    Map<String, String> walletAddresses,
+  ) async {
     try {
       final batch = _firestore.batch();
 
-      AppLogger.d('DEBUG: Preparing to upsert ${walletAddresses.length} wallets for merchant $merchantId');
+      AppLogger.d(
+        'DEBUG: Preparing to upsert ${walletAddresses.length} wallets for merchant $merchantId',
+      );
       walletAddresses.forEach((network, address) {
         final docId = '${merchantId}_${network.toLowerCase()}';
         final docRef = _firestore.collection('wallets').doc(docId);
@@ -470,7 +502,9 @@ class FirebaseService {
       });
 
       await batch.commit();
-      AppLogger.d('DEBUG: Upserted ${walletAddresses.length} wallet documents for merchant $merchantId');
+      AppLogger.d(
+        'DEBUG: Upserted ${walletAddresses.length} wallet documents for merchant $merchantId',
+      );
     } catch (e) {
       AppLogger.e('Failed to upsert merchant wallets: $e', error: e);
       rethrow;
@@ -479,7 +513,9 @@ class FirebaseService {
 
   /// Generate deterministic wallet addresses for a merchant and persist them.
   /// Returns the generated map of network->address.
-  Future<Map<String, String>> generateAndSaveMerchantWallets(String merchantId) async {
+  Future<Map<String, String>> generateAndSaveMerchantWallets(
+    String merchantId,
+  ) async {
     try {
       final userId = currentUserId;
       if (userId == null) {
@@ -487,10 +523,15 @@ class FirebaseService {
       }
 
       // Generate addresses deterministically
-      final wallets = CryptoWalletService.generateWalletAddresses(merchantId: merchantId, userId: userId);
+      final wallets = CryptoWalletService.generateWalletAddresses(
+        merchantId: merchantId,
+        userId: userId,
+      );
 
       // Save wallet addresses on merchant document and mark walletsGenerated
-      final merchantRef = _firestore.collection(_merchantsCollection).doc(merchantId);
+      final merchantRef = _firestore
+          .collection(_merchantsCollection)
+          .doc(merchantId);
       await merchantRef.set({
         'walletAddresses': wallets,
         'walletsGenerated': true,
@@ -501,7 +542,9 @@ class FirebaseService {
       // Upsert per-network wallet docs
       await upsertMerchantWallets(merchantId, wallets);
 
-      AppLogger.d('DEBUG: Generated and saved ${wallets.length} wallets for merchant $merchantId');
+      AppLogger.d(
+        'DEBUG: Generated and saved ${wallets.length} wallets for merchant $merchantId',
+      );
       return wallets;
     } catch (e) {
       AppLogger.e('Failed to generate and save merchant wallets: $e', error: e);
@@ -516,11 +559,21 @@ class FirebaseService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        data['id'] = doc.id;
-        return models.Invoice.fromJson(data);
-      }).toList();
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return models.Invoice.fromJson(data);
+          }).toList();
+        });
+  }
+
+  /// Watch a merchant document for realtime changes. Emits the raw document
+  /// data map (including `id`) whenever the merchant doc updates.
+  Stream<Map<String, dynamic>> watchMerchantDocument(String merchantId) {
+    return _firestore.collection(_merchantsCollection).doc(merchantId).snapshots().map((doc) {
+      final data = doc.data() ?? <String, dynamic>{};
+      data['id'] = doc.id;
+      return Map<String, dynamic>.from(data);
     });
   }
 
@@ -544,17 +597,21 @@ class FirebaseService {
     }
   }
 
-  Future<void> updateInvoiceStatus(String invoiceId, String status, {String? txHash}) async {
+  Future<void> updateInvoiceStatus(
+    String invoiceId,
+    String status, {
+    String? txHash,
+  }) async {
     try {
       final updateData = <String, dynamic>{
         'status': status,
         'updatedAt': DateTime.now().toIso8601String(),
       };
-      
+
       if (status == 'paid') {
         updateData['paidAt'] = DateTime.now().toIso8601String();
       }
-      
+
       if (txHash != null) {
         updateData['txHash'] = txHash;
       }
@@ -563,7 +620,7 @@ class FirebaseService {
           .collection(_invoicesCollection)
           .doc(invoiceId)
           .update(updateData);
-      
+
       AppLogger.d('Invoice status updated: $invoiceId -> $status');
     } catch (e) {
       AppLogger.e('Error updating invoice status: $e', error: e);
@@ -585,7 +642,11 @@ class FirebaseService {
     }
   }
 
-  Future<List<models.Transaction>> getTransactions(String merchantId, {int? limit, String? lastDocumentId}) async {
+  Future<List<models.Transaction>> getTransactions(
+    String merchantId, {
+    int? limit,
+    String? lastDocumentId,
+  }) async {
     try {
       Query query = _firestore
           .collection('transactions')
@@ -608,7 +669,12 @@ class FirebaseService {
 
       final querySnapshot = await query.get();
       return querySnapshot.docs
-          .map((doc) => models.Transaction.fromJson({...doc.data() as Map<String, dynamic>, 'id': doc.id}))
+          .map(
+            (doc) => models.Transaction.fromJson({
+              ...doc.data() as Map<String, dynamic>,
+              'id': doc.id,
+            }),
+          )
           .toList();
     } catch (e) {
       AppLogger.e('Error getting transactions: $e', error: e);
@@ -616,28 +682,37 @@ class FirebaseService {
     }
   }
 
-  Stream<List<models.Transaction>> watchMerchantTransactions(String merchantId) {
+  Stream<List<models.Transaction>> watchMerchantTransactions(
+    String merchantId,
+  ) {
     return _firestore
         .collection('transactions')
         .where('merchantId', isEqualTo: merchantId)
         .orderBy('createdAt', descending: true)
         .limit(100) // Limit real-time stream for performance
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => models.Transaction.fromJson({...doc.data(), 'id': doc.id}))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) =>
+                    models.Transaction.fromJson({...doc.data(), 'id': doc.id}),
+              )
+              .toList(),
+        );
   }
 
-  Future<void> updateTransactionStatus(String transactionId, String status, {String? txHash}) async {
+  Future<void> updateTransactionStatus(
+    String transactionId,
+    String status, {
+    String? txHash,
+  }) async {
     try {
-      final updateData = {
-        'status': status,
-      };
-      
+      final updateData = {'status': status};
+
       if (status == 'completed') {
         updateData['completedAt'] = DateTime.now().toIso8601String();
       }
-      
+
       if (txHash != null) {
         updateData['txHash'] = txHash;
       }
@@ -646,7 +721,7 @@ class FirebaseService {
           .collection('transactions')
           .doc(transactionId)
           .update(updateData);
-      
+
       AppLogger.d('Transaction status updated: $transactionId -> $status');
     } catch (e) {
       AppLogger.e('Error updating transaction status: $e', error: e);
@@ -694,7 +769,9 @@ class FirebaseService {
           .get();
 
       return querySnapshot.docs
-          .map((doc) => models.PaymentLink.fromJson({...doc.data(), 'id': doc.id}))
+          .map(
+            (doc) => models.PaymentLink.fromJson({...doc.data(), 'id': doc.id}),
+          )
           .toList();
     } catch (e) {
       AppLogger.e('Error getting payment links: $e', error: e);
@@ -702,31 +779,45 @@ class FirebaseService {
     }
   }
 
-  Stream<List<models.PaymentLink>> watchMerchantPaymentLinks(String merchantId) {
+  Stream<List<models.PaymentLink>> watchMerchantPaymentLinks(
+    String merchantId,
+  ) {
     return _firestore
         .collection('payment_links')
         .where('merchantId', isEqualTo: merchantId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => models.PaymentLink.fromJson({...doc.data(), 'id': doc.id}))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) =>
+                    models.PaymentLink.fromJson({...doc.data(), 'id': doc.id}),
+              )
+              .toList(),
+        );
   }
 
-  Future<void> updatePaymentLinkUsage(String paymentLinkId, String invoiceId) async {
+  Future<void> updatePaymentLinkUsage(
+    String paymentLinkId,
+    String invoiceId,
+  ) async {
     try {
       await _firestore.runTransaction((transaction) async {
-        final paymentLinkRef = _firestore.collection('payment_links').doc(paymentLinkId);
+        final paymentLinkRef = _firestore
+            .collection('payment_links')
+            .doc(paymentLinkId);
         final paymentLinkDoc = await transaction.get(paymentLinkRef);
-        
+
         if (!paymentLinkDoc.exists) {
           throw Exception('Payment link not found');
         }
 
         final currentData = paymentLinkDoc.data()!;
         final currentUsageCount = currentData['usageCount'] ?? 0;
-        final currentInvoiceIds = List<String>.from(currentData['invoiceIds'] ?? []);
-        
+        final currentInvoiceIds = List<String>.from(
+          currentData['invoiceIds'] ?? [],
+        );
+
         if (!currentInvoiceIds.contains(invoiceId)) {
           currentInvoiceIds.add(invoiceId);
         }
@@ -737,7 +828,7 @@ class FirebaseService {
           'updatedAt': DateTime.now().toIso8601String(),
         });
       });
-      
+
       AppLogger.d('Payment link usage updated: $paymentLinkId');
     } catch (e) {
       AppLogger.e('Error updating payment link usage: $e', error: e);
@@ -759,7 +850,10 @@ class FirebaseService {
     }
   }
 
-  Future<models.Customer?> getCustomerByEmail(String merchantId, String email) async {
+  Future<models.Customer?> getCustomerByEmail(
+    String merchantId,
+    String email,
+  ) async {
     try {
       final querySnapshot = await _firestore
           .collection('customers')
@@ -796,12 +890,15 @@ class FirebaseService {
     }
   }
 
-  Future<void> updateCustomerStats(String customerId, double transactionAmount) async {
+  Future<void> updateCustomerStats(
+    String customerId,
+    double transactionAmount,
+  ) async {
     try {
       await _firestore.runTransaction((transaction) async {
         final customerRef = _firestore.collection('customers').doc(customerId);
         final customerDoc = await transaction.get(customerRef);
-        
+
         if (!customerDoc.exists) {
           throw Exception('Customer not found');
         }
@@ -817,7 +914,7 @@ class FirebaseService {
           'updatedAt': DateTime.now().toIso8601String(),
         });
       });
-      
+
       AppLogger.d('Customer stats updated: $customerId');
     } catch (e) {
       AppLogger.e('Error updating customer stats: $e', error: e);
@@ -826,7 +923,11 @@ class FirebaseService {
   }
 
   // Analytics methods for real transaction data
-  Future<Map<String, dynamic>> getMerchantAnalytics(String merchantId, {DateTime? startDate, DateTime? endDate}) async {
+  Future<Map<String, dynamic>> getMerchantAnalytics(
+    String merchantId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
     try {
       Query transactionQuery = _firestore
           .collection('transactions')
@@ -834,33 +935,46 @@ class FirebaseService {
           .where('status', isEqualTo: 'completed');
 
       if (startDate != null) {
-        transactionQuery = transactionQuery.where('createdAt', isGreaterThanOrEqualTo: startDate.toIso8601String());
+        transactionQuery = transactionQuery.where(
+          'createdAt',
+          isGreaterThanOrEqualTo: startDate.toIso8601String(),
+        );
       }
-      
+
       if (endDate != null) {
-        transactionQuery = transactionQuery.where('createdAt', isLessThanOrEqualTo: endDate.toIso8601String());
+        transactionQuery = transactionQuery.where(
+          'createdAt',
+          isLessThanOrEqualTo: endDate.toIso8601String(),
+        );
       }
 
       final transactionSnapshot = await transactionQuery.get();
       final transactions = transactionSnapshot.docs
-          .map((doc) => models.Transaction.fromJson({...doc.data() as Map<String, dynamic>, 'id': doc.id}))
+          .map(
+            (doc) => models.Transaction.fromJson({
+              ...doc.data() as Map<String, dynamic>,
+              'id': doc.id,
+            }),
+          )
           .toList();
 
       // Calculate analytics
       final totalRevenue = transactions
           .where((t) => t.type == 'payment_received')
           .fold<double>(0.0, (sum, t) => sum + t.amountNaira);
-      
+
       final totalTransactions = transactions.length;
-      
+
       final successfulTransactions = transactions
           .where((t) => t.status == 'completed')
           .length;
-      
-      final successRate = totalTransactions > 0 ? (successfulTransactions / totalTransactions * 100) : 0.0;
 
-      final averageTransactionValue = totalTransactions > 0 
-          ? totalRevenue / totalTransactions 
+      final successRate = totalTransactions > 0
+          ? (successfulTransactions / totalTransactions * 100)
+          : 0.0;
+
+      final averageTransactionValue = totalTransactions > 0
+          ? totalRevenue / totalTransactions
           : 0.0;
 
       // Group by day for chart data
@@ -868,7 +982,8 @@ class FirebaseService {
       for (final transaction in transactions) {
         if (transaction.type == 'payment_received') {
           final day = transaction.createdAt.toIso8601String().split('T')[0];
-          dailyRevenue[day] = (dailyRevenue[day] ?? 0.0) + transaction.amountNaira;
+          dailyRevenue[day] =
+              (dailyRevenue[day] ?? 0.0) + transaction.amountNaira;
         }
       }
 
@@ -878,7 +993,10 @@ class FirebaseService {
         'successRate': successRate,
         'averageTransactionValue': averageTransactionValue,
         'dailyRevenue': dailyRevenue,
-        'recentTransactions': transactions.take(10).map((t) => t.toJson()).toList(),
+        'recentTransactions': transactions
+            .take(10)
+            .map((t) => t.toJson())
+            .toList(),
       };
     } catch (e) {
       AppLogger.e('Error getting merchant analytics: $e', error: e);
