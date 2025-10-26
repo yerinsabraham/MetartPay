@@ -778,5 +778,28 @@ class MerchantProvider extends ChangeNotifier {
       AppLogger.w('Realtime payment links subscription error: $e', error: e);
       // Keep the app functional; the provider can fall back to non-realtime loading.
     });
+
+    // Subscribe to invoices realtime updates so UI reflecting pending amounts
+    // and invoice lists update automatically when backend writes invoices.
+    _firebaseService.watchMerchantInvoices(_currentMerchant!.id).listen((invoices) {
+      _invoices = List<Invoice>.from(invoices);
+      notifyListeners();
+    }, onError: (e) {
+      AppLogger.w('Realtime invoices subscription error: $e', error: e);
+    });
+
+    // Also watch the merchant document for any profile/KYC changes
+    _firebaseService.watchMerchantDocument(_currentMerchant!.id).listen((merchantDoc) {
+      try {
+        final updated = Merchant.fromJson(merchantDoc);
+        _currentMerchant = updated;
+        _checkSetupStatus();
+        notifyListeners();
+      } catch (e) {
+        AppLogger.w('Failed to parse merchant realtime update: $e', error: e);
+      }
+    }, onError: (e) {
+      AppLogger.w('Realtime merchant document subscription error: $e', error: e);
+    });
   }
 }

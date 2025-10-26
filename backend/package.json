@@ -4,6 +4,7 @@
   "description": "MetartPay Backend API - Crypto payment processing",
   "main": "dist/index.js",
   "scripts": {
+    "start": "node server.js",
     "build": "tsc",
     "dev": "npm run build && firebase emulators:start",
     "deploy": "npm run build && firebase deploy --only functions",
@@ -19,7 +20,7 @@
     "serve:normalized-manifest": "node tools/serve_normalized_manifest.js"
   },
   "engines": {
-    "node": "18"
+    "node": "20"
   },
   "dependencies": {
     "@solana/spl-token": "^0.3.9",

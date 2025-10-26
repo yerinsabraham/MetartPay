@@ -6,7 +6,10 @@ import '../models/wallet_address.dart';
 import '../utils/app_logger.dart';
 
 class WalletService {
-  static const String _baseUrl = ApiConfig.baseUrl;
+  // ApiConfig.baseUrl is resolved at runtime (depends on environment), so
+  // use a runtime getter instead of a compile-time const to avoid errors
+  // during constant evaluation.
+  static String get _baseUrl => ApiConfig.baseUrl;
 
   /// Get wallets for a merchant
   Future<List<Wallet>> getMerchantWallets(String merchantId, String idToken) async {

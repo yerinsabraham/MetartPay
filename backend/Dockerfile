@@ -28,7 +28,10 @@ RUN npm ci --omit=dev
 COPY --from=builder /usr/src/app/dist ./dist
 # Copy runtime config and optional dev helpers (cluster_mints.json, etc.)
 COPY --from=builder /usr/src/app/config ./config
-COPY --from=builder /usr/src/app/dev ./dev
+## Ensure a dev directory exists in the final image. The builder may not
+## always produce a `/usr/src/app/dev` directory (dev helpers are optional),
+## so create the directory here to avoid a failing COPY when absent.
+RUN mkdir -p ./dev
 
 ENV PORT=8080
 EXPOSE 8080

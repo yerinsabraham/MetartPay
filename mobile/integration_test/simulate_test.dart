@@ -4,6 +4,7 @@ import 'package:integration_test/integration_test.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:http/http.dart' as http;
+import 'package:metartpay_mobile/config/environment.dart';
 
 // Integration test using integration_test package.
 // Usage (local):
@@ -13,10 +14,8 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('simulate-confirm end-to-end', (WidgetTester tester) async {
-    final baseUrl = const String.fromEnvironment(
-      'METARTPAY_BASE_URL',
-      defaultValue: 'https://metartpay-api-456120304945.us-central1.run.app',
-    );
+    final configuredBase = const String.fromEnvironment('METARTPAY_BASE_URL', defaultValue: '');
+    final baseUrl = configuredBase.isNotEmpty ? configuredBase : Environment.apiBaseUrl;
 
     final simulatePayload = {
       'txHash': 'INTEGRATION_SIM_${DateTime.now().millisecondsSinceEpoch}',
@@ -79,7 +78,7 @@ void main() {
       // Backend unreachable — start an in-process mock server to simulate behavior
       mockServer = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
       final port = mockServer.port;
-      final mockBase = 'https://metartpay-api-456120304945.us-central1.run.app';
+  final mockBase = Environment.apiBaseUrl;
       // Simple in-memory store
       final Map<String, Map<String, dynamic>> store = {};
 

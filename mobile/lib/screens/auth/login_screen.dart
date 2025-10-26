@@ -44,6 +44,23 @@ class _LoginScreenState extends State<LoginScreen> {
             backgroundColor: Colors.red,
           ),
         );
+        return;
+      }
+
+      // On successful login, ensure merchant data is loaded and navigate
+      // to the home screen. Use pushNamedAndRemoveUntil so the login stack is cleared.
+      if (success && mounted) {
+        try {
+          final merchantProvider = context.read<MerchantProvider>();
+          await merchantProvider.loadUserMerchants();
+        } catch (e) {
+          // Non-fatal: log and continue to home
+          AppLogger.w('DEBUG: Failed to load merchants after login: $e', error: e);
+        }
+
+        if (mounted) {
+          Navigator.pushNamedAndRemoveUntil(context, '/home', (r) => false);
+        }
       }
     }
   }
@@ -59,6 +76,21 @@ class _LoginScreenState extends State<LoginScreen> {
           backgroundColor: Colors.red,
         ),
       );
+      return;
+    }
+
+    // On successful Google sign-in, load merchant data and navigate to home
+    if (success && mounted) {
+      try {
+        final merchantProvider = context.read<MerchantProvider>();
+        await merchantProvider.loadUserMerchants();
+      } catch (e) {
+        AppLogger.w('DEBUG: Failed to load merchants after Google sign-in: $e', error: e);
+      }
+
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (r) => false);
+      }
     }
   }
 

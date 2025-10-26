@@ -567,6 +567,16 @@ class FirebaseService {
         });
   }
 
+  /// Watch a merchant document for realtime changes. Emits the raw document
+  /// data map (including `id`) whenever the merchant doc updates.
+  Stream<Map<String, dynamic>> watchMerchantDocument(String merchantId) {
+    return _firestore.collection(_merchantsCollection).doc(merchantId).snapshots().map((doc) {
+      final data = doc.data() ?? <String, dynamic>{};
+      data['id'] = doc.id;
+      return Map<String, dynamic>.from(data);
+    });
+  }
+
   // Invoice methods
   Future<models.Invoice?> getInvoice(String invoiceId) async {
     try {

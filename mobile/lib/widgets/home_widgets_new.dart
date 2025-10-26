@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
 import 'metartpay_branding.dart';
 import '../services/firebase_service.dart';
 import '../utils/app_logger.dart';
+import '../providers/merchant_provider.dart';
+import '../services/payment_service.dart';
+import '../utils/app_config.dart';
+import '../screens/payment_status_screen.dart';
 
 // Non-custodial Home V2 widgets
 class HomeShortcuts extends StatelessWidget {
@@ -42,6 +48,61 @@ class HomeShortcuts extends StatelessWidget {
               label: 'View Transactions',
               onTap: onViewTransactions,
             ),
+            if (kDebugMode)
+              _actionCard(
+                context,
+                icon: Icons.bug_report,
+                label: 'Simulate Payment (debug)',
+                onTap: () async {
+                  // Quick simulate: create a synthetic payment via PaymentService
+                  final mp = Provider.of<MerchantProvider>(context, listen: false);
+                  final merchantId = mp.currentMerchant?.id;
+                  if (merchantId == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('No merchant available to simulate for')),
+                    );
+                    return;
+                  }
+
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (ctx) => const Center(child: CircularProgressIndicator()),
+                  );
+
+                  try {
+                    final svc = PaymentService(baseUrl: AppConfig.backendBaseUrl);
+                    final payload = {
+                      'txHash': 'SIM_Q_${DateTime.now().millisecondsSinceEpoch}',
+                      'toAddress': 'simulated-address-1',
+                      'fromAddress': 'simulated-sender',
+                      'amountCrypto': 0.25,
+                      'cryptoCurrency': 'ETH',
+                      'network': 'sepolia',
+                      'merchantId': merchantId,
+                      'paymentLinkId': '',
+                    };
+                    final txId = await svc.createPayment(payload, simulateKey: AppConfig.devSimulateKey);
+                    Navigator.of(context).pop(); // dismiss progress
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Simulated transaction: $txId')),
+                    );
+                    // Open payment status to inspect
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PaymentStatusScreen(transactionId: txId, baseUrl: AppConfig.backendBaseUrl),
+                      ),
+                    );
+                  } catch (e) {
+                    Navigator.of(context).pop();
+                    AppLogger.e('Quick simulate failed: $e', error: e);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Simulate failed: $e')),
+                    );
+                  }
+                },
+              ),
           ],
         );
       },
@@ -117,11 +178,27 @@ class _SimpleDashboardState extends State<SimpleDashboard> {
   double _settledToday = 0.0;
   String _cryptoReceived = '0.0';
   bool _loading = true;
+  VoidCallback? _merchantListener;
 
   @override
   void initState() {
     super.initState();
     _loadAnalytics();
+
+    // Add a listener to MerchantProvider so analytics refresh when
+    // transactions/invoices/merchant change in realtime.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        final mp = Provider.of<MerchantProvider>(context, listen: false);
+        _merchantListener = () async {
+          // Reload analytics when provider notifies
+          await _loadAnalytics();
+        };
+        mp.addListener(_merchantListener!);
+      } catch (e) {
+        AppLogger.w('Failed to attach MerchantProvider listener: $e', error: e);
+      }
+    });
   }
 
   Future<void> _loadAnalytics() async {
@@ -230,5 +307,16 @@ class _SimpleDashboardState extends State<SimpleDashboard> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    // Remove merchant provider listener if attached
+    try {
+      final mp = Provider.of<MerchantProvider>(context, listen: false);
+      if (_merchantListener != null) mp.removeListener(_merchantListener!);
+    } catch (_) {}
+
+    super.dispose();
   }
 }

@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
+import '../config/environment.dart';
 
 class ApiService {
-  static const String baseUrl =
-      'https://metartpay-api-456120304945.us-central1.run.app';
+  // Use the environment-configured base URL so builds can target staging/production/etc.
+  static String get baseUrl => Environment.apiBaseUrl;
 
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
@@ -14,10 +15,18 @@ class ApiService {
     final user = FirebaseAuth.instance.currentUser;
     final token = await user?.getIdToken();
 
-    return {
+    final headers = <String, String>{
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
+
+    // Add dev simulate key header in non-production builds if configured
+    final simulateKey = Environment.devSimulateKey;
+    if (Environment.enableSimulate && simulateKey.isNotEmpty) {
+      headers['x-dev-simulate-key'] = simulateKey;
+    }
+
+    return headers;
   }
 
   Future<Map<String, dynamic>> _handleResponse(http.Response response) async {

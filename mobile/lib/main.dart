@@ -25,6 +25,8 @@ import 'providers/security_provider.dart';
 import 'providers/customer_provider.dart';
 import 'services/notification_service.dart';
 import 'utils/app_logger.dart';
+import 'config/environment.dart';
+import 'widgets/debug_overlay.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,13 +51,9 @@ void main() async {
     // Continue app launch even if Firebase fails
   }
 
-  // In debug builds, prefer connecting to the local Firestore emulator so
-  // we don't hit production rules. This is best-effort and will try both
-  // the convenience API and a Settings fallback for older plugin versions.
-  final baseUrl = const String.fromEnvironment(
-    'METARTPAY_BASE_URL',
-    defaultValue: 'https://metartpay-api-456120304945.us-central1.run.app',
-  );
+  // Resolve configured base URL (allow override via METARTPAY_BASE_URL).
+  final configuredBase = const String.fromEnvironment('METARTPAY_BASE_URL', defaultValue: '');
+  final baseUrl = configuredBase.isNotEmpty ? configuredBase : Environment.apiBaseUrl;
   // Only enable the Firestore emulator when the configured backend URL
   // explicitly points at a localhost host (127.0.0.1 or 10.0.2.2) or when the
   // build is invoked with --dart-define=FORCE_FIRESTORE_EMULATOR=true.
@@ -151,10 +149,24 @@ class MyApp extends StatelessWidget {
             return previous ?? PaymentLinkProvider(merchantProvider);
           },
         ),
-        ChangeNotifierProvider(
-          create: (_) {
+        ChangeNotifierProxyProvider<MerchantProvider, NotificationProvider>(
+          create: (context) {
             AppLogger.d('DEBUG: Creating NotificationProvider');
             return NotificationProvider();
+          },
+          update: (context, merchantProvider, previous) {
+            final np = previous ?? NotificationProvider();
+            // Initialize or clear notification data when merchant changes
+            final merchant = merchantProvider.currentMerchant;
+            if (merchant != null) {
+              // Fire-and-forget initialization; provider will notifyListeners when ready
+              np.initialize(merchant.id).catchError((e) {
+                AppLogger.w('DEBUG: NotificationProvider initialize failed: $e', error: e);
+              });
+            } else {
+              np.clearData();
+            }
+            return np;
           },
         ),
         ChangeNotifierProvider(
@@ -170,7 +182,7 @@ class MyApp extends StatelessWidget {
           },
         ),
       ],
-      child: MaterialApp(
+  child: MaterialApp(
         title: 'MetartPay',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
@@ -226,6 +238,16 @@ class MyApp extends StatelessWidget {
         home: !bool.fromEnvironment('dart.vm.product')
             ? const HomePageNewWrapper()
             : const HomePageNew(),
+        // Debug overlay shows current environment and API host when not prod
+        builder: (context, child) {
+          return Stack(
+            children: [
+              if (child != null) child,
+              if (!Environment.isProduction)
+                DebugOverlay(environment: Environment.environment, apiBase: Environment.apiBaseUrl),
+            ],
+          );
+        },
         routes: {
           '/home': (context) => const HomePageNew(),
           '/home-v2': (context) => const HomePageNew(),
@@ -251,12 +273,9 @@ class MyApp extends StatelessWidget {
           // Debug/demo route - only enabled in debug builds
           if (!bool.fromEnvironment('dart.vm.product'))
             '/demo-simulate': (context) {
-              final baseUrl = const String.fromEnvironment(
-                'METARTPAY_BASE_URL',
-                defaultValue:
-                    'https://metartpay-api-456120304945.us-central1.run.app',
-              );
-              return DemoSimulatePage(baseUrl: baseUrl);
+              final demoBase = const String.fromEnvironment('METARTPAY_BASE_URL', defaultValue: '');
+              final demoResolved = demoBase.isNotEmpty ? demoBase : Environment.apiBaseUrl;
+              return DemoSimulatePage(baseUrl: demoResolved);
             },
         },
       ),

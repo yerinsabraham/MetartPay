@@ -4,6 +4,7 @@ import '../../providers/merchant_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/metartpay_branding.dart';
 import '../kyc/kyc_verification_screen.dart';
+import '../auth/login_screen.dart';
 import '../security/security_settings_screen.dart';
 import 'admin_dashboard_screen.dart';
 
@@ -611,7 +612,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     navigator.pop();
                   } catch (_) {}
 
-                  navigator.pushNamedAndRemoveUntil('/login', (route) => false);
+                    // Navigate to the login screen widget directly since
+                    // the named route '/login' is not registered in
+                    // MaterialApp routes. This avoids the "Could not find
+                    // a generator for route settings" runtime error.
+                    navigator.pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (ctx) => const LoginScreen(),
+                      ),
+                      (route) => false,
+                    );
                 }
               } catch (e) {
                 // Dismiss progress dialog if visible

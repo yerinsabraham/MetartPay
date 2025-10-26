@@ -38,6 +38,13 @@ class SecurityService {
     required String userId,
     String? customLocation,
   }) async {
+    // Ensure device id is available. If the service wasn't initialized
+    // (e.g. initialize() not called), create or load the device id here to
+    // avoid null-check operator errors.
+    if (_deviceId == null) {
+      _deviceId = await _getOrCreateDeviceId();
+    }
+
     final sessionId = _generateSessionId();
     final deviceInfo = await _getDeviceInfo();
     final packageInfo = await PackageInfo.fromPlatform();
@@ -45,7 +52,7 @@ class SecurityService {
     final session = UserSession(
       id: sessionId,
       userId: userId,
-      deviceId: _deviceId!,
+      deviceId: _deviceId ?? 'unknown-device',
       deviceName: deviceInfo['deviceName'] ?? 'Unknown Device',
       deviceModel: deviceInfo['deviceModel'] ?? 'Unknown Model',
       operatingSystem: deviceInfo['operatingSystem'] ?? 'Unknown OS',
@@ -217,7 +224,7 @@ class SecurityService {
         eventType: eventType,
         eventDescription: eventDescription,
         severity: severity,
-        deviceId: _deviceId!,
+        deviceId: _deviceId ?? 'unknown-device',
         ipAddress: await _getIPAddress(),
         location: 'Unknown', // Could be enhanced with location services
         eventData: eventData ?? {},

@@ -1,19 +1,14 @@
 import 'package:flutter/foundation.dart';
+import '../config/environment.dart';
 
 class AppConfig {
-  // The backend base URL for API calls. In production this should be set
-  // from build-time environment variables or a config file.
-  // Default to the staging backend so local debug runs hit staging when no build
-  // environment variable is provided. Change back before production builds.
-  static const String? backendBaseUrl = String.fromEnvironment(
-    'METARTPAY_BACKEND_BASE_URL',
-    defaultValue: 'https://metartpay-api-456120304945.us-central1.run.app/api',
-  );
+  // The backend base URL for API calls. Prefer using Environment so
+  // builds targeting staging/production will use the correct host.
+  static String get backendBaseUrl => '${Environment.apiBaseUrl}/api';
 
-  static const String devSimulateKey = String.fromEnvironment(
-    'METARTPAY_DEV_SIMULATE_KEY',
-    defaultValue: 'SimKey123',
-  );
+  // Dev simulate key is now sourced from Environment (can still be overridden
+  // via --dart-define=DEV_SIMULATE_KEY if desired).
+  static String get devSimulateKey => Environment.devSimulateKey;
 
   // When true the mobile app will synthesize a server-shaped payment
   // response locally (no Firestore write). For developer convenience this

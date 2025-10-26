@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 // removed unused import
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../auth/login_screen.dart';
 import '../../providers/merchant_provider.dart';
 // removed unused import
 import '../../widgets/metartpay_branding.dart';
@@ -608,9 +609,12 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen>
                   await authProvider.signOut();
                   // Navigate back to login screen after logout
                   if (mounted) {
-                    Navigator.of(
-                      context,
-                    ).pushNamedAndRemoveUntil('/', (route) => false);
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (ctx) => const LoginScreen(),
+                      ),
+                      (route) => false,
+                    );
                   }
                 }
               },
