@@ -13,12 +13,12 @@ class DevSimulateToggle extends StatefulWidget {
 class _DevSimulateToggleState extends State<DevSimulateToggle> {
   bool _enabled = false;
   bool _busy = false;
-  final _paymentService = PaymentService(baseUrl: '');
+  late PaymentService _paymentService;
 
   @override
   void initState() {
     super.initState();
-    _paymentService.baseUrl = widget.baseUrl; // minor mutation for convenience
+  _paymentService = PaymentService(baseUrl: widget.baseUrl);
   }
 
   Future<void> _simulate() async {
@@ -34,7 +34,7 @@ class _DevSimulateToggleState extends State<DevSimulateToggle> {
         'merchantId': 'dev-merchant-1',
         'paymentLinkId': ''
       };
-      final txId = await _paymentService.createPayment(payload, simulateKey: 'dev-local-key');
+  final txId = await _paymentService.createPayment(payload, simulateKey: 'dev-local-key');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Simulated tx: $txId')));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Simulate failed: $e')));

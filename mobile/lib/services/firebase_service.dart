@@ -1,8 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:path/path.dart' as path;
+import 'package:file_picker/file_picker.dart';
 import '../models/models.dart' as models;
 import '../utils/app_logger.dart';
 import 'crypto_wallet_service.dart';
@@ -67,6 +71,64 @@ class FirebaseService {
     }
   }
 
+  // Client-side helper to fetch tier configs
+  Future<Map<String, dynamic>> _fetchTierConfigsClient() async {
+    try {
+      final snap = await _firestore.collection('config_merchantTiers').get();
+      final map = <String, dynamic>{};
+      for (final d in snap.docs) {
+        map[d.id] = d.data();
+      }
+      return map;
+    } catch (e) {
+      AppLogger.w('Failed to fetch tier configs client-side: $e');
+      return {};
+    }
+  }
+
+  Future<double> _sumCompletedPaymentsClient(String merchantId, {DateTime? start, DateTime? end}) async {
+    try {
+      Query q = _firestore.collection('payments').where('merchantId', isEqualTo: merchantId).where('status', isEqualTo: 'completed');
+      if (start != null) q = q.where('createdAt', isGreaterThanOrEqualTo: start);
+      if (end != null) q = q.where('createdAt', isLessThanOrEqualTo: end);
+      final snap = await q.get();
+      double total = 0.0;
+      for (final d in snap.docs) {
+        final data = d.data();
+        total += (data['amountNgn'] ?? data['amount'] ?? 0);
+      }
+      return total;
+    } catch (e) {
+      AppLogger.w('Failed to sum completed payments client-side: $e');
+      return 0.0;
+    }
+  }
+
+  Future<void> _enforceTierLimitsClient(String merchantId, double? requestedAmount) async {
+    final merchantDoc = await _firestore.collection(_merchantsCollection).doc(merchantId).get();
+    if (!merchantDoc.exists) throw Exception('Merchant not found');
+    final merchant = merchantDoc.data()!;
+    final tierId = merchant['merchantTier'] ?? 'Tier0_Unregistered';
+
+    final configs = await _fetchTierConfigsClient();
+    final tier = configs[tierId] ?? null;
+
+    if (tier == null) return; // no client-side enforcement if no config
+
+    if (requestedAmount != null && tier['singleLimit'] != null && requestedAmount > (tier['singleLimit'] as num)) {
+      throw Exception('Requested amount exceeds single-transaction limit for your tier.');
+    }
+
+    if (tier['dailyLimit'] != null) {
+      final now = DateTime.now();
+      final startOfDay = DateTime(now.year, now.month, now.day);
+      final dayTotal = await _sumCompletedPaymentsClient(merchantId, start: startOfDay);
+      if (requestedAmount != null && (dayTotal + requestedAmount) > (tier['dailyLimit'] as num)) {
+        throw Exception('Daily limit exceeded for your tier.');
+      }
+    }
+  }
+
   Future<models.Merchant?> getMerchant(String merchantId) async {
     try {
       final doc = await _firestore
@@ -120,6 +182,7 @@ class FirebaseService {
     required String bankName,
     required String bankAccountName,
     Map<String, String>? walletAddresses,
+    String? merchantTier,
   }) async {
     if (currentUserId == null) {
       throw Exception('User not authenticated');
@@ -141,6 +204,7 @@ class FirebaseService {
         bvn: bvn,
         address: address,
         kycStatus: 'pending',
+        merchantTier: merchantTier ?? 'Tier0_Unregistered',
         isSetupComplete: _isSetupComplete(
           businessName: businessName,
           industry: industry,
@@ -277,20 +341,27 @@ class FirebaseService {
     required String email,
     String? phoneNumber,
     String? profileImageUrl,
+    bool isTest = false,
   }) async {
     if (currentUserId == null) {
       throw Exception('User not authenticated');
     }
 
     try {
-      await _firestore.collection(_usersCollection).doc(currentUserId).set({
+      final data = {
         'displayName': displayName,
         'email': email,
         'phoneNumber': phoneNumber,
         'profileImageUrl': profileImageUrl,
         'lastLoginAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      };
+
+      if (isTest) {
+        data['isTest'] = true;
+      }
+
+      await _firestore.collection(_usersCollection).doc(currentUserId).set(data, SetOptions(merge: true));
     } catch (e) {
       throw Exception('Failed to save user profile: $e');
     }
@@ -426,6 +497,93 @@ class FirebaseService {
            bankAccountNumber.isNotEmpty &&
            bankName.isNotEmpty &&
            bankAccountName.isNotEmpty;
+  }
+
+  // Upload a KYC document (image/pdf) to Firebase Storage under 'kyc/{merchantId}/'
+  // and create a metadata record in Firestore under merchants/{merchantId}/documents.
+  // Enforces a 5MB size limit.
+  Future<Map<String, dynamic>> uploadKycDocument(String merchantId, PlatformFile file, {required String docType}) async {
+    if (currentUserId == null) {
+      throw Exception('User not authenticated');
+    }
+
+    // Size check: file.size is in bytes
+    const int maxBytes = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxBytes) {
+      throw Exception('File exceeds maximum allowed size of 5MB');
+    }
+
+    try {
+      final storage = FirebaseStorage.instance;
+      final filename = '${DateTime.now().toUtc().toIso8601String()}_${path.basename(file.name)}';
+      final storagePath = 'kyc/${merchantId}/${filename}';
+
+      final ref = storage.ref().child(storagePath);
+
+      UploadTask uploadTask;
+
+      // If we have a path on the PlatformFile, upload from file.
+      if (file.path != null) {
+        final fileToUpload = File(file.path!);
+        final metadata = SettableMetadata(
+          contentType: file.extension != null && file.extension!.toLowerCase() == 'pdf' ? 'application/pdf' : 'image/jpeg',
+        );
+
+        uploadTask = ref.putFile(fileToUpload, metadata);
+      } else if (file.bytes != null) {
+        final metadata = SettableMetadata(
+          contentType: file.extension != null && file.extension!.toLowerCase() == 'pdf' ? 'application/pdf' : 'image/jpeg',
+        );
+        uploadTask = ref.putData(file.bytes!, metadata);
+      } else {
+        throw Exception('No file data available to upload');
+      }
+
+      final snapshot = await uploadTask;
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+
+      final docData = {
+        'filename': file.name,
+        'storagePath': storagePath,
+        'downloadUrl': downloadUrl,
+        'contentType': file.extension != null && file.extension!.toLowerCase() == 'pdf' ? 'application/pdf' : 'image/jpeg',
+        'size': file.size,
+        'uploadedBy': currentUserId,
+        'uploadedAt': FieldValue.serverTimestamp(),
+        'docType': docType,
+      };
+
+      // Write metadata under merchants/{merchantId}/documents
+      final docRef = _firestore.collection('merchants').doc(merchantId).collection('documents').doc();
+      await docRef.set(docData);
+
+      // Return record including generated id
+      return {'id': docRef.id, ...docData};
+    } catch (e) {
+      AppLogger.e('Failed to upload KYC document: $e', error: e);
+      rethrow;
+    }
+  }
+
+  /// Fetch list of KYC documents metadata saved under merchants/{merchantId}/documents
+  Future<List<Map<String, dynamic>>> getMerchantDocuments(String merchantId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('merchants')
+          .doc(merchantId)
+          .collection('documents')
+          .orderBy('uploadedAt', descending: true)
+          .get();
+
+      return snapshot.docs.map((d) {
+        final m = d.data();
+        m['id'] = d.id;
+        return m;
+      }).toList();
+    } catch (e) {
+      AppLogger.e('Error fetching merchant documents: $e', error: e);
+      return [];
+    }
   }
 
   // Stream methods for real-time updates

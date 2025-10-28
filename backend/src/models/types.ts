@@ -18,6 +18,8 @@ export interface Merchant {
   kycStatus: 'pending' | 'verified' | 'rejected';
   walletsGenerated?: boolean;
   walletsGeneratedAt?: Date;
+  // Merchant tier id (e.g. Tier0_Unregistered, Tier1_BusinessName, Tier2_LimitedCompany)
+  merchantTier?: string;
   createdAt: Date;
   updatedAt: Date;
 }

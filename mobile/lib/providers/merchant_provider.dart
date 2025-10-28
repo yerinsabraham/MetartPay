@@ -5,6 +5,7 @@ import '../services/firebase_service.dart';
 import '../services/crypto_wallet_service.dart';
 import '../services/transaction_service.dart';
 import '../utils/app_logger.dart';
+import 'package:file_picker/file_picker.dart';
 
 class MerchantProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -118,6 +119,8 @@ class MerchantProvider extends ChangeNotifier {
     required String bankName,
     required String bankAccountName,
     Map<String, String>? walletAddresses,
+    String? merchantTier,
+    List<dynamic>? kycFiles,
   }) async {
     try {
       _setLoading(true);
@@ -137,7 +140,20 @@ class MerchantProvider extends ChangeNotifier {
         bankName: bankName,
         bankAccountName: bankAccountName,
         walletAddresses: walletAddresses ?? {},
+        merchantTier: merchantTier,
       );
+
+      // If KYC files were provided (PlatformFile objects), upload them and link to merchant
+      if (kycFiles != null && kycFiles.isNotEmpty) {
+        try {
+          for (final pf in kycFiles) {
+            // pf is expected to be a PlatformFile returned by file_picker
+            await _firebaseService.uploadKycDocument(merchant.id, pf, docType: pf.name ?? 'document');
+          }
+        } catch (e) {
+          AppLogger.w('Failed to upload one or more KYC files: $e', error: e);
+        }
+      }
 
       // Update local state
       _merchants.add(merchant);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import '../../services/firebase_service.dart';
 import '../../models/models.dart';
 import '../../providers/merchant_provider.dart';
@@ -218,6 +219,32 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 const SizedBox(height: 6),
                 if (m.walletAddresses.isEmpty) const Text('No wallet addresses provided'),
                 ...m.walletAddresses.entries.map((e) => Text('${e.key}: ${e.value}')),
+                const SizedBox(height: 12),
+                const Text('KYC Documents', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 6),
+                FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _firebaseService.getMerchantDocuments(m.id),
+                  builder: (context, snap) {
+                    if (snap.connectionState == ConnectionState.waiting) return const CircularProgressIndicator();
+                    if (!snap.hasData || snap.data!.isEmpty) return const Text('No documents uploaded');
+                    final docs = snap.data!;
+                    return Column(
+                      children: docs.map((d) {
+                        final isPdf = (d['contentType'] ?? '').toString().contains('pdf');
+                        final url = d['downloadUrl'] as String?;
+                        return ListTile(
+                          leading: isPdf ? const Icon(Icons.picture_as_pdf) : const Icon(Icons.image),
+                          title: Text(d['filename'] ?? 'Document'),
+                          subtitle: Text('${((d['size'] ?? 0) / 1024).toStringAsFixed(1)} KB'),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.open_in_new),
+                            onPressed: url == null ? null : () => launchUrlString(url),
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context),

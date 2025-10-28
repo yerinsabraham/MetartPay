@@ -7,6 +7,8 @@ import crypto from 'crypto';
 import bs58 from 'bs58';
 const clusterMints = require('../../config/cluster_mints.json');
 
+import { enforceTierLimits } from '../lib/tierEnforcement';
+
 export class PaymentLinkController {
   private walletService = new WalletService();
 
@@ -81,6 +83,13 @@ export class PaymentLinkController {
       }
 
       // Create payment link
+      // Enforce merchant tier limits before creating the link
+      try {
+        await enforceTierLimits(merchantId, createRequest.amount);
+      } catch (limitErr: any) {
+        res.status(400).json({ error: limitErr instanceof Error ? limitErr.message : String(limitErr) });
+        return;
+      }
       const paymentLinkData: Omit<PaymentLink, 'id'> = {
         merchantId,
         title: createRequest.title,
@@ -189,6 +198,13 @@ export class PaymentLinkController {
     const prices = await this.getCryptoPrices();
     const priceKey = token.toLowerCase();
     const ngnToCrypto = prices[priceKey] || 1650;
+
+    // Enforce tier limits for this merchant and amount before creating payment
+    try {
+      await enforceTierLimits(merchantId, amountNgn);
+    } catch (limErr: any) {
+      throw new Error(limErr instanceof Error ? limErr.message : String(limErr));
+    }
 
   const addressRaw = (wallet.publicAddress || '').toString();
   const addressLower = addressRaw.toLowerCase();

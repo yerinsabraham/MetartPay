@@ -2,6 +2,10 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/payment_service.dart';
 import '../models/transaction_model.dart';
 
@@ -142,24 +146,26 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
 
     final tx = _current!;
 
+    final textTheme = Theme.of(context).textTheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Status', style: Theme.of(context).textTheme.subtitle1),
+            Text('Status', style: textTheme.titleMedium),
             _buildStatusChip(tx.status),
           ],
         ),
         const SizedBox(height: 12),
-        Text('Transaction', style: Theme.of(context).textTheme.subtitle2),
+        Text('Transaction', style: textTheme.titleSmall),
         const SizedBox(height: 6),
         SelectableText('txHash: ${tx.txHash}'),
         SelectableText('network: ${tx.network}'),
         SelectableText('amount: ${tx.amountCrypto} ${tx.cryptoCurrency}'),
         const SizedBox(height: 12),
-        Text('Details', style: Theme.of(context).textTheme.subtitle2),
+        Text('Details', style: textTheme.titleSmall),
         const SizedBox(height: 6),
         Text('from: ${tx.fromAddress}'),
         Text('to: ${tx.toAddress}'),
@@ -182,7 +188,7 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
         if (kDebugMode)
           Padding(
             padding: const EdgeInsets.only(top: 8.0),
-            child: Text('Debug mode: Firestore listener + polling fallback enabled', style: Theme.of(context).textTheme.caption),
+            child: Text('Debug mode: Firestore listener + polling fallback enabled', style: textTheme.bodySmall),
           ),
       ],
     );

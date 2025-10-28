@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../widgets/metartpay_branding.dart';
 
 class KYCDetailsStep extends StatefulWidget {
@@ -53,9 +56,54 @@ class _KYCDetailsStepState extends State<KYCDetailsStep> {
       widget.onDataUpdate('idNumber', _idNumberController.text);
       widget.onDataUpdate('bvn', _bvnController.text);
       widget.onDataUpdate('address', _addressController.text);
+      // KYC files are stored in-memory as a list of PlatformFile
+      // They should not be persisted directly to Firestore via partial save
+      // but will be passed to the final create call.
+      widget.onDataUpdate('kycFiles', _pickedFiles);
       
       widget.onNext();
     }
+  }
+
+  List<PlatformFile> _pickedFiles = [];
+
+  Future<void> _pickDocument() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+        withData: false, // prefer path for upload
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        // Enforce size limit client-side as well
+        const int maxBytes = 5 * 1024 * 1024;
+        final validFiles = result.files.where((f) => f.size <= maxBytes).toList();
+        final oversized = result.files.where((f) => f.size > maxBytes).toList();
+
+        if (oversized.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('One or more selected files exceed 5MB and were ignored.')),
+          );
+        }
+
+        setState(() {
+          _pickedFiles.addAll(validFiles);
+        });
+      }
+    } catch (e) {
+      AppLogger.e('Error picking document: $e', error: e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to pick document: $e')),
+      );
+    }
+  }
+
+  void _removePickedFile(int index) {
+    setState(() {
+      _pickedFiles.removeAt(index);
+    });
   }
 
   @override
@@ -180,6 +228,49 @@ class _KYCDetailsStepState extends State<KYCDetailsStep> {
                     ),
 
                     const SizedBox(height: 24),
+                    // Document upload area
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Upload ID / KYC Documents', style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: _pickDocument,
+                                icon: const Icon(Icons.upload_file),
+                                label: const Text('Select files'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          if (_pickedFiles.isNotEmpty)
+                            Column(
+                              children: List.generate(_pickedFiles.length, (i) {
+                                final pf = _pickedFiles[i];
+                                final isImage = pf.extension != null && ['jpg', 'jpeg', 'png'].contains(pf.extension!.toLowerCase());
+                                return Card(
+                                  child: ListTile(
+                                    leading: isImage && pf.path != null
+                                        ? Image.file(File(pf.path!), width: 48, height: 48, fit: BoxFit.cover)
+                                        : const Icon(Icons.picture_as_pdf, size: 40),
+                                    title: Text(pf.name),
+                                    subtitle: Text('${(pf.size / 1024).toStringAsFixed(1)} KB'),
+                                    trailing: IconButton(
+                                      icon: const Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () => _removePickedFile(i),
+                                    ),
+                                  ),
+                                );
+                              }),
+                            ),
+                        ],
+                      ),
+                    ),
                     
                     // Info Card
                     Container(

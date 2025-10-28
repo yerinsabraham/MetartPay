@@ -16,6 +16,12 @@ class AuthProvider extends ChangeNotifier {
 
   final FirebaseService _firebaseService = FirebaseService();
 
+  // Feature flag - require email verification before allowing access.
+  // Controlled via --dart-define=REQUIRE_EMAIL_VERIFICATION=true when running the app.
+  static final bool requireEmailVerification = bool.fromEnvironment('REQUIRE_EMAIL_VERIFICATION', defaultValue: false);
+  // Flag to mark created data as test data. Default true for beta.
+  static final bool useTestData = bool.fromEnvironment('USE_TEST_DATA', defaultValue: true);
+
   User? get user => _user;
   User? get currentUser => _user;
   bool get isLoading => _isLoading;
@@ -165,7 +171,31 @@ class AuthProvider extends ChangeNotifier {
 
       // Update user profile with name
       await result.user?.updateDisplayName(name);
+
+      // Save user profile document in Firestore and tag as test data when configured
+      try {
+        await _firebaseService.saveUserProfile(
+          displayName: name,
+          email: email,
+          isTest: useTestData,
+        );
+      } catch (e) {
+        AppLogger.w('⚠️ DEBUG: Failed to save user profile: $e', error: e);
+      }
   AppLogger.d('✅ DEBUG: Display name updated to: $name');
+
+      // Send verification email only when the feature flag is enabled.
+      if (requireEmailVerification) {
+        try {
+          await result.user?.sendEmailVerification();
+          AppLogger.d('✅ DEBUG: Verification email sent to: ${result.user?.email}');
+        } catch (e) {
+          AppLogger.w('⚠️ DEBUG: Failed to send verification email: $e', error: e);
+        }
+      }
+
+      // Refresh _user reference
+      _user = _auth!.currentUser;
 
       return true;
     } on FirebaseAuthException catch (e) {
@@ -202,6 +232,36 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
     }
   }
+
+  /// Sends a verification email to the currently signed-in user.
+  Future<bool> sendEmailVerification() async {
+    try {
+      if (_auth == null || _auth!.currentUser == null) return false;
+      await _auth!.currentUser!.sendEmailVerification();
+      AppLogger.d('✅ DEBUG: Verification email resent to: ${_auth!.currentUser!.email}');
+      return true;
+    } catch (e) {
+      AppLogger.e('❌ DEBUG: Failed to resend verification email: $e', error: e);
+      return false;
+    }
+  }
+
+  /// Reloads the current user from Firebase and updates internal state.
+  Future<bool> reloadCurrentUser() async {
+    try {
+      if (_auth == null || _auth!.currentUser == null) return false;
+      await _auth!.currentUser!.reload();
+      _user = _auth!.currentUser;
+      notifyListeners();
+      AppLogger.d('✅ DEBUG: Reloaded current user. emailVerified=${_user?.emailVerified}');
+      return _user?.emailVerified ?? false;
+    } catch (e) {
+      AppLogger.e('❌ DEBUG: Failed to reload current user: $e', error: e);
+      return false;
+    }
+  }
+
+  bool get isEmailVerified => _user?.emailVerified ?? false;
 
   Future<bool> signInWithGoogle() async {
     try {

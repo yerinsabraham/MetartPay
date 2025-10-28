@@ -6,7 +6,7 @@ import '../../widgets/metartpay_branding.dart';
 import 'business_info_step.dart';
 import 'kyc_details_step.dart';
 import 'bank_account_step.dart';
-import 'wallet_generation_step.dart';
+// Wallet generation step intentionally omitted in Phase A setup
 import 'setup_confirmation_step.dart';
 
 class MerchantSetupWizard extends StatefulWidget {
@@ -32,14 +32,13 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
     'bankAccountNumber': '',
     'bankName': '',
     'bankAccountName': '',
-    'walletAddresses': <String, String>{},
+    // walletAddresses removed during Phase A - wallets/QR generation deferred to later phases
   };
 
   final List<String> _stepTitles = [
     'Business Information',
     'Personal Details',
     'Bank Account',
-    'Crypto Wallets',
     'Confirmation',
   ];
 
@@ -72,7 +71,7 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
         _setupData['bankAccountNumber'] = currentMerchant.bankAccountNumber;
         _setupData['bankName'] = currentMerchant.bankName;
         _setupData['bankAccountName'] = currentMerchant.bankAccountName;
-        _setupData['walletAddresses'] = Map<String, String>.from(currentMerchant.walletAddresses);
+        // walletAddresses intentionally omitted for Phase A
       });
     }
   }
@@ -100,7 +99,11 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
       );
     }
 
-    final success = await merchantProvider.savePartialSetupData(_setupData);
+  // Prepare a serializable copy for partial save (exclude in-memory file objects)
+  final serializableData = Map<String, dynamic>.from(_setupData);
+  if (serializableData.containsKey('kycFiles')) serializableData.remove('kycFiles');
+
+  final success = await merchantProvider.savePartialSetupData(serializableData);
 
     if (!success && mounted) {
   final errorMessage = merchantProvider.error ?? 'Failed to save progress. Please try again.';
@@ -181,7 +184,8 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
       bankAccountNumber: _setupData['bankAccountNumber'],
       bankName: _setupData['bankName'],
       bankAccountName: _setupData['bankAccountName'],
-      walletAddresses: _setupData['walletAddresses'],
+      merchantTier: _setupData['merchantTier'],
+      kycFiles: (_setupData['kycFiles'] as List<dynamic>?) ?? [],
     );
 
     if (mounted) {
@@ -286,12 +290,7 @@ class _MerchantSetupWizardState extends State<MerchantSetupWizard> {
                 onNext: _nextStep,
                 onPrevious: _previousStep,
               ),
-              WalletGenerationStep(
-                setupData: _setupData,
-                onDataUpdate: _updateSetupData,
-                onNext: _nextStep,
-                onPrevious: _previousStep,
-              ),
+              // Wallet generation step removed for Phase A
               SetupConfirmationStep(
                 setupData: _setupData,
                 onComplete: _completeSetup,

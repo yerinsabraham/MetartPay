@@ -5,8 +5,9 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/merchant_provider.dart';
 import 'login_screen.dart';
-import '../home/home_screen.dart';
+// Legacy HomeScreen removed — use HomePageNew (v2) as the single home entry
 import '../setup/merchant_setup_wizard.dart';
+import 'email_verification_screen.dart';
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
@@ -17,6 +18,13 @@ class AuthWrapper extends StatelessWidget {
       builder: (context, authProvider, merchantProvider, _) {
         if (!authProvider.isAuthenticated) {
           return const LoginScreen();
+        }
+
+        // If configured to require email verification, and user is signed in but hasn't verified,
+        // show the verification screen. For beta/testing we keep REQUIRE_EMAIL_VERIFICATION=false so
+        // this will not block testers.
+        if (AuthProvider.requireEmailVerification && authProvider.user != null && !(authProvider.user?.emailVerified ?? false)) {
+          return const EmailVerificationScreen();
         }
 
         // Always trigger merchant data load if not already attempted
@@ -57,32 +65,8 @@ class AuthWrapper extends StatelessWidget {
           return const MerchantSetupWizard();
         }
 
-        // Otherwise show the main app. In debug builds provide a small dev button
-        // to open the simplified Home V2 for QA without changing default routes.
-        if (kDebugMode) {
-          return Stack(
-            children: [
-              const HomeScreen(),
-              Positioned(
-                top: 16,
-                right: 12,
-                child: SafeArea(
-                  child: FloatingActionButton.small(
-                    heroTag: 'home_v2_debug',
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/home-v2');
-                    },
-                    backgroundColor: Colors.white,
-                    foregroundColor: Theme.of(context).colorScheme.primary,
-                    child: const Text('V2', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ),
-            ],
-          );
-        }
-
-        return const HomeScreen();
+        // Show the v2 home page by default (simplified POS-first dashboard)
+        return const HomePageNew();
       },
     );
   }

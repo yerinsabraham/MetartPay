@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../../providers/merchant_provider.dart';
 import '../../utils/app_logger.dart';
 import '../../widgets/home_widgets_new.dart';
 import '../../widgets/metartpay_branding.dart';
 import 'home_controller_new.dart';
+import '../../providers/notification_provider.dart';
+import '../demo_simulate_page.dart';
 
 /// A simplified, minimal homepage (v2).
 /// Keep this file separate from existing `home_screen.dart` while we validate.
@@ -22,10 +25,32 @@ class HomePageNew extends StatelessWidget {
         showLogo: true,
         plainWhiteBackground: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none),
-            onPressed: () {
-              AppLogger.d('DEBUG: Notifications tapped (inactive)');
+          Consumer<NotificationProvider>(
+            builder: (context, notif, _) {
+              final hasUnread = (notif.unreadCount ?? 0) > 0;
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_none),
+                    onPressed: () {
+                      Navigator.of(context).pushNamed('/notifications');
+                    },
+                  ),
+                  if (notif.unreadCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                ],
+              );
             },
           ),
           IconButton(
@@ -95,6 +120,24 @@ class HomePageNew extends StatelessWidget {
           ),
         ),
       ),
+      // Debug simulate FAB: visible only in non-production builds
+      floatingActionButton: kDebugMode
+          ? FloatingActionButton.extended(
+              icon: const Icon(Icons.bug_report),
+              label: const Text('Simulate'),
+              onPressed: () {
+                // Use named route if available (only defined in debug builds via main.dart)
+                try {
+                  Navigator.of(context).pushNamed('/demo-simulate');
+                } catch (_) {
+                  // Fallback: push DemoSimulatePage directly
+                  final baseUrl = const String.fromEnvironment('METARTPAY_BASE_URL', defaultValue: 'http://127.0.0.1:5001/metartpay-bac2f/us-central1/api');
+                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => DemoSimulatePage(baseUrl: baseUrl)));
+                }
+              },
+            )
+          : null,
     );
   }
 }
+

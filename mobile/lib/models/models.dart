@@ -14,6 +14,7 @@ class Merchant {
   final String? bvn;
   final String? address;
   final String kycStatus;
+  final String? merchantTier;
   final bool isSetupComplete;
   
   // Bank Account Information
@@ -121,6 +122,7 @@ class Merchant {
       bvn: json['bvn'],
       address: json['address'],
       kycStatus: json['kycStatus'] ?? 'pending',
+      merchantTier: json['merchantTier'],
       isSetupComplete: _parseBool(json['isSetupComplete']),
       bankAccountNumber: json['bankAccountNumber'] ?? '',
       bankName: json['bankName'] ?? '',
@@ -141,6 +143,7 @@ class Merchant {
       'industry': industry,
       'contactEmail': contactEmail,
       'businessAddress': businessAddress,
+      'merchantTier': merchantTier,
       'fullName': fullName,
       'idNumber': idNumber,
       'bvn': bvn,
@@ -187,6 +190,7 @@ class Merchant {
       industry: industry ?? this.industry,
       contactEmail: contactEmail ?? this.contactEmail,
       businessAddress: businessAddress ?? this.businessAddress,
+      merchantTier: merchantTier ?? this.merchantTier,
       fullName: fullName ?? this.fullName,
       idNumber: idNumber ?? this.idNumber,
       bvn: bvn ?? this.bvn,

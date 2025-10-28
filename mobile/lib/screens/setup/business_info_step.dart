@@ -39,6 +39,7 @@ class _BusinessInfoStepState extends State<BusinessInfoStep> {
   ];
 
   String? _selectedIndustry;
+  String? _selectedTier;
 
   @override
   void initState() {
@@ -48,6 +49,7 @@ class _BusinessInfoStepState extends State<BusinessInfoStep> {
     _industryController.text = widget.setupData['industry'] ?? '';
     _contactEmailController.text = widget.setupData['contactEmail'] ?? '';
     _businessAddressController.text = widget.setupData['businessAddress'] ?? '';
+  _selectedTier = widget.setupData['merchantTier']?.isEmpty == true ? null : widget.setupData['merchantTier'];
     _selectedIndustry = widget.setupData['industry']?.isEmpty == true 
         ? null 
         : widget.setupData['industry'];
@@ -67,6 +69,7 @@ class _BusinessInfoStepState extends State<BusinessInfoStep> {
       // Update setup data
       widget.onDataUpdate('businessName', _businessNameController.text);
       widget.onDataUpdate('industry', _selectedIndustry ?? '');
+      widget.onDataUpdate('merchantTier', _selectedTier ?? 'Tier0_Unregistered');
       widget.onDataUpdate('contactEmail', _contactEmailController.text);
       widget.onDataUpdate('businessAddress', _businessAddressController.text);
       
@@ -202,6 +205,30 @@ class _BusinessInfoStepState extends State<BusinessInfoStep> {
                         prefixIcon: const Icon(Icons.location_on),
                         alignLabelWithHint: true,
                       ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Merchant Type / Tier
+                    DropdownButtonFormField<String>(
+                      value: _selectedTier,
+                      decoration: InputDecoration(
+                        labelText: 'Business Type',
+                        hintText: 'Select your business type',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1,
+                          ),
+                        ),
+                        prefixIcon: const Icon(Icons.badge),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'Tier0_Unregistered', child: Text('Sole Proprietor / Unregistered')),
+                        DropdownMenuItem(value: 'Tier1_BusinessName', child: Text('Registered Business Name')),
+                        DropdownMenuItem(value: 'Tier2_LimitedCompany', child: Text('Limited Company (Registered)')),
+                      ],
+                      onChanged: (v) => setState(() { _selectedTier = v; }),
                     ),
                   ],
                 ),

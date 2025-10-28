@@ -7,6 +7,7 @@ export interface AuthenticatedRequest extends Request {
     uid: string;
     email?: string;
     admin?: boolean;
+    emailVerified?: boolean;
   };
 }
 
@@ -71,6 +72,8 @@ export const authenticateToken = async (
       uid: decodedToken.uid,
       email: decodedToken.email,
       admin: customClaims,
+      // Firebase ID token includes email_verified claim
+      emailVerified: decodedToken.email_verified === true,
     };
 
     next();

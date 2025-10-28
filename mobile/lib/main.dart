@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:io' show Platform;
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'screens/auth/auth_wrapper.dart';
@@ -36,6 +38,21 @@ void main() async {
     );
     AppLogger.d('DEBUG: Firebase initialized successfully');
     AppLogger.d('DEBUG: Project ID: ${Firebase.app().options.projectId}');
+
+    // In debug builds we can optionally connect to the local Firebase emulators.
+    // Enable by passing --dart-define=USE_FIREBASE_EMULATOR=true when running.
+    const useEmulator = bool.fromEnvironment('USE_FIREBASE_EMULATOR', defaultValue: false);
+    if (!bool.fromEnvironment('dart.vm.product') && useEmulator) {
+      try {
+    // On a physical device we expect adb reverse to be used so 127.0.0.1 maps to host.
+    final firestoreHost = const String.fromEnvironment('EMULATOR_FIRESTORE_HOST', defaultValue: '127.0.0.1');
+
+    AppLogger.d('DEBUG: Configuring Firestore emulator at $firestoreHost:8080');
+    FirebaseFirestore.instance.useFirestoreEmulator(firestoreHost, 8080);
+      } catch (e, s) {
+        AppLogger.e('DEBUG: Failed to configure Firebase emulators: $e', error: e, stackTrace: s);
+      }
+    }
 
     // Initialize Firebase Messaging background handler
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -147,8 +164,8 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-  // Set Home V2 (new simplified home) as the initial page per request.
-  home: const HomePageNew(),
+  // Use AuthWrapper as the app's entry so unauthenticated users see login first.
+  home: const AuthWrapper(),
         routes: {
           '/home': (context) => const HomePageNew(),
           '/home-v2': (context) => const HomePageNew(),

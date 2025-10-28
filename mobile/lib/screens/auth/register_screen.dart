@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import 'email_verification_screen.dart';
+import '../../widgets/mode_banner.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -37,7 +39,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (success && mounted) {
-        Navigator.of(context).pop();
+        // If email verification is required by config, show the verification screen.
+        if (AuthProvider.requireEmailVerification) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const EmailVerificationScreen()),
+          );
+        } else {
+          // Default: registration succeeded, return to previous screen (login/home flow will continue)
+          Navigator.of(context).pop();
+        }
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -80,7 +90,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const SizedBox(height: 20),
-                      
+
+                      // Runtime mode banner (cloud vs emulator, test-data, verification)
+                      const ModeBanner(),
+
+                      const SizedBox(height: 12),
+
                       Text(
                         'Join MetartPay',
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -283,21 +298,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       // Google Sign-in Button
                       OutlinedButton.icon(
                         onPressed: authProvider.isLoading ? null : () => _registerWithGoogle(),
-                        icon: Container(
+                        icon: SizedBox(
                           width: 20,
                           height: 20,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(3),
-                            color: Colors.white,
-                          ),
-                          child: const Text(
-                            'G',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue,
-                            ),
-                            textAlign: TextAlign.center,
+                          child: Image.asset(
+                            'assets/icons/google.png',
+                            width: 20,
+                            height: 20,
+                            errorBuilder: (context, error, stackTrace) {
+                              // Fallback to 'G' if image fails to load
+                              return Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(3),
+                                  color: Colors.white,
+                                ),
+                                child: const Text(
+                                  'G',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              );
+                            },
                           ),
                         ),
                         label: const Text('Continue with Google'),

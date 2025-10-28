@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/metartpay_branding.dart';
 import 'register_screen.dart';
+import '../../widgets/mode_banner.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -70,8 +71,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 60),
-                    
+                    const SizedBox(height: 20),
+
+                    // Runtime mode banner (cloud vs emulator, test-data, verification)
+                    const ModeBanner(),
+
+                    const SizedBox(height: 20),
+
                     // Logo and Title
                     Column(
                       children: [

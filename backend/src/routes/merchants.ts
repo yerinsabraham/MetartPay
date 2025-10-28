@@ -8,18 +8,33 @@ import { autoGenerateWalletsOnKYCApproval } from '../controllers/walletControlle
 
 const router = Router();
 
-// POST /api/merchants - Create new merchant
-router.post('/', asyncHandler(async (req: Request, res: Response) => {
+// POST /api/merchants - Create new merchant (protected)
+// Only authenticated users can create merchants. The server will use the authenticated
+// user's uid as the merchant owner. Optionally, the server can require that the user's
+// email is verified via the REQUIRE_EMAIL_VERIFICATION_SERVER env flag.
+router.post('/', authenticateToken, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const {
-    userId,
     businessName,
     bankAccountNumber,
     bankName,
     bankAccountName,
   }: CreateMerchantRequest = req.body;
 
-  // Validation
-  if (!userId || !businessName || !bankAccountNumber || !bankName || !bankAccountName) {
+  const authUser = req.user;
+
+  // Ensure authenticated
+  if (!authUser || !authUser.uid) {
+    return res.status(401).json({ success: false, message: 'Authentication required' });
+  }
+
+  // Optional server-side email verification enforcement
+  const requireEmailVerificationServer = process.env.REQUIRE_EMAIL_VERIFICATION_SERVER === 'true';
+  if (requireEmailVerificationServer && authUser.emailVerified !== true) {
+    return res.status(403).json({ success: false, message: 'Email verification required' });
+  }
+
+  // Validation (userId is derived from token)
+  if (!businessName || !bankAccountNumber || !bankName || !bankAccountName) {
     return res.status(400).json({
       success: false,
       message: 'All merchant fields are required',
@@ -29,12 +44,13 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   const merchantId = uuidv4();
   const merchant: Merchant = {
     id: merchantId,
-    userId,
+    userId: authUser.uid,
     businessName,
     bankAccountNumber,
     bankName,
     bankAccountName,
     kycStatus: 'pending',
+    merchantTier: 'Tier0_Unregistered',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -117,12 +133,18 @@ router.put('/:id', authenticateToken, asyncHandler(async (req: AuthenticatedRequ
 
   // Auto-generate wallets if KYC was just approved
   if (kycStatusChanged && kycApproved) {
-    console.log(`KYC approved for merchant ${id}, generating wallets...`);
-    try {
-      await autoGenerateWalletsOnKYCApproval(id);
-    } catch (error) {
-      console.error(`Failed to auto-generate wallets for merchant ${id}:`, error);
-      // Don't fail the request if wallet generation fails
+    // Auto-generate wallets on KYC approval is gated by an env flag.
+    const autoGen = process.env.AUTO_GENERATE_WALLETS_ON_KYC === 'true';
+    if (autoGen) {
+      console.log(`KYC approved for merchant ${id}, generating wallets...`);
+      try {
+        await autoGenerateWalletsOnKYCApproval(id);
+      } catch (error) {
+        console.error(`Failed to auto-generate wallets for merchant ${id}:`, error);
+        // Don't fail the request if wallet generation fails
+      }
+    } else {
+      console.log(`KYC approved for merchant ${id}, skipping auto wallet generation (AUTO_GENERATE_WALLETS_ON_KYC not enabled)`);
     }
   }
 

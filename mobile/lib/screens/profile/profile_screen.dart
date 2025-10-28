@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/merchant_provider.dart';
+import '../../providers/notification_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/metartpay_branding.dart';
 import '../kyc/kyc_verification_screen.dart';
@@ -15,6 +16,23 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Try to ensure merchant data is loaded when opening profile
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final mp = Provider.of<MerchantProvider>(context, listen: false);
+      if (mp.currentMerchant == null && !mp.hasAttemptedLoad) {
+        mp.loadUserMerchants();
+      }
+      // Also initialize notifications for current merchant if available
+      final np = Provider.of<NotificationProvider>(context, listen: false);
+      if (mp.currentMerchant != null) {
+        np.initialize(mp.currentMerchant!.id);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
